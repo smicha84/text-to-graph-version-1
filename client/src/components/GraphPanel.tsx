@@ -80,7 +80,7 @@ export default function GraphPanel({
     setIsSimulating(true);
     visualizer.render(graph);
     
-    // Fit graph to view after short delay to allow simulation to start
+    // Fit graph to view after short delay to allow simulation to position nodes
     setTimeout(() => {
       visualizer.fitToView();
       setIsSimulating(false);
@@ -91,7 +91,7 @@ export default function GraphPanel({
       
       // Clear active subgraph when loading a new graph
       setActiveSubgraphId(null);
-    }, 100);
+    }, 500);  // Increased timeout to give nodes more time to position
     
     // Update zoom info periodically during simulation
     const interval = setInterval(() => {

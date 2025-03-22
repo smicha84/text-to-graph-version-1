@@ -459,8 +459,17 @@ export class GraphVisualizer {
       }
     });
     
+    // Default to center points if no valid positions found
+    if (minX === Infinity || minY === Infinity || maxX === -Infinity || maxY === -Infinity) {
+      console.log("Using default center positioning - no valid node positions found");
+      minX = this.width / 2 - 100;
+      maxX = this.width / 2 + 100;
+      minY = this.height / 2 - 100;
+      maxY = this.height / 2 + 100;
+    }
+    
     // Add padding
-    const padding = 50;
+    const padding = 80; // Increased padding for better visuals
     minX -= padding;
     minY -= padding;
     maxX += padding;
@@ -469,21 +478,30 @@ export class GraphVisualizer {
     const graphWidth = maxX - minX;
     const graphHeight = maxY - minY;
     
-    if (graphWidth === 0 || graphHeight === 0) return;
+    if (graphWidth === 0 || graphHeight === 0) {
+      console.log("Graph has zero width or height, using default sizing");
+      // Default to reasonable values if graph has zero dimensions
+      minX = this.width / 2 - 100;
+      maxX = this.width / 2 + 100;
+      minY = this.height / 2 - 100;
+      maxY = this.height / 2 + 100;
+    }
     
     // Calculate scale to fit
     const scale = Math.min(
       this.width / graphWidth,
       this.height / graphHeight,
-      2 // Max scale
+      1.5 // Reduced max scale for better overall view
     );
     
     // Calculate translation to center
     const translateX = this.width / 2 - ((minX + maxX) / 2) * scale;
     const translateY = this.height / 2 - ((minY + maxY) / 2) * scale;
     
+    console.log(`Centering graph: translate(${translateX}, ${translateY}) scale(${scale})`);
+    
     // Apply transform
-    this.svg.transition().duration(300).call(
+    this.svg.transition().duration(500).call( // Increased duration for smoother transition
       this.zoom.transform,
       d3.zoomIdentity.translate(translateX, translateY).scale(scale)
     );
