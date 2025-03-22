@@ -6,13 +6,18 @@ import { generateGraphInputSchema, exportGraphSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { generateGraphWithClaude } from "./anthropic";
 
-// Function to merge two graphs
+// Function to merge two graphs with subgraph tracking
 function mergeGraphs(existingGraph: any, newGraph: any): any {
   // Create a deep copy of the existing graph
   const mergedGraph = {
     nodes: [...existingGraph.nodes],
-    edges: [...existingGraph.edges]
+    edges: [...existingGraph.edges],
+    subgraphCounter: existingGraph.subgraphCounter || 0
   };
+  
+  // Generate a new subgraph ID for this addition
+  const newSubgraphId = `sg${(mergedGraph.subgraphCounter || 0) + 1}`;
+  mergedGraph.subgraphCounter = (mergedGraph.subgraphCounter || 0) + 1;
   
   // Create a map of existing node IDs and labels for quick lookup
   const existingNodeIds = new Map();
@@ -26,7 +31,7 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
   // Create a mapping from new node IDs to either existing IDs or new unique IDs
   const nodeIdMap = new Map();
   
-  // Add new nodes, avoiding duplicates
+  // Add new nodes, avoiding duplicates and tracking subgraph membership
   newGraph.nodes.forEach((newNode: any) => {
     const nodeName = newNode.properties.name || '';
     const nodeKey = `${newNode.label}:${nodeName}`.toLowerCase();
@@ -34,21 +39,29 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
     // Check if a similar node already exists
     if (existingNodeIds.has(nodeKey)) {
       // Map this new node ID to the existing node ID
-      nodeIdMap.set(newNode.id, existingNodeIds.get(nodeKey));
+      const existingId = existingNodeIds.get(nodeKey);
+      nodeIdMap.set(newNode.id, existingId);
+      
+      // Find the existing node and add the new subgraph ID to its list
+      const existingNode = mergedGraph.nodes.find((n: any) => n.id === existingId);
+      if (existingNode) {
+        existingNode.subgraphIds = [...(existingNode.subgraphIds || []), newSubgraphId];
+      }
     } else {
       // Generate a new unique ID for this node
       const newId = `n${mergedGraph.nodes.length + 1}`;
       nodeIdMap.set(newNode.id, newId);
       
-      // Add the node with the new ID
+      // Add the node with the new ID and subgraph ID
       mergedGraph.nodes.push({
         ...newNode,
-        id: newId
+        id: newId,
+        subgraphIds: [newSubgraphId]
       });
     }
   });
   
-  // Add new edges, updating source and target references
+  // Add new edges, updating source and target references and tracking subgraph membership
   newGraph.edges.forEach((newEdge: any) => {
     // Get mapped node IDs for source and target
     const sourceId = nodeIdMap.get(newEdge.source) || newEdge.source;
@@ -58,19 +71,24 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
     const newId = `e${mergedGraph.edges.length + 1}`;
     
     // Check if this edge already exists (same source, target, and label)
-    const edgeExists = mergedGraph.edges.some((edge: any) => 
+    const existingEdgeIndex = mergedGraph.edges.findIndex((edge: any) => 
       edge.source === sourceId && 
       edge.target === targetId && 
       edge.label === newEdge.label
     );
     
-    // Add the edge if it doesn't already exist
-    if (!edgeExists) {
+    if (existingEdgeIndex >= 0) {
+      // The edge exists, so add this subgraph ID to its list
+      const existingEdge = mergedGraph.edges[existingEdgeIndex];
+      existingEdge.subgraphIds = [...(existingEdge.subgraphIds || []), newSubgraphId];
+    } else {
+      // Add a new edge with this subgraph ID
       mergedGraph.edges.push({
         ...newEdge,
         id: newId,
         source: sourceId,
-        target: targetId
+        target: targetId,
+        subgraphIds: [newSubgraphId]
       });
     }
   });
