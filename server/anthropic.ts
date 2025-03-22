@@ -48,13 +48,46 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     });
 
     // Extract the JSON response from Claude
-    const content = response.content[0];
+    console.log('Claude API response:', JSON.stringify(response.content, null, 2));
     
-    if (content.type !== 'text') {
-      throw new Error('Expected text response from Claude API');
+    // Handle different content types from Claude API
+    let contentText = '';
+    
+    // Check if we have a valid response with content
+    if (!response.content || response.content.length === 0) {
+      throw new Error('Empty response from Claude API');
     }
     
-    const contentText = content.text;
+    // Define types for the content from Claude API
+    interface TextContent {
+      type: 'text';
+      text: string;
+    }
+    
+    interface ThinkingContent {
+      type: 'thinking';
+      thinking: Record<string, any>;
+    }
+    
+    type ContentItem = TextContent | ThinkingContent;
+    
+    // Extract text content from any response format
+    for (const item of response.content as ContentItem[]) {
+      if (item.type === 'text') {
+        contentText += (item as TextContent).text;
+      } else if (item.type === 'thinking' && typeof (item as ThinkingContent).thinking === 'object') {
+        // If the response contains thinking content, try to extract it
+        contentText += JSON.stringify((item as ThinkingContent).thinking);
+      }
+    }
+    
+    if (!contentText) {
+      throw new Error('No text content found in Claude API response');
+    }
+    
+    console.log('Extracted content text:', contentText);
+    
+    // Try to find and parse JSON in the response
     const jsonStart = contentText.indexOf('{');
     const jsonEnd = contentText.lastIndexOf('}') + 1;
     
@@ -63,12 +96,19 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     }
     
     const jsonResponse = contentText.substring(jsonStart, jsonEnd);
-    const graphData = JSON.parse(jsonResponse);
-
-    // Apply simple layout algorithm to position nodes
-    applyLayout(graphData);
+    console.log('Extracted JSON:', jsonResponse);
     
-    return graphData;
+    try {
+      const graphData = JSON.parse(jsonResponse);
+      
+      // Apply simple layout algorithm to position nodes
+      applyLayout(graphData);
+      
+      return graphData;
+    } catch (parseError) {
+      console.error('Error parsing JSON response:', parseError);
+      throw new Error(`Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+    }
   } catch (error) {
     console.error('Error calling Claude API:', error);
     throw new Error(`Failed to generate graph with Claude: ${error instanceof Error ? error.message : String(error)}`);
