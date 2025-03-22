@@ -187,13 +187,17 @@ Only respond with the JSON object, no explanations or other text.`;
 }
 
 function applyLayout(graph: { nodes: any[], edges: any[] }): void {
+  // Instead of circular layout, use a more randomized layout
+  // This gives the force-directed algorithm a better starting point
   const centerX = 400;
   const centerY = 300;
-  const radius = 200;
+  const spreadFactor = 250; // Higher value means more spread out initial positions
   
-  graph.nodes.forEach((node, index) => {
-    const angle = (2 * Math.PI * index) / graph.nodes.length;
-    node.x = centerX + radius * Math.cos(angle);
-    node.y = centerY + radius * Math.sin(angle);
+  // Apply a slight randomization to the positions
+  graph.nodes.forEach((node) => {
+    // Use a combination of random positioning and node index to achieve 
+    // better distribution while still maintaining some determinism
+    node.x = centerX + (Math.random() - 0.5) * spreadFactor;
+    node.y = centerY + (Math.random() - 0.5) * spreadFactor;
   });
 }
