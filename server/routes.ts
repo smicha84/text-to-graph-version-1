@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -175,14 +175,21 @@ async function generateGraphFromTextFallback(text: string, options: any) {
   };
 }
 
-// Main graph generation function using Claude
+// Main graph generation function that selects based on model
 async function generateGraphFromText(text: string, options: any) {
   try {
-    // Use Claude API for AI-powered graph generation
-    return await generateGraphWithClaude(text, options);
+    // Check if the model is set to 'fallback', otherwise use Claude
+    if (options.model === 'fallback') {
+      console.log("Using regex-based generation by user selection");
+      return generateGraphFromTextFallback(text, options);
+    } else {
+      // Default to Claude API for AI-powered graph generation
+      console.log("Using Claude API for graph generation");
+      return await generateGraphWithClaude(text, options);
+    }
   } catch (error) {
     console.error("Error using Claude API for graph generation:", error);
-    console.log("Falling back to regex-based generation");
+    console.log("Falling back to regex-based generation due to error");
     // Fall back to the regex approach if Claude fails
     return generateGraphFromTextFallback(text, options);
   }

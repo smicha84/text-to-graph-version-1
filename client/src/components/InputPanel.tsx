@@ -25,7 +25,7 @@ export default function InputPanel({ onGenerateGraph, isLoading }: InputPanelPro
     extractRelations: true,
     inferProperties: true,
     mergeEntities: true,
-    model: "o1-pro"
+    model: "claude"
   });
 
   const handleOptionChange = (option: keyof GraphGenerationOptions, value: boolean | string) => {
@@ -148,9 +148,8 @@ export default function InputPanel({ onGenerateGraph, isLoading }: InputPanelPro
                   <SelectValue placeholder="Select a model" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="o1-pro">O1 Pro (Recommended)</SelectItem>
-                  <SelectItem value="o1-standard">O1 Standard</SelectItem>
-                  <SelectItem value="o1-fast">O1 Fast</SelectItem>
+                  <SelectItem value="claude">Claude (Recommended)</SelectItem>
+                  <SelectItem value="fallback">Regex Fallback</SelectItem>
                 </SelectContent>
               </Select>
             </div>
