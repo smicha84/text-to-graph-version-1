@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles for graph visualization */
+.node circle {
+  transition: fill 0.3s ease, stroke 0.3s ease, stroke-width 0.3s ease;
+}
+
+/* Cursor styles to indicate drag functionality */
+.node circle:hover {
+  stroke: #2563EB;
+  stroke-width: 2px;
+  cursor: grab;
+}
+
+.node circle:active {
+  cursor: grabbing;
+}
+
+/* Animation for the drag tooltip */
+.drag-tooltip {
+  animation: fade-in 0.5s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -104,6 +104,45 @@ export default function GraphPanel({
       clearInterval(interval);
     };
   }, [graph, visualizer]);
+  
+  // Show a tooltip when the graph is first rendered to indicate draggable nodes
+  useEffect(() => {
+    if (visualizer && graph && graph.nodes.length > 0) {
+      const tooltip = document.createElement('div');
+      tooltip.className = 'drag-tooltip';
+      tooltip.innerText = 'Nodes are draggable - click and drag to reposition';
+      tooltip.style.position = 'absolute';
+      tooltip.style.top = '50px';
+      tooltip.style.left = '50%';
+      tooltip.style.transform = 'translateX(-50%)';
+      tooltip.style.backgroundColor = '#2563EB';
+      tooltip.style.color = 'white';
+      tooltip.style.padding = '8px 16px';
+      tooltip.style.borderRadius = '4px';
+      tooltip.style.zIndex = '1000';
+      tooltip.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+      tooltip.style.fontWeight = '500';
+      
+      // Add to the graph container
+      const graphContainer = svgRef.current?.parentElement;
+      if (graphContainer) {
+        graphContainer.appendChild(tooltip);
+        
+        // Remove the tooltip after 5 seconds
+        setTimeout(() => {
+          tooltip.style.opacity = '0';
+          tooltip.style.transition = 'opacity 0.5s ease-out';
+          
+          // Remove from DOM after fade out
+          setTimeout(() => {
+            if (tooltip.parentNode === graphContainer) {
+              graphContainer.removeChild(tooltip);
+            }
+          }, 500);
+        }, 5000);
+      }
+    }
+  }, [graph, visualizer]);
 
   // Fit graph to view
   const fitGraph = () => {

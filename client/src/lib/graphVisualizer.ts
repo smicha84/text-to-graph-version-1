@@ -395,6 +395,7 @@ export class GraphVisualizer {
       .enter()
       .append("g")
       .attr("class", "node")
+      .attr("id", (d) => `node-${d.id}`) // Add ID for easier selection
       .on("click", (event: MouseEvent, d: SimulationNode) => {
         event.stopPropagation();
         this.onSelectElement(d as unknown as Node);
@@ -404,10 +405,19 @@ export class GraphVisualizer {
           if (!event.active && this.simulation) {
             this.simulation.alphaTarget(0.3).restart();
           }
+          // Set fixed position and show visual feedback
           d.fx = d.x;
           d.fy = d.y;
+          // Change cursor to grabbing to indicate active drag
+          d3.select(event.sourceEvent.target).style("cursor", "grabbing");
+          // Highlight the node being dragged
+          d3.select(event.subject.id ? `#node-${event.subject.id}` : event.sourceEvent.target.parentNode)
+            .select("circle")
+            .attr("stroke", "#2563EB")
+            .attr("stroke-width", 3);
         })
         .on("drag", (event: d3.D3DragEvent<SVGGElement, SimulationNode, SimulationNode>, d: SimulationNode) => {
+          // Update fixed position during drag
           d.fx = event.x;
           d.fy = event.y;
         })
@@ -415,17 +425,26 @@ export class GraphVisualizer {
           if (!event.active && this.simulation) {
             this.simulation.alphaTarget(0);
           }
+          // Release fixed position and restore visual state
           d.fx = null;
           d.fy = null;
+          // Reset cursor
+          d3.select(event.sourceEvent.target).style("cursor", "grab");
+          // Remove highlight
+          d3.select(event.subject.id ? `#node-${event.subject.id}` : event.sourceEvent.target.parentNode)
+            .select("circle")
+            .attr("stroke", null)
+            .attr("stroke-width", 0);
         }));
     
-    // Node circles
+    // Node circles with cursor styling to indicate draggable
     nodes.append("circle")
       .attr("r", 20)
       .attr("fill", (d: SimulationNode) => {
         // Use custom color if available, otherwise fall back to default color map
         return this.customNodeColors[d.type] || NODE_COLORS[d.type] || NODE_COLORS.default;
-      });
+      })
+      .style("cursor", "grab") // Change cursor to indicate draggable
     
     // Node labels (inside circle)
     nodes.append("text")
