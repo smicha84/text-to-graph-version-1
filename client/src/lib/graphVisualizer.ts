@@ -23,11 +23,33 @@ interface SimulationLink {
 
 // Node colors based on node type
 export const NODE_COLORS: Record<string, string> = {
+  // Person types with different roles
   'Person': '#3B82F6',       // primary blue
-  'Company': '#10B981',      // secondary green
-  'Organization': '#10B981', // same as Company
-  'Product': '#8B5CF6',      // accent purple
+  'Employee': '#4F46E5',     // indigo
+  'Entrepreneur': '#8B5CF6', // purple
+  'Investor': '#EC4899',     // pink
+  'Expert': '#0EA5E9',       // sky blue
+  
+  // Organization types
+  'Company': '#10B981',      // emerald
+  'Organization': '#059669', // green
+  'Institute': '#14B8A6',    // teal
+  'Agency': '#0D9488',       // teal dark
+  
+  // Location types
   'Location': '#F59E0B',     // amber
+  'City': '#F97316',         // orange
+  'Country': '#EA580C',      // orange dark
+  
+  // Content types
+  'Product': '#8B5CF6',      // purple
+  'Project': '#6366F1',      // indigo
+  'Document': '#A855F7',     // purple light
+  'Event': '#D946EF',        // fuchsia
+  'Technology': '#2563EB',   // blue
+  'Initiative': '#7C3AED',   // violet
+  
+  // Default for any unmatched types
   'default': '#6B7280'       // gray
 };
 

@@ -145,8 +145,8 @@ Respond with a JSON object that has the following structure:
   "nodes": [
     {
       "id": "n1",  // A unique string identifier starting with 'n' followed by a number
-      "label": "Person",  // The entity type (Person, Organization, Location, etc.)
-      "type": "Person",   // More specific category if available
+      "label": "Person",  // The general entity category (Person, Organization, Location, etc.)
+      "type": "Entrepreneur",   // More specific subcategory (Executive, Investor, Employee, Institute, etc.)
       "properties": {
         "name": "John Doe",  // Required property
         // Include other properties that are relevant
@@ -182,6 +182,7 @@ QUALITY REQUIREMENTS:
 - Include sufficient properties to make each entity informative and distinctive
 - Create relationship labels that clearly describe the nature of the connection
 - Ensure each relationship flows in the logical direction (e.g., PERSON WORKS_FOR COMPANY, not the reverse)
+- Use SPECIFIC types for nodes, choosing from: Employee, Entrepreneur, Investor, Expert, Company, Organization, Institute, Agency, City, Country, Location, Product, Project, Document, Event, Technology, Initiative
 
 Only respond with the JSON object, no explanations or other text.`;
 }
