@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { Graph, GraphOptions } from '@shared/schema';
+import { Graph, GraphOptions, Node, Edge } from '@shared/schema';
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -87,16 +87,69 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     
     console.log('Extracted content text:', contentText);
     
-    // Try to find and parse JSON in the response
-    const jsonStart = contentText.indexOf('{');
-    const jsonEnd = contentText.lastIndexOf('}') + 1;
+    // Try to find and extract a valid JSON object using regex for better reliability
+    // This regex looks for objects with "nodes" and "edges" arrays which are the essential parts of our graph
+    const graphJsonRegex = /{[\s\S]*?"nodes"\s*:\s*\[[\s\S]*?\][\s\S]*?"edges"\s*:\s*\[[\s\S]*?\][\s\S]*?}/g;
+    const match = graphJsonRegex.exec(contentText);
     
-    if (jsonStart === -1 || jsonEnd === -1) {
-      throw new Error('Could not extract valid JSON from Claude response');
+    if (!match) {
+      console.error('Could not find valid graph JSON in Claude response');
+      // Fallback to simple extraction
+      const jsonStart = contentText.indexOf('{');
+      const jsonEnd = contentText.lastIndexOf('}') + 1;
+      
+      if (jsonStart === -1 || jsonEnd === -1) {
+        throw new Error('Could not extract any JSON object from Claude response');
+      }
+      
+      const jsonResponse = contentText.substring(jsonStart, jsonEnd);
+      console.log('Attempting to parse extracted JSON with traditional method');
+      
+      try {
+        // Create a default structure in case parsing fails
+        const graphData: Graph = {
+          nodes: [],
+          edges: [],
+          subgraphCounter: 1
+        } as Graph;
+        
+        // Try to parse, but continue with empty graph if it fails
+        try {
+          Object.assign(graphData, JSON.parse(jsonResponse));
+        } catch (parseError) {
+          console.error('Error with fallback JSON parsing, using empty graph:', parseError);
+        }
+        
+        // Apply simple layout algorithm to position nodes
+        applyLayout(graphData);
+        
+        // Initialize subgraph tracking for new graphs
+        const initialSubgraphId = 'sg1';
+        graphData.subgraphCounter = 1;
+        
+        // Add subgraph IDs to all nodes and edges if they exist
+        if (graphData.nodes && Array.isArray(graphData.nodes)) {
+          graphData.nodes.forEach((node: { subgraphIds?: string[] }) => {
+            node.subgraphIds = [initialSubgraphId];
+          });
+        }
+        
+        if (graphData.edges && Array.isArray(graphData.edges)) {
+          graphData.edges.forEach((edge: { subgraphIds?: string[] }) => {
+            edge.subgraphIds = [initialSubgraphId];
+          });
+        }
+        
+        return graphData;
+      } catch (finalError) {
+        console.error('All JSON extraction methods failed:', finalError);
+        throw new Error('Failed to extract any usable graph data from Claude response');
+      }
     }
     
-    const jsonResponse = contentText.substring(jsonStart, jsonEnd);
-    console.log('Extracted JSON:', jsonResponse);
+    // We found a match with the regex
+    const jsonResponse = match[0];
+    console.log('Extracted graph JSON with regex match');
     
     try {
       const graphData = JSON.parse(jsonResponse);
@@ -109,13 +162,13 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
       graphData.subgraphCounter = 1;
       
       // Add subgraph IDs to all nodes and edges
-      if (graphData.nodes) {
+      if (graphData.nodes && Array.isArray(graphData.nodes)) {
         graphData.nodes.forEach((node: { subgraphIds?: string[] }) => {
           node.subgraphIds = [initialSubgraphId];
         });
       }
       
-      if (graphData.edges) {
+      if (graphData.edges && Array.isArray(graphData.edges)) {
         graphData.edges.forEach((edge: { subgraphIds?: string[] }) => {
           edge.subgraphIds = [initialSubgraphId];
         });
@@ -123,7 +176,7 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
       
       return graphData;
     } catch (parseError) {
-      console.error('Error parsing JSON response:', parseError);
+      console.error('Error parsing regex-matched JSON response:', parseError);
       throw new Error(`Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
     }
   } catch (error) {

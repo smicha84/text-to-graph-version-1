@@ -120,6 +120,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate graph using Claude API, potentially merging with existing graph
       const result = await generateGraphFromText(text, options, existingGraph, appendMode);
       
+      // Verify that we have nodes and edges arrays in the result
+      if (!result || !Array.isArray(result.nodes) || !Array.isArray(result.edges)) {
+        console.error('Invalid graph structure returned:', result);
+        return res.status(500).json({ 
+          message: 'Generated graph has an invalid structure',
+          details: 'The API generated a graph without valid nodes and edges arrays'
+        });
+      }
+      
       // Return the generated or merged graph
       res.json(result);
     } catch (error) {
@@ -128,7 +137,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(400).json({ message: validationError.message });
       } else {
         console.error('Error generating graph:', error);
-        res.status(500).json({ message: 'Failed to generate graph' });
+        // Include more details in the error response
+        let errorMessage = 'Failed to generate graph';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        res.status(500).json({ 
+          message: 'Failed to generate graph',
+          details: errorMessage
+        });
       }
     }
   });

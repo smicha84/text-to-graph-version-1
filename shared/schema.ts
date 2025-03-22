@@ -61,7 +61,33 @@ export const exportGraphSchema = z.object({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertGraph = z.infer<typeof insertGraphSchema>;
-export type Graph = typeof graphs.$inferSelect;
+export type GraphRecord = typeof graphs.$inferSelect;
 export type GraphOptions = z.infer<typeof graphOptionsSchema>;
 export type GenerateGraphInput = z.infer<typeof generateGraphInputSchema>;
 export type ExportGraphInput = z.infer<typeof exportGraphSchema>;
+
+// In-memory graph representation
+export interface Node {
+  id: string;
+  label: string;
+  type: string;
+  properties: Record<string, any>;
+  x?: number;
+  y?: number;
+  subgraphIds?: string[];
+}
+
+export interface Edge {
+  id: string;
+  source: string;
+  target: string;
+  label: string;
+  properties: Record<string, any>;
+  subgraphIds?: string[];
+}
+
+export interface Graph {
+  nodes: Node[];
+  edges: Edge[];
+  subgraphCounter?: number;
+}
