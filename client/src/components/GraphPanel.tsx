@@ -52,16 +52,28 @@ export default function GraphPanel({
     // Clear any existing SVG content 
     d3.select(svgRef.current).selectAll("*").remove();
     
+    // Get the SVG container's dimensions
+    const svgContainer = svgRef.current.parentElement;
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
     
-    // Create visualizer
+    // Find the center point using the "No graph to display" element approach
+    let centerX = width / 2;
+    let centerY = height / 2;
+    
+    // Log the dimensions for debugging
+    console.log(`SVG dimensions: ${width}x${height}, Center: (${centerX}, ${centerY})`);
+    
+    // Create visualizer with the center point
     const newVisualizer = new GraphVisualizer(
       svgRef.current, 
       width, 
       height,
       handleElementSelect
     );
+    
+    // Store the natural center point for reference
+    setCustomCenterPoint({ x: centerX, y: centerY });
     
     setVisualizer(newVisualizer);
     
