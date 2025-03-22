@@ -38,7 +38,7 @@ export const graphOptionsSchema = z.object({
   extractRelations: z.boolean().default(true),
   inferProperties: z.boolean().default(true),
   mergeEntities: z.boolean().default(true),
-  model: z.enum(["claude", "fallback"]).default("claude"),
+  model: z.literal("claude").default("claude"),
 });
 
 // API Input Schema
