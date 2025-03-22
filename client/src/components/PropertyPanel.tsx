@@ -68,7 +68,9 @@ export default function PropertyPanel({ element, onClose }: PropertyPanelProps) 
               {propertyEntries.map(([key, value]) => (
                 <div key={key} className="flex justify-between">
                   <span className="text-sm font-medium text-gray-600">{key}:</span>
-                  <span className="text-sm text-gray-700">{value?.toString()}</span>
+                  <span className="text-sm text-gray-700">
+                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                  </span>
                 </div>
               ))}
             </div>

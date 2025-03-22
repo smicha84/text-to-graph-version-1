@@ -223,15 +223,24 @@ export class GraphVisualizer {
     this.height = height;
     this.onSelectElement = onSelectElement;
     
-    // Setup zoom behavior with panning enabled
+    // Setup zoom behavior with panning explicitly enabled
     this.zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
       .on("zoom", (event) => {
         this.container.attr("transform", event.transform);
+      })
+      // Ensure panning is enabled
+      .filter((event) => {
+        // Always return true to enable all zoom/pan behaviors
+        // This overrides any default event filtering
+        return true;
       });
     
-    // Apply zoom and enable panning
+    // Apply zoom and enable panning, and ensure it's active immediately
     this.svg.call(this.zoom);
+    
+    // Enable the pan behavior on the SVG element
+    this.svg.style("cursor", "move");
     
     // Add definitions for markers (arrows)
     const defs = this.svg.append("defs");
@@ -314,8 +323,17 @@ export class GraphVisualizer {
     // Recreate the container for graph elements
     this.container = this.svg.append("g");
     
-    // Re-setup the zoom behavior with panning enabled
+    // Re-setup the zoom behavior with panning explicitly enabled
+    this.zoom
+      .filter((event) => {
+        // Always return true to enable all zoom/pan behaviors
+        return true;
+      });
+      
     this.svg.call(this.zoom);
+    
+    // Re-apply cursor style for panning
+    this.svg.style("cursor", "move");
     
     // Setup click handler using click instead of mousedown to avoid interfering with panning
     this.svg.on("click", (event) => {
