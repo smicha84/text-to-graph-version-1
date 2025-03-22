@@ -9,6 +9,7 @@ import { GraphGenerationOptions } from "@/types/graph";
 interface InputPanelProps {
   onGenerateGraph: (text: string, options: GraphGenerationOptions) => void;
   isLoading: boolean;
+  hasExistingGraph: boolean; // Whether there's already a graph to append to
 }
 
 // Sample examples to populate the textarea
@@ -18,14 +19,15 @@ const EXAMPLES = [
   "The movie Inception was directed by Christopher Nolan and stars Leonardo DiCaprio. Christopher Nolan also directed The Dark Knight which stars Christian Bale as Batman."
 ];
 
-export default function InputPanel({ onGenerateGraph, isLoading }: InputPanelProps) {
+export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGraph }: InputPanelProps) {
   const [text, setText] = useState(EXAMPLES[0]);
   const [options, setOptions] = useState<GraphGenerationOptions>({
     extractEntities: true,
     extractRelations: true,
     inferProperties: true,
     mergeEntities: true,
-    model: "claude" // Only using Claude model
+    model: "claude", // Only using Claude model
+    appendMode: false
   });
 
   const handleOptionChange = (option: keyof GraphGenerationOptions, value: boolean | string) => {
@@ -134,23 +136,45 @@ export default function InputPanel({ onGenerateGraph, isLoading }: InputPanelPro
                   </Label>
                 </div>
               </div>
+              
+              {/* Append Mode Toggle - Only show when there's an existing graph */}
+              {hasExistingGraph && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                  <div className="flex items-center">
+                    <Checkbox
+                      id="appendMode"
+                      checked={options.appendMode === true}
+                      onCheckedChange={(checked) => 
+                        handleOptionChange("appendMode", checked === true)
+                      }
+                      className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                    />
+                    <Label htmlFor="appendMode" className="ml-2 text-sm font-medium text-blue-800">
+                      Append to Existing Graph
+                    </Label>
+                  </div>
+                  <p className="mt-1 text-xs text-blue-600 ml-6">
+                    Add new nodes and connections to the current graph instead of replacing it
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           
           <Button
             onClick={handleGenerateClick}
             disabled={isLoading || !text.trim()}
-            className="w-full mt-4 bg-primary hover:bg-blue-600 text-white font-medium py-2 rounded transition-colors flex items-center justify-center"
+            className={`w-full mt-4 ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white font-medium py-2 rounded transition-colors flex items-center justify-center`}
           >
             {isLoading ? (
               <>
                 <i className="fas fa-spinner fa-spin mr-2"></i>
-                <span>Generating...</span>
+                <span>{options.appendMode ? 'Appending...' : 'Generating...'}</span>
               </>
             ) : (
               <>
-                <i className="fas fa-project-diagram mr-2"></i>
-                <span>Generate Graph</span>
+                <i className={`${options.appendMode ? 'fas fa-plus-circle' : 'fas fa-project-diagram'} mr-2`}></i>
+                <span>{options.appendMode ? 'Append to Graph' : 'Generate Graph'}</span>
               </>
             )}
           </Button>

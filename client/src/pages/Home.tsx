@@ -19,14 +19,21 @@ export default function Home() {
   // Generate graph mutation
   const generateMutation = useMutation({
     mutationFn: async ({ text, options }: { text: string, options: GraphGenerationOptions }) => {
-      const response = await apiRequest('POST', '/api/generate-graph', { text, options });
+      // If we're in append mode, we need to send the existing graph to merge with
+      const payload = {
+        text,
+        options,
+        ...(options.appendMode && graph ? { existingGraph: graph, appendMode: true } : {})
+      };
+      const response = await apiRequest('POST', '/api/generate-graph', payload);
       return response.json();
     },
-    onSuccess: (data: Graph) => {
+    onSuccess: (data: Graph, variables) => {
       setGraph(data);
+      const isAppendMode = variables.options.appendMode;
       toast({
-        title: "Graph Generated",
-        description: `Successfully created graph with ${data.nodes.length} nodes and ${data.edges.length} edges.`,
+        title: isAppendMode ? "Graph Updated" : "Graph Generated",
+        description: `Successfully ${isAppendMode ? 'updated' : 'created'} graph with ${data.nodes.length} nodes and ${data.edges.length} edges.`,
       });
     },
     onError: (error: Error) => {
@@ -109,6 +116,7 @@ export default function Home() {
         <InputPanel 
           onGenerateGraph={handleGenerateGraph}
           isLoading={generateMutation.isPending}
+          hasExistingGraph={!!graph && graph.nodes.length > 0}
         />
         
         <div className="flex-1 flex flex-col h-full">
