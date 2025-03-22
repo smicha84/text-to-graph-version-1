@@ -18,14 +18,40 @@
   cursor: grabbing;
 }
 
+/* Styles for the SVG background to indicate panning capability */
+.graph-svg {
+  cursor: move; /* Show move cursor to indicate panning */
+}
+
 /* Animation for the drag tooltip */
 .drag-tooltip {
   animation: fade-in 0.5s ease-out;
 }
 
+/* Tooltip for panning hint */
+.pan-tooltip {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
 @keyframes fade-in {
   from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes fade-out {
+  from { opacity: 0.8; }
+  to { opacity: 0; visibility: hidden; }
 }
 
 @layer base {

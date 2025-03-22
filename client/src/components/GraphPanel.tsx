@@ -322,8 +322,18 @@ export default function GraphPanel({
           {/* Graph Canvas */}
           <svg 
             ref={svgRef}
-            className={`w-full h-full ${!graph || isLoading ? 'hidden' : ''}`}
+            className={`w-full h-full graph-svg ${!graph || isLoading ? 'hidden' : ''}`}
           ></svg>
+          
+          {/* Panning instructions tooltip */}
+          {graph && !isLoading && (
+            <div 
+              className="pan-tooltip"
+              style={{ animation: 'fade-in 0.5s ease-out, fade-out 0.5s ease-in 5s forwards' }}
+            >
+              Click and drag the background to pan the graph
+            </div>
+          )}
         </div>
         
         {/* Controls Sidebar */}

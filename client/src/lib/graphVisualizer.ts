@@ -254,11 +254,10 @@ export class GraphVisualizer {
     // Create container for graph elements
     this.container = this.svg.append("g");
     
-    // Handle background click to deselect - use mousedown instead of click to allow for panning
-    this.svg.on("mousedown", (event) => {
+    // Handle background click to deselect - use click event to avoid interfering with panning
+    this.svg.on("click", (event) => {
       // Only deselect on direct SVG background click, not on nodes or edges
       if (event.target === this.svg.node()) {
-        event.stopPropagation();
         this.onSelectElement(null);
       }
     });
