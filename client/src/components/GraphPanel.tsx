@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { GraphVisualizer } from "@/lib/graphVisualizer";
 import LayoutControls, { LayoutSettings } from "@/components/LayoutControls";
 import { MinusIcon, PlusIcon, ExpandIcon, DownloadIcon } from "lucide-react";
+import * as d3 from "d3";
 
 interface GraphPanelProps {
   graph: Graph | null;
@@ -27,6 +28,9 @@ export default function GraphPanel({
   useEffect(() => {
     if (!svgRef.current) return;
     
+    // Clear any existing SVG content 
+    d3.select(svgRef.current).selectAll("*").remove();
+    
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
     
@@ -41,7 +45,12 @@ export default function GraphPanel({
     setVisualizer(newVisualizer);
     
     return () => {
-      // Clean up if needed
+      // Clean up by clearing the SVG content directly
+      if (svgRef.current) {
+        while (svgRef.current.firstChild) {
+          svgRef.current.removeChild(svgRef.current.firstChild);
+        }
+      }
     };
   }, [onElementSelect]);
 

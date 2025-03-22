@@ -48,6 +48,11 @@ export class GraphVisualizer {
     centerStrength: 0.03,
     collisionRadius: 50
   };
+  
+  // Expose simulation for cleanup
+  public getSimulation(): d3.Simulation<SimulationNode, SimulationLink> | null {
+    return this.simulation;
+  };
 
   constructor(
     svgElement: SVGSVGElement,
@@ -84,13 +89,26 @@ export class GraphVisualizer {
     console.log("Rendering graph:", graph);
     this.graph = graph;
     
-    // Clear existing elements
-    this.container.selectAll("*").remove();
+    // Clear all existing elements from the SVG
+    this.svg.selectAll("*").remove();
     
     // Stop any existing simulation
     if (this.simulation) {
       this.simulation.stop();
+      this.simulation = null;
     }
+    
+    // Recreate the container for graph elements
+    this.container = this.svg.append("g");
+    
+    // Re-setup the zoom behavior
+    this.svg.call(this.zoom);
+    
+    // Re-setup background click handler
+    this.svg.on("click", (event) => {
+      event.stopPropagation();
+      this.onSelectElement(null);
+    });
     
     // Validate graph data
     if (!graph || !graph.nodes || !graph.edges) {
