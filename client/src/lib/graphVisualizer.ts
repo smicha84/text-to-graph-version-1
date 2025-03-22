@@ -31,6 +31,9 @@ export const NODE_COLORS: Record<string, string> = {
   'default': '#6B7280'       // gray
 };
 
+// Import layout settings interface
+import { LayoutSettings } from "@/components/LayoutControls";
+
 export class GraphVisualizer {
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private container: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -39,6 +42,12 @@ export class GraphVisualizer {
   private graph: Graph | null = null;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private onSelectElement: (element: Node | Edge | null) => void;
+  private layoutSettings: LayoutSettings = {
+    nodeRepulsion: 500,
+    linkDistance: 150,
+    centerStrength: 0.03,
+    collisionRadius: 50
+  };
 
   constructor(
     svgElement: SVGSVGElement,
@@ -177,14 +186,14 @@ export class GraphVisualizer {
       .attr("font-size", "11px")
       .text((d: SimulationNode) => d.properties.name || "");
     
-    // Create force simulation
+    // Create force simulation with layout settings
     this.simulation = d3.forceSimulation<SimulationNode, SimulationLink>(nodeData)
       .force("link", d3.forceLink<SimulationNode, SimulationLink>(linkData)
         .id((d: SimulationNode) => d.id)
-        .distance(100)) // Distance between connected nodes
-      .force("charge", d3.forceManyBody<SimulationNode>().strength(-300)) // Repulsion between nodes
-      .force("center", d3.forceCenter<SimulationNode>(this.width / 2, this.height / 2)) // Center of the layout
-      .force("collision", d3.forceCollide<SimulationNode>().radius(40)) // Prevent node overlap
+        .distance(this.layoutSettings.linkDistance)) // Distance between connected nodes
+      .force("charge", d3.forceManyBody<SimulationNode>().strength(-this.layoutSettings.nodeRepulsion)) // Repulsion between nodes
+      .force("center", d3.forceCenter<SimulationNode>(this.width / 2, this.height / 2).strength(this.layoutSettings.centerStrength)) // Center of the layout
+      .force("collision", d3.forceCollide<SimulationNode>().radius(this.layoutSettings.collisionRadius)) // Prevent node overlap
       .on("tick", () => {
         // Update link positions
         edgeLines
@@ -294,5 +303,50 @@ export class GraphVisualizer {
       translateX: transform.x,
       translateY: transform.y
     };
+  }
+
+  /**
+   * Update the layout settings and apply them to the simulation
+   */
+  public updateLayoutSettings(settings: LayoutSettings): void {
+    this.layoutSettings = settings;
+    
+    if (this.simulation) {
+      // Update link distance
+      const linkForce = this.simulation.force("link") as d3.ForceLink<SimulationNode, SimulationLink>;
+      if (linkForce) {
+        linkForce.distance(settings.linkDistance);
+      }
+      
+      // Update node repulsion
+      const chargeForce = this.simulation.force("charge") as d3.ForceManyBody<SimulationNode>;
+      if (chargeForce) {
+        chargeForce.strength(-settings.nodeRepulsion);
+      }
+      
+      // Update center gravity
+      const centerForce = this.simulation.force("center") as d3.ForceCenter<SimulationNode>;
+      if (centerForce) {
+        centerForce.strength(settings.centerStrength);
+      }
+      
+      // Update collision radius
+      const collisionForce = this.simulation.force("collision") as d3.ForceCollide<SimulationNode>;
+      if (collisionForce) {
+        collisionForce.radius(settings.collisionRadius);
+      }
+      
+      // Restart simulation with a higher alpha to see the effect
+      this.simulation.alpha(0.5).restart();
+    }
+  }
+  
+  /**
+   * Restart the simulation with current settings
+   */
+  public restartSimulation(): void {
+    if (this.simulation && this.graph) {
+      this.simulation.alpha(1).restart();
+    }
   }
 }
