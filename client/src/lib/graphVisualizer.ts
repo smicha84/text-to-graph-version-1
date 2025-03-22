@@ -230,15 +230,7 @@ export class GraphVisualizer {
         this.container.attr("transform", event.transform);
       });
     
-    // Apply zoom and allow panning
-    this.svg.call(this.zoom)
-      // Prevent default on mousedown to avoid interference with panning
-      .on("mousedown.zoom", null)
-      .on("touchstart.zoom", null)
-      .on("touchmove.zoom", null)
-      .on("touchend.zoom", null);
-      
-    // Re-add the zoom behavior specifically for panning
+    // Apply zoom and enable panning
     this.svg.call(this.zoom);
     
     // Create container for graph elements
@@ -273,14 +265,6 @@ export class GraphVisualizer {
     this.container = this.svg.append("g");
     
     // Re-setup the zoom behavior with panning enabled
-    this.svg.call(this.zoom)
-      // Prevent default on mousedown to avoid interference with panning
-      .on("mousedown.zoom", null)
-      .on("touchstart.zoom", null)
-      .on("touchmove.zoom", null)
-      .on("touchend.zoom", null);
-      
-    // Re-add the zoom behavior specifically for panning  
     this.svg.call(this.zoom);
     
     // Re-setup background click handler - use mousedown instead of click to allow for panning
