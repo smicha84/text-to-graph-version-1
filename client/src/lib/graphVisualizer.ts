@@ -318,11 +318,10 @@ export class GraphVisualizer {
     // Re-setup the zoom behavior with panning enabled
     this.svg.call(this.zoom);
     
-    // Re-setup background click handler - use mousedown instead of click to allow for panning
-    this.svg.on("mousedown", (event) => {
+    // Setup click handler using click instead of mousedown to avoid interfering with panning
+    this.svg.on("click", (event) => {
       // Only deselect on direct SVG background click, not on nodes or edges
       if (event.target === this.svg.node()) {
-        event.stopPropagation();
         this.onSelectElement(null);
       }
     });
