@@ -97,11 +97,25 @@ export class GraphVisualizer {
   }
   
   /**
+   * Get the current style for a node
+   */
+  public getNodeStyle(nodeId: string): NodeStyle | null {
+    return this.nodeStyles.get(nodeId) || null;
+  }
+  
+  /**
    * Set custom style for a specific edge
    */
   public setEdgeStyle(edgeId: string, style: EdgeStyle): void {
     this.edgeStyles.set(edgeId, style);
     this.applyStyles();
+  }
+  
+  /**
+   * Get the current style for an edge
+   */
+  public getEdgeStyle(edgeId: string): EdgeStyle | null {
+    return this.edgeStyles.get(edgeId) || null;
   }
   
   /**

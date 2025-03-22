@@ -39,7 +39,9 @@ export default function GraphPanel({
   const [subgraphIds, setSubgraphIds] = useState<string[]>([]);
   const [activeSubgraphId, setActiveSubgraphId] = useState<string | null>(null);
   const [customNodeColors, setCustomNodeColors] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState<'layout' | 'subgraph' | 'color'>('layout');
+  const [activeTab, setActiveTab] = useState<'layout' | 'subgraph' | 'color' | 'style'>('layout');
+  const [selectedElement, setSelectedElement] = useState<Node | Edge | null>(null);
+  const [elementStyle, setElementStyle] = useState<NodeStyle | EdgeStyle | null>(null);
 
   // Setup D3 visualization
   useEffect(() => {
@@ -56,7 +58,7 @@ export default function GraphPanel({
       svgRef.current, 
       width, 
       height,
-      onElementSelect
+      handleElementSelect
     );
     
     setVisualizer(newVisualizer);
@@ -69,7 +71,7 @@ export default function GraphPanel({
         }
       }
     };
-  }, [onElementSelect]);
+  }, []);
 
   // Update visualization when graph changes
   useEffect(() => {
@@ -166,6 +168,44 @@ export default function GraphPanel({
       setCustomNodeColors(newColors);
       visualizer.updateNodeColors(newColors);
     }
+  };
+  
+  // Handle element selection
+  const handleElementSelect = (element: Node | Edge | null) => {
+    setSelectedElement(element);
+    
+    // Switch to style tab when an element is selected
+    if (element) {
+      setActiveTab('style');
+      const isNode = 'type' in element;
+      
+      // Check if the element already has a style
+      let existingStyle: NodeStyle | EdgeStyle | null = null;
+      
+      if (isNode && visualizer) {
+        existingStyle = visualizer.getNodeStyle(element.id);
+      } else if (!isNode && visualizer) {
+        existingStyle = visualizer.getEdgeStyle(element.id);
+      }
+      
+      setElementStyle(existingStyle);
+    }
+    
+    // Call the parent's element select callback
+    onElementSelect(element);
+  };
+  
+  // Handle style changes
+  const handleStyleChange = (elementId: string, isNode: boolean, style: NodeStyle | EdgeStyle) => {
+    if (!visualizer) return;
+    
+    if (isNode) {
+      visualizer.setNodeStyle(elementId, style as NodeStyle);
+    } else {
+      visualizer.setEdgeStyle(elementId, style as EdgeStyle);
+    }
+    
+    setElementStyle(style);
   };
 
   return (
@@ -300,6 +340,23 @@ export default function GraphPanel({
                   Colors
                 </div>
               </button>
+              
+              {selectedElement && (
+                <button
+                  className={cn(
+                    "flex-1 py-3 px-4 text-sm font-medium border-b-2",
+                    activeTab === 'style'
+                      ? "border-blue-500 text-blue-600" 
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  onClick={() => setActiveTab('style')}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <PenLineIcon className="w-4 h-4" />
+                    Style
+                  </div>
+                </button>
+              )}
             </div>
             
             {/* Tab Content */}
@@ -378,6 +435,25 @@ export default function GraphPanel({
                       onColorChange={handleColorChange} 
                     />
                   )}
+                </div>
+              )}
+              
+              {/* Style Panel Section */}
+              {activeTab === 'style' && selectedElement && (
+                <div>
+                  <h3 className="flex items-center gap-2 font-semibold text-gray-700 mb-3">
+                    <PenLineIcon size={16} className="text-gray-500" />
+                    {'type' in selectedElement ? 'Node' : 'Edge'} Styling
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Customize the visual appearance of the selected element
+                  </p>
+                  
+                  <StylePanel
+                    element={selectedElement}
+                    onStyleChange={handleStyleChange}
+                    currentStyle={elementStyle}
+                  />
                 </div>
               )}
             </div>
