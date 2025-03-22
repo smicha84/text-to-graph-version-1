@@ -1,10 +1,11 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { Graph, Node, Edge, ZoomPanInfo, NodeStyle, EdgeStyle } from "@/types/graph";
 import { Button } from "@/components/ui/button";
-import { GraphVisualizer, NODE_COLORS } from "@/lib/graphVisualizer";
+import { GraphVisualizer, NODE_COLORS, CenterPoint } from "@/lib/graphVisualizer";
 import LayoutControls, { LayoutSettings } from "@/components/LayoutControls";
 import ColorEditor from "@/components/ColorEditor";
 import StylePanel from "@/components/StylePanel";
+import CenterControls from "@/components/CenterControls";
 import { 
   MinusIcon, 
   PlusIcon, 
@@ -42,6 +43,7 @@ export default function GraphPanel({
   const [activeTab, setActiveTab] = useState<'layout' | 'subgraph' | 'color' | 'style'>('layout');
   const [selectedElement, setSelectedElement] = useState<Node | Edge | null>(null);
   const [elementStyle, setElementStyle] = useState<NodeStyle | EdgeStyle | null>(null);
+  const [customCenterPoint, setCustomCenterPoint] = useState<CenterPoint | null>(null);
 
   // Setup D3 visualization
   useEffect(() => {

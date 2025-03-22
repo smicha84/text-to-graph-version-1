@@ -76,6 +76,11 @@ export interface LayoutSettings {
   collisionRadius: number;
 }
 
+export interface CenterPoint {
+  x: number;
+  y: number;
+}
+
 export class GraphVisualizer {
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private container: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -86,6 +91,7 @@ export class GraphVisualizer {
   private onSelectElement: (element: Node | Edge | null) => void;
   private activeSubgraphId: string | null = null;
   private customNodeColors: Record<string, string> = {};
+  private customCenterPoint: CenterPoint | null = null;
   private layoutSettings: LayoutSettings = {
     nodeRepulsion: 200,
     linkDistance: 100,
@@ -366,11 +372,12 @@ export class GraphVisualizer {
     
     // Prepare node and link data for force simulation
     const nodeData = graph.nodes.map((node, index) => {
-      // For the first node (typically a central entity), fix it at the center of the screen
+      // For the first node (typically a central entity), fix it at the center or custom center point
       if (index === 0) {
-        const centerX = this.width / 2;
-        const centerY = this.height / 2;
-        console.log(`Anchoring first node at center: (${centerX}, ${centerY})`);
+        // Use custom center point if available, otherwise use the SVG center
+        const centerX = this.customCenterPoint ? this.customCenterPoint.x : this.width / 2;
+        const centerY = this.customCenterPoint ? this.customCenterPoint.y : this.height / 2;
+        console.log(`Anchoring first node at ${this.customCenterPoint ? 'custom' : 'default'} center: (${centerX}, ${centerY})`);
         return {
           ...node,
           x: centerX,
@@ -733,6 +740,49 @@ export class GraphVisualizer {
    */
   public getSimulation(): d3.Simulation<SimulationNode, SimulationLink> | null {
     return this.simulation;
+  }
+  
+  /**
+   * Set a custom center point for the graph
+   * @param centerPoint The custom center coordinates, or null to use default center
+   */
+  public setCustomCenterPoint(centerPoint: CenterPoint | null): void {
+    console.log(`Setting custom center point: ${centerPoint ? `(${centerPoint.x}, ${centerPoint.y})` : 'None (using default)'}`);
+    this.customCenterPoint = centerPoint;
+    
+    // If we already have a simulation running, update the center force
+    if (this.simulation) {
+      const centerX = centerPoint ? centerPoint.x : this.width / 2;
+      const centerY = centerPoint ? centerPoint.y : this.height / 2;
+      
+      // Update the center force with the new coordinates
+      this.simulation.force("center", d3.forceCenter<SimulationNode>(centerX, centerY)
+        .strength(this.layoutSettings.centerStrength * 2));
+      
+      // If we have nodes, update the first node to be fixed at the new center
+      if (this.graph && this.graph.nodes.length > 0) {
+        const firstNode = this.graph.nodes[0];
+        const nodeElement = this.container.select(`#node-${firstNode.id}`);
+        
+        if (nodeElement.size() > 0) {
+          const nodeData = nodeElement.datum() as SimulationNode;
+          nodeData.x = centerX;
+          nodeData.y = centerY;
+          nodeData.fx = centerX;
+          nodeData.fy = centerY;
+        }
+      }
+      
+      // Restart the simulation to apply the changes
+      this.simulation.alpha(0.3).restart();
+    }
+  }
+  
+  /**
+   * Get the current custom center point or null if using default
+   */
+  public getCustomCenterPoint(): CenterPoint | null {
+    return this.customCenterPoint;
   }
   
   /**
