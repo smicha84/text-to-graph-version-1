@@ -355,11 +355,25 @@ export class GraphVisualizer {
     console.log(`Processing ${graph.nodes.length} nodes and ${graph.edges.length} edges`);
     
     // Prepare node and link data for force simulation
-    const nodeData = graph.nodes.map(node => ({
-      ...node,
-      x: node.x || this.width / 2 + (Math.random() - 0.5) * 100,
-      y: node.y || this.height / 2 + (Math.random() - 0.5) * 100
-    })) as SimulationNode[];
+    const nodeData = graph.nodes.map((node, index) => {
+      // For the first node (typically a central entity), fix it at the center of the screen
+      if (index === 0) {
+        return {
+          ...node,
+          x: this.width / 2,
+          y: this.height / 2,
+          fx: this.width / 2,  // Fixed X position
+          fy: this.height / 2   // Fixed Y position
+        };
+      }
+      
+      // For other nodes, use random positions around center
+      return {
+        ...node,
+        x: node.x || this.width / 2 + (Math.random() - 0.5) * 100,
+        y: node.y || this.height / 2 + (Math.random() - 0.5) * 100
+      };
+    }) as SimulationNode[];
     
     // Create a map for faster node lookup
     const nodeMap = new Map<string, SimulationNode>();
@@ -458,9 +472,16 @@ export class GraphVisualizer {
           if (!event.active && this.simulation) {
             this.simulation.alphaTarget(0);
           }
-          // Release fixed position and restore visual state
-          d.fx = null;
-          d.fy = null;
+          
+          // Only release the fixed position for nodes other than the first node
+          // For the first node (index 0), we keep it fixed at the center
+          const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+          if (nodeIndex !== 0) {
+            // Release fixed position for non-anchored nodes
+            d.fx = null;
+            d.fy = null;
+          }
+          
           // Reset cursor
           d3.select(event.sourceEvent.target).style("cursor", "grab");
           // Remove highlight
@@ -477,7 +498,26 @@ export class GraphVisualizer {
         // Use custom color if available, otherwise fall back to default color map
         return this.customNodeColors[d.type] || NODE_COLORS[d.type] || NODE_COLORS.default;
       })
-      .style("cursor", "grab") // Change cursor to indicate draggable
+      .attr("stroke", (d: SimulationNode, i: number) => {
+        // Add a border to the first node to indicate it's anchored
+        const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+        return nodeIndex === 0 ? "#000" : null;
+      })
+      .attr("stroke-width", (d: SimulationNode, i: number) => {
+        // Add a border to the first node to indicate it's anchored
+        const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+        return nodeIndex === 0 ? 2 : 0;
+      })
+      .attr("stroke-dasharray", (d: SimulationNode, i: number) => {
+        // Add a dashed border to the first node to indicate it's anchored
+        const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+        return nodeIndex === 0 ? "3,3" : null;
+      })
+      .style("cursor", (d: SimulationNode, i: number) => {
+        // The first node is fixed and cannot be freely dragged
+        const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+        return nodeIndex === 0 ? "default" : "grab";
+      })
     
     // Node labels (inside circle)
     nodes.append("text")
@@ -755,7 +795,21 @@ export class GraphVisualizer {
     this.container.selectAll(".node circle")
       .transition().duration(300)
       .attr("opacity", 0.3)
-      .attr("stroke-width", 0);
+      .attr("stroke-width", (d: any) => {
+        // Preserve the stroke-width for the anchored node
+        const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+        return nodeIndex === 0 ? 2 : 0;
+      })
+      .attr("stroke-dasharray", (d: any) => {
+        // Preserve the dash array for the anchored node
+        const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+        return nodeIndex === 0 ? "3,3" : null;
+      })
+      .attr("stroke", (d: any) => {
+        // Preserve the stroke color for the anchored node
+        const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+        return nodeIndex === 0 ? "#000" : null;
+      });
       
     this.container.selectAll(".edge line")
       .transition().duration(300)
