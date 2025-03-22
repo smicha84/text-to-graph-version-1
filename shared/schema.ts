@@ -76,8 +76,6 @@ export interface Node {
   x?: number;
   y?: number;
   subgraphIds?: string[];
-  narrativeSource?: string; // Text source that generated this node
-  narrativeIndex?: number; // Position in the narrative flow
 }
 
 export interface Edge {
@@ -87,23 +85,10 @@ export interface Edge {
   label: string;
   properties: Record<string, any>;
   subgraphIds?: string[];
-  narrativeSource?: string; // Text source that generated this edge
-  narrativeIndex?: number; // Position in the narrative flow
 }
 
 export interface Graph {
   nodes: Node[];
   edges: Edge[];
   subgraphCounter?: number;
-  narrativeSegments?: NarrativeSegment[]; // Narrative flow segments
-}
-
-// New interface for narrative flow segments
-export interface NarrativeSegment {
-  id: string;
-  text: string;
-  startIndex: number;
-  endIndex: number;
-  nodeIds: string[];
-  edgeIds: string[];
 }

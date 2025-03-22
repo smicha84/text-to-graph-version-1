@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { Graph, GraphOptions, Node, Edge, NarrativeSegment } from '@shared/schema';
+import { Graph, GraphOptions, Node, Edge } from '@shared/schema';
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -110,9 +110,8 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
         const graphData: Graph = {
           nodes: [],
           edges: [],
-          subgraphCounter: 1,
-          narrativeSegments: []
-        } as Graph;
+          subgraphCounter: 1
+        };
         
         // Try to parse, but continue with empty graph if it fails
         try {
@@ -121,70 +120,8 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
           console.error('Error with fallback JSON parsing, using empty graph:', parseError);
         }
         
-        // Apply simple layout algorithm to position nodes
-        applyLayout(graphData);
-        
-        // Initialize subgraph tracking for new graphs
-        const initialSubgraphId = 'sg1';
-        graphData.subgraphCounter = 1;
-        
-        // Create initial narrative segment
-        const narrativeSegment: NarrativeSegment = {
-          id: initialSubgraphId,
-          text: text,
-          startIndex: 0,
-          endIndex: text.length,
-          nodeIds: [],
-          edgeIds: []
-        };
-        
-        // Add subgraph IDs and fix labels for all nodes if they exist
-        if (graphData.nodes && Array.isArray(graphData.nodes)) {
-          graphData.nodes.forEach((node: Node) => {
-            // Process labels to extract label details from parentheses
-            let label = node.label;
-            let labelDetail = '';
-            
-            // Check if the label has a format like "Organization (Company)"
-            const labelMatch = node.label?.match(/^(.+?)\s*\((.+?)\)$/);
-            if (labelMatch) {
-              label = labelMatch[1].trim(); // The part before the parentheses
-              labelDetail = labelMatch[2].trim(); // The part within parentheses
-            }
-            
-            // Set the corrected label and add label detail
-            node.label = label;
-            node.labelDetail = labelDetail || node.type;
-            
-            // Add subgraph ID
-            node.subgraphIds = [initialSubgraphId];
-            
-            // Add narrative data
-            node.narrativeSource = text.substring(0, Math.min(100, text.length)) + "...";
-            node.narrativeIndex = 0;
-            
-            // Add to narrative segment
-            narrativeSegment.nodeIds.push(node.id);
-          });
-        }
-        
-        // Add subgraph IDs and narrative data to all edges if they exist
-        if (graphData.edges && Array.isArray(graphData.edges)) {
-          graphData.edges.forEach((edge: Edge) => {
-            edge.subgraphIds = [initialSubgraphId];
-            
-            // Add narrative data
-            edge.narrativeSource = text.substring(0, Math.min(100, text.length)) + "...";
-            edge.narrativeIndex = 0;
-            
-            // Add to narrative segment
-            narrativeSegment.edgeIds.push(edge.id);
-          });
-        }
-        
-        // Add narrative segments to graph
-        graphData.narrativeSegments = [narrativeSegment];
-        
+        // Process the graph data
+        processGraphData(graphData, text);
         return graphData;
       } catch (finalError) {
         console.error('All JSON extraction methods failed:', finalError);
@@ -199,70 +136,8 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     try {
       const graphData = JSON.parse(jsonResponse);
       
-      // Apply simple layout algorithm to position nodes
-      applyLayout(graphData);
-      
-      // Initialize subgraph tracking for new graphs
-      const initialSubgraphId = 'sg1';
-      graphData.subgraphCounter = 1;
-      
-      // Create initial narrative segment
-      const narrativeSegment: NarrativeSegment = {
-        id: initialSubgraphId,
-        text: text,
-        startIndex: 0,
-        endIndex: text.length,
-        nodeIds: [],
-        edgeIds: []
-      };
-      
-      // Add subgraph IDs and fix labels for all nodes
-      if (graphData.nodes && Array.isArray(graphData.nodes)) {
-        graphData.nodes.forEach((node: Node) => {
-          // Process labels to extract label details from parentheses
-          let label = node.label;
-          let labelDetail = '';
-          
-          // Check if the label has a format like "Organization (Company)"
-          const labelMatch = node.label.match(/^(.+?)\s*\((.+?)\)$/);
-          if (labelMatch) {
-            label = labelMatch[1].trim(); // The part before the parentheses
-            labelDetail = labelMatch[2].trim(); // The part within parentheses
-          }
-          
-          // Set the corrected label and add label detail
-          node.label = label;
-          node.labelDetail = labelDetail || node.type;
-          
-          // Add subgraph ID
-          node.subgraphIds = [initialSubgraphId];
-          
-          // Add narrative data
-          node.narrativeSource = text.substring(0, Math.min(100, text.length)) + "...";
-          node.narrativeIndex = 0;
-          
-          // Add to narrative segment
-          narrativeSegment.nodeIds.push(node.id);
-        });
-      }
-      
-      // Add subgraph IDs and narrative data to all edges
-      if (graphData.edges && Array.isArray(graphData.edges)) {
-        graphData.edges.forEach((edge: Edge) => {
-          edge.subgraphIds = [initialSubgraphId];
-          
-          // Add narrative data
-          edge.narrativeSource = text.substring(0, Math.min(100, text.length)) + "...";
-          edge.narrativeIndex = 0;
-          
-          // Add to narrative segment
-          narrativeSegment.edgeIds.push(edge.id);
-        });
-      }
-      
-      // Add narrative segments to graph
-      graphData.narrativeSegments = [narrativeSegment];
-      
+      // Process the graph data
+      processGraphData(graphData, text);
       return graphData;
     } catch (parseError) {
       console.error('Error parsing regex-matched JSON response:', parseError);
@@ -271,6 +146,46 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
   } catch (error) {
     console.error('Error calling Claude API:', error);
     throw new Error(`Failed to generate graph with Claude: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+// Helper function to process graph data (add layout, fix labels, etc.)
+function processGraphData(graphData: Graph, text: string): void {
+  // Apply simple layout algorithm to position nodes
+  applyLayout(graphData);
+  
+  // Initialize subgraph tracking for new graphs
+  const initialSubgraphId = 'sg1';
+  graphData.subgraphCounter = 1;
+  
+  // Fix labels for all nodes if they exist
+  if (graphData.nodes && Array.isArray(graphData.nodes)) {
+    graphData.nodes.forEach((node: Node) => {
+      // Process labels to extract label details from parentheses
+      let label = node.label;
+      let labelDetail = '';
+      
+      // Check if the label has a format like "Organization (Company)"
+      const labelMatch = node.label?.match(/^(.+?)\s*\((.+?)\)$/);
+      if (labelMatch) {
+        label = labelMatch[1].trim(); // The part before the parentheses
+        labelDetail = labelMatch[2].trim(); // The part within parentheses
+      }
+      
+      // Set the corrected label and add label detail
+      node.label = label;
+      node.labelDetail = labelDetail || node.type;
+      
+      // Add subgraph ID
+      node.subgraphIds = [initialSubgraphId];
+    });
+  }
+  
+  // Add subgraph IDs to all edges if they exist
+  if (graphData.edges && Array.isArray(graphData.edges)) {
+    graphData.edges.forEach((edge: Edge) => {
+      edge.subgraphIds = [initialSubgraphId];
+    });
   }
 }
 
