@@ -203,7 +203,8 @@ ${options.mergeEntities ? '- Merge similar or duplicate entities into single nod
 TASK BREAKDOWN:
 1. First, identify all the key entities in the text.
 2. For each entity, determine its:
-   - Type/category (Person, Organization, Location, Event, Concept, etc.)
+   - High-level category (Person, Organization, Location, etc.) - This will be the "label"
+   - Specific subtype - This will be stored in the "type" field
    - Unique properties (name, age, date, description, etc.)
    - Any identifiers that would help distinguish it
 3. Map the relationships between these entities.
@@ -215,8 +216,8 @@ Respond with a JSON object that has the following structure:
   "nodes": [
     {
       "id": "n1",  // A unique string identifier starting with 'n' followed by a number
-      "label": "Person",  // The general entity category (Person, Organization, Location, etc.)
-      "type": "Entrepreneur",   // More specific subcategory (Executive, Investor, Employee, Institute, etc.)
+      "label": "Person",  // IMPORTANT: Use ONLY these high-level categories: Person, Organization, Location, Event, Document, Project, Technology, Concept
+      "type": "Entrepreneur",   // More specific type - choose from: Employee, Entrepreneur, Investor, Expert, Company, Agency, Institute, City, Country, Region, Conference, Meeting, Report, Presentation, Initiative, Software, Hardware, Method, Theory
       "properties": {
         "name": "John Doe",  // Required property
         // Include other properties that are relevant
@@ -245,19 +246,19 @@ Respond with a JSON object that has the following structure:
 }
 
 QUALITY REQUIREMENTS:
-- Ensure the graph is connected and meaningful
-- Use consistent labeling schemes for similar entities and relationships
+- Use STRICT label categories from the list above - never combine label and type in the label field
+- Be consistent: the same entity type should always have the same label (e.g., all companies should have label "Organization" and type "Company")
+- Store hierarchical or classification information as a property, not in the label or type fields
 - Use ALL_CAPS for relationship labels
 - Don't invent entities or relationships that aren't supported by the text
 - Include sufficient properties to make each entity informative and distinctive
 - Create relationship labels that clearly describe the nature of the connection
 - Ensure each relationship flows in the logical direction (e.g., PERSON WORKS_FOR COMPANY, not the reverse)
-- Use SPECIFIC types for nodes, choosing from: Employee, Entrepreneur, Investor, Expert, Company, Organization, Institute, Agency, City, Country, Location, Product, Project, Document, Event, Technology, Initiative
 
 Only respond with the JSON object, no explanations or other text.`;
 }
 
-function applyLayout(graph: { nodes: any[], edges: any[] }): void {
+function applyLayout(graph: Graph): void {
   // Instead of circular layout, use a more randomized layout
   // This gives the force-directed algorithm a better starting point
   const centerX = 400;
@@ -265,10 +266,12 @@ function applyLayout(graph: { nodes: any[], edges: any[] }): void {
   const spreadFactor = 250; // Higher value means more spread out initial positions
   
   // Apply a slight randomization to the positions
-  graph.nodes.forEach((node: any) => {
-    // Use a combination of random positioning and node index to achieve 
-    // better distribution while still maintaining some determinism
-    node.x = centerX + (Math.random() - 0.5) * spreadFactor;
-    node.y = centerY + (Math.random() - 0.5) * spreadFactor;
-  });
+  if (graph.nodes && Array.isArray(graph.nodes)) {
+    graph.nodes.forEach((node: Node) => {
+      // Use a combination of random positioning and node index to achieve 
+      // better distribution while still maintaining some determinism
+      node.x = centerX + (Math.random() - 0.5) * spreadFactor;
+      node.y = centerY + (Math.random() - 0.5) * spreadFactor;
+    });
+  }
 }
