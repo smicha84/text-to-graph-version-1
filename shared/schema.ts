@@ -39,6 +39,7 @@ export const graphOptionsSchema = z.object({
   inferProperties: z.boolean().default(true),
   mergeEntities: z.boolean().default(true),
   model: z.literal("claude").default("claude"),
+  appendMode: z.boolean().optional().default(false), // Whether to append to existing graph
 });
 
 // API Input Schema
