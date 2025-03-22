@@ -1,6 +1,8 @@
 import * as d3 from "d3";
 import { Graph, Node, Edge } from "@/types/graph";
 
+import { NodeStyle, EdgeStyle } from "@/types/graph";
+
 // Define extension types for D3 force simulation
 interface SimulationNode extends d3.SimulationNodeDatum {
   id: string;
@@ -12,6 +14,7 @@ interface SimulationNode extends d3.SimulationNodeDatum {
   y?: number;
   fx?: number | null;
   fy?: number | null;
+  // Rendering will check custom styles map instead of storing styles directly on the node
 }
 
 interface SimulationLink {
@@ -21,6 +24,7 @@ interface SimulationLink {
   label: string;
   properties: Record<string, any>;
   subgraphIds?: string[]; // Array of subgraph IDs this edge belongs to
+  // Rendering will check custom styles map instead of storing styles directly on the edge
 }
 
 // Node colors based on node type

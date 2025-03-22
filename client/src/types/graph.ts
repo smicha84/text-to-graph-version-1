@@ -1,3 +1,22 @@
+export interface NodeStyle {
+  color?: string;
+  size?: number;
+  borderColor?: string;
+  borderWidth?: number;
+  labelColor?: string;
+  labelSize?: number;
+  pinned?: boolean;
+}
+
+export interface EdgeStyle {
+  color?: string;
+  width?: number;
+  dashed?: boolean;
+  labelColor?: string;
+  labelSize?: number;
+  arrowSize?: number;
+}
+
 export interface Node {
   id: string;
   label: string;
