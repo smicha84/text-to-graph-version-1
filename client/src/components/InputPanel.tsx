@@ -12,14 +12,7 @@ interface InputPanelProps {
   hasExistingGraph: boolean; // Whether there's already a graph to append to
 }
 
-// Sample text to populate the textarea
-const DEFAULT_TEXT = `John Carter, a seasoned software engineer at Acme Corp, has been leading groundbreaking projects since joining the company in 2019. At Acme Corp, he collaborates closely with Maria Rodriguez, a machine learning expert, and Luis Gomez, a cybersecurity specialist. In a major initiative, Acme Corp partnered with TechNet Inc to develop a state-of-the-art AI system headquartered in San Francisco. The project received support from a local government grant and also involved international collaboration with InnovateNow, a Berlin-based startup founded by Eva Müller. Eva, who is passionate about renewable energy, frequently connects with industry leaders such as James Thompson, an investor from London, and presents at global tech conferences.
-
-On March 10, 2023, Acme Corp hosted a launch event at the San Francisco Innovation Hub where Maria showcased recent breakthroughs in artificial intelligence. The event brought together experts from various fields; Kevin O'Neill, a renowned data scientist from Dublin, delivered a keynote on cybersecurity in modern digital ecosystems, while Nina Patel, a tech journalist, documented the unfolding innovations. Their collective efforts spurred additional projects, including a creative campaign in collaboration with Creative Minds, a design agency based in New York, and a sustainability initiative with GreenFuture, a non-profit dedicated to environmental conservation.
-
-Spanning cities such as San Francisco, Berlin, London, Dublin, and New York, this narrative weaves a complex network of individuals, companies, events, and locations. Each entity carries its own set of properties—roles, dates, affiliations, and geographic details—that together form a rich test case for generating a compelling labeled property graph.`;
-
-// Sample examples to load for the example button
+// Sample examples to populate the textarea
 const EXAMPLES = [
   "John Doe works for Acme Corp since 2018 in New York. Jane Smith also works for Acme Corp since 2020. Acme Corp produces Widget X. John knows Jane since 2019.",
   "Apple Inc was founded by Steve Jobs, Steve Wozniak, and Ronald Wayne in 1976. Tim Cook is the current CEO of Apple Inc. Apple Inc is based in Cupertino and produces iPhone, iPad, and Mac products.",
@@ -27,7 +20,7 @@ const EXAMPLES = [
 ];
 
 export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGraph }: InputPanelProps) {
-  const [text, setText] = useState(DEFAULT_TEXT);
+  const [text, setText] = useState(EXAMPLES[0]);
   const [options, setOptions] = useState<GraphGenerationOptions>({
     extractEntities: true,
     extractRelations: true,
