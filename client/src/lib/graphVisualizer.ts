@@ -357,12 +357,15 @@ export class GraphVisualizer {
     const nodeData = graph.nodes.map((node, index) => {
       // For the first node (typically a central entity), fix it at the center of the screen
       if (index === 0) {
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        console.log(`Anchoring first node at center: (${centerX}, ${centerY})`);
         return {
           ...node,
-          x: this.width / 2,
-          y: this.height / 2,
-          fx: this.width / 2,  // Fixed X position
-          fy: this.height / 2   // Fixed Y position
+          x: centerX,
+          y: centerY,
+          fx: centerX,  // Fixed X position
+          fy: centerY   // Fixed Y position
         };
       }
       
@@ -544,7 +547,7 @@ export class GraphVisualizer {
         .strength(-this.layoutSettings.nodeRepulsion) // Repulsion between nodes
         .distanceMax(300)) // Limit the effect distance to prevent runaway behavior
       .force("center", d3.forceCenter<SimulationNode>(this.width / 2, this.height / 2)
-        .strength(this.layoutSettings.centerStrength * 2)) // Increase center pull to keep nodes from drifting
+        .strength(this.layoutSettings.centerStrength * 2)) // Double strength to prevent drift
       .force("collision", d3.forceCollide<SimulationNode>().radius(this.layoutSettings.collisionRadius)) // Prevent node overlap
       .alphaDecay(0.05) // Increase decay rate to stabilize simulation faster
       .on("tick", () => {
