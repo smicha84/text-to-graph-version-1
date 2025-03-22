@@ -49,35 +49,56 @@ export default function GraphPanel({
   useEffect(() => {
     if (!svgRef.current) return;
     
-    // Clear any existing SVG content 
-    d3.select(svgRef.current).selectAll("*").remove();
+    let visualizerInstance: GraphVisualizer | null = null;
     
-    // Get the SVG container's dimensions
-    const svgContainer = svgRef.current.parentElement;
-    const width = svgRef.current.clientWidth;
-    const height = svgRef.current.clientHeight;
+    // Create a ResizeObserver to get accurate dimensions even when initially hidden
+    const resizeObserver = new ResizeObserver(entries => {
+      const entry = entries[0];
+      if (!entry) return;
+      
+      // Get dimensions from observer
+      const width = entry.contentRect.width || svgRef.current?.parentElement?.clientWidth || 800;
+      const height = entry.contentRect.height || svgRef.current?.parentElement?.clientHeight || 600;
+      
+      // Wait for non-zero dimensions
+      if (width === 0 || height === 0) return;
+      
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      console.log(`SVG dimensions updated: ${width}x${height}, Center: (${centerX}, ${centerY})`);
+      
+      // If visualizer already exists, update its dimensions
+      if (visualizerInstance) {
+        visualizerInstance.updateDimensions(width, height);
+      } else {
+        // Clear any existing SVG content
+        d3.select(svgRef.current).selectAll("*").remove();
+        
+        // Create new visualizer with the detected dimensions
+        visualizerInstance = new GraphVisualizer(
+          svgRef.current, 
+          width, 
+          height,
+          handleElementSelect
+        );
+        
+        // Store the natural center point for reference
+        setCustomCenterPoint({ x: centerX, y: centerY });
+        
+        setVisualizer(visualizerInstance);
+      }
+    });
     
-    // Find the center point using the "No graph to display" element approach
-    let centerX = width / 2;
-    let centerY = height / 2;
-    
-    // Log the dimensions for debugging
-    console.log(`SVG dimensions: ${width}x${height}, Center: (${centerX}, ${centerY})`);
-    
-    // Create visualizer with the center point
-    const newVisualizer = new GraphVisualizer(
-      svgRef.current, 
-      width, 
-      height,
-      handleElementSelect
-    );
-    
-    // Store the natural center point for reference
-    setCustomCenterPoint({ x: centerX, y: centerY });
-    
-    setVisualizer(newVisualizer);
+    // Start observing the SVG container for size changes
+    if (svgRef.current.parentElement) {
+      resizeObserver.observe(svgRef.current.parentElement);
+    }
     
     return () => {
+      // Stop observing on cleanup
+      resizeObserver.disconnect();
+      
       // Clean up by clearing the SVG content directly
       if (svgRef.current) {
         while (svgRef.current.firstChild) {
@@ -350,11 +371,16 @@ export default function GraphPanel({
             </div>
           )}
           
-          {/* Graph Canvas */}
-          <svg 
-            ref={svgRef}
-            className={`w-full h-full graph-svg ${!graph || isLoading ? 'hidden' : ''}`}
-          ></svg>
+          {/* Graph Canvas Container with Flexbox - similar to empty state centering */}
+          <div 
+            className={`absolute inset-0 flex items-center justify-center ${!graph || isLoading ? 'hidden' : ''}`}
+          >
+            <svg 
+              ref={svgRef}
+              className="w-full h-full graph-svg"
+              style={{ maxWidth: '100%', maxHeight: '100%' }}
+            ></svg>
+          </div>
           
           {/* Panning instructions tooltip */}
           {graph && !isLoading && (

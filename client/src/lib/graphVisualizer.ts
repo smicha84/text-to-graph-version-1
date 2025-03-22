@@ -748,6 +748,38 @@ export class GraphVisualizer {
    * Set a custom center point for the graph
    * @param centerPoint The custom center coordinates, or null to use default center
    */
+  /**
+   * Update the dimensions of the visualizer (when container resizes)
+   * @param width New width
+   * @param height New height 
+   */
+  public updateDimensions(width: number, height: number): void {
+    if (width === 0 || height === 0) return; // Skip invalid dimensions
+    
+    console.log(`Updating dimensions: ${width}x${height}`);
+    
+    // Update internal dimensions
+    this.width = width;
+    this.height = height;
+    
+    // Update the background rect
+    this.svg.select(".background")
+      .attr("width", width)
+      .attr("height", height);
+    
+    // Update center force if simulation exists
+    if (this.simulation) {
+      const centerX = this.customCenterPoint ? this.customCenterPoint.x : width / 2;
+      const centerY = this.customCenterPoint ? this.customCenterPoint.y : height / 2;
+      
+      this.simulation.force("center", d3.forceCenter<SimulationNode>(centerX, centerY)
+        .strength(this.layoutSettings.centerStrength * 2));
+      
+      // Restart simulation to apply changes
+      this.simulation.alpha(0.3).restart();
+    }
+  }
+  
   public setCustomCenterPoint(centerPoint: CenterPoint | null): void {
     console.log(`Setting custom center point: ${centerPoint ? `(${centerPoint.x}, ${centerPoint.y})` : 'None (using default)'}`);
     this.customCenterPoint = centerPoint;
