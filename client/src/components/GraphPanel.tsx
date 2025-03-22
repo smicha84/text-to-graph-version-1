@@ -56,9 +56,15 @@ export default function GraphPanel({
       const entry = entries[0];
       if (!entry) return;
       
-      // Get dimensions from observer
-      const width = entry.contentRect.width || svgRef.current?.parentElement?.clientWidth || 800;
-      const height = entry.contentRect.height || svgRef.current?.parentElement?.clientHeight || 600;
+      // Get dimensions dynamically from the container element
+      // This ensures we adapt to any screen size - mobile, tablet, or desktop
+      const container = svgRef.current?.parentElement;
+      if (!container) return;
+      
+      // Get the actual dimensions from the DOM
+      const containerRect = container.getBoundingClientRect();
+      const width = containerRect.width;
+      const height = containerRect.height;
       
       // Wait for non-zero dimensions
       if (width === 0 || height === 0) return;
@@ -71,7 +77,7 @@ export default function GraphPanel({
       // If visualizer already exists, update its dimensions
       if (visualizerInstance) {
         visualizerInstance.updateDimensions(width, height);
-      } else {
+      } else if (svgRef.current) {
         // Clear any existing SVG content
         d3.select(svgRef.current).selectAll("*").remove();
         
