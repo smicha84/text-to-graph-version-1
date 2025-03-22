@@ -45,6 +45,8 @@ export const graphOptionsSchema = z.object({
 export const generateGraphInputSchema = z.object({
   text: z.string().min(1, "Text is required"),
   options: graphOptionsSchema,
+  existingGraph: z.any().optional(), // Optional existing graph to append to
+  appendMode: z.boolean().optional().default(false), // Whether to append to existing graph
 });
 
 // Export Graph Schema

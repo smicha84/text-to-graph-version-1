@@ -6,10 +6,90 @@ import { generateGraphInputSchema, exportGraphSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { generateGraphWithClaude } from "./anthropic";
 
+// Function to merge two graphs
+function mergeGraphs(existingGraph: any, newGraph: any): any {
+  // Create a deep copy of the existing graph
+  const mergedGraph = {
+    nodes: [...existingGraph.nodes],
+    edges: [...existingGraph.edges]
+  };
+  
+  // Create a map of existing node IDs and labels for quick lookup
+  const existingNodeIds = new Map();
+  existingGraph.nodes.forEach((node: any) => {
+    // Use a combination of label and name property (if available) as a unique identifier
+    const nodeName = node.properties.name || '';
+    const nodeKey = `${node.label}:${nodeName}`.toLowerCase();
+    existingNodeIds.set(nodeKey, node.id);
+  });
+  
+  // Create a mapping from new node IDs to either existing IDs or new unique IDs
+  const nodeIdMap = new Map();
+  
+  // Add new nodes, avoiding duplicates
+  newGraph.nodes.forEach((newNode: any) => {
+    const nodeName = newNode.properties.name || '';
+    const nodeKey = `${newNode.label}:${nodeName}`.toLowerCase();
+    
+    // Check if a similar node already exists
+    if (existingNodeIds.has(nodeKey)) {
+      // Map this new node ID to the existing node ID
+      nodeIdMap.set(newNode.id, existingNodeIds.get(nodeKey));
+    } else {
+      // Generate a new unique ID for this node
+      const newId = `n${mergedGraph.nodes.length + 1}`;
+      nodeIdMap.set(newNode.id, newId);
+      
+      // Add the node with the new ID
+      mergedGraph.nodes.push({
+        ...newNode,
+        id: newId
+      });
+    }
+  });
+  
+  // Add new edges, updating source and target references
+  newGraph.edges.forEach((newEdge: any) => {
+    // Get mapped node IDs for source and target
+    const sourceId = nodeIdMap.get(newEdge.source) || newEdge.source;
+    const targetId = nodeIdMap.get(newEdge.target) || newEdge.target;
+    
+    // Create a new unique edge ID
+    const newId = `e${mergedGraph.edges.length + 1}`;
+    
+    // Check if this edge already exists (same source, target, and label)
+    const edgeExists = mergedGraph.edges.some((edge: any) => 
+      edge.source === sourceId && 
+      edge.target === targetId && 
+      edge.label === newEdge.label
+    );
+    
+    // Add the edge if it doesn't already exist
+    if (!edgeExists) {
+      mergedGraph.edges.push({
+        ...newEdge,
+        id: newId,
+        source: sourceId,
+        target: targetId
+      });
+    }
+  });
+  
+  return mergedGraph;
+}
+
 // Main graph generation function using Claude API
-async function generateGraphFromText(text: string, options: any) {
+async function generateGraphFromText(text: string, options: any, existingGraph?: any, appendMode = false) {
   console.log("Using Claude API for graph generation");
-  return await generateGraphWithClaude(text, options);
+  const newGraph = await generateGraphWithClaude(text, options);
+  
+  // If append mode is true and we have an existing graph, merge them
+  if (appendMode && existingGraph) {
+    console.log("Merging with existing graph");
+    return mergeGraphs(existingGraph, newGraph);
+  }
+  
+  return newGraph;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -17,12 +97,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate-graph', async (req, res) => {
     try {
       // Validate request body
-      const { text, options } = generateGraphInputSchema.parse(req.body);
+      const { text, options, existingGraph, appendMode } = generateGraphInputSchema.parse(req.body);
       
-      // Generate graph using Claude or fallback
-      const result = await generateGraphFromText(text, options);
+      // Generate graph using Claude API, potentially merging with existing graph
+      const result = await generateGraphFromText(text, options, existingGraph, appendMode);
       
-      // Return the generated graph
+      // Return the generated or merged graph
       res.json(result);
     } catch (error) {
       if (error instanceof ZodError) {

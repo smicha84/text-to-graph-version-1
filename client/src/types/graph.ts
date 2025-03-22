@@ -26,6 +26,7 @@ export interface GraphGenerationOptions {
   inferProperties: boolean;
   mergeEntities: boolean;
   model: 'claude'; // Only Claude model is supported
+  appendMode?: boolean; // Whether to append to existing graph instead of replacing it
 }
 
 export interface ZoomPanInfo {
