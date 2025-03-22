@@ -223,36 +223,37 @@ export class GraphVisualizer {
     this.height = height;
     this.onSelectElement = onSelectElement;
     
-    // Setup zoom behavior with panning explicitly enabled
+    // Create a clean SVG structure
+    // Step 1: Add a rect that covers the entire SVG area
+    // This rect will capture click events for deselection
+    this.svg.append("rect")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("fill", "transparent")
+      .attr("class", "background")
+      .style("cursor", "move");
+    
+    // Step 2: Create container for graph elements - this will be transformed for zoom/pan
+    this.container = this.svg.append("g")
+      .attr("class", "graph-container");
+    
+    // Step 3: Setup the zoom behavior
     this.zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.1, 4])
+      .scaleExtent([0.1, 4])  // Zoom limits 
       .on("zoom", (event) => {
+        // Apply the zoom transform to the container
         this.container.attr("transform", event.transform);
       });
     
-    // Apply zoom and enable panning directly to SVG element
+    // Step 4: Apply zoom to the SVG element and initialize with identity transform
     this.svg.call(this.zoom);
     
-    // Create a background rectangle to capture pan events
-    // This needs to be added before the container to ensure it's behind everything
-    this.svg.append("rect")
-      .attr("width", "100%")
-      .attr("height", "100%")
-      .attr("fill", "transparent")
-      .style("cursor", "move")
-      .attr("class", "background-rect");
-    
-    // Create container for graph elements
-    this.container = this.svg.append("g").attr("class", "graph-container");
-    
-    // Add definitions for markers (arrows)
+    // Step 5: Add definitions for markers (arrows)
     const defs = this.svg.append("defs");
-    
-    // Define arrow marker
     defs.append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 20) // Position the arrow away from the end of the line
+      .attr("refX", 20) 
       .attr("refY", 0)
       .attr("orient", "auto")
       .attr("markerWidth", 6)
@@ -260,15 +261,14 @@ export class GraphVisualizer {
       .attr("xoverflow", "visible")
       .append("path")
       .attr("d", "M 0,-4 L 8,0 L 0,4")
-      .attr("fill", "#9CA3AF") // Match the edge color
+      .attr("fill", "#9CA3AF")
       .attr("stroke", "none");
     
-    // Handle background click to deselect - use click event to avoid interfering with panning
-    this.svg.on("click", (event) => {
-      // Only deselect on direct SVG background click, not on nodes or edges
-      if (event.target === this.svg.node()) {
-        this.onSelectElement(null);
-      }
+    // Step 6: Add a click handler for the background that doesn't interfere with zoom
+    this.svg.select(".background").on("click", (event) => {
+      // Prevent propagation to avoid conflict with zoom
+      event.stopPropagation();
+      this.onSelectElement(null);
     });
   }
 
@@ -287,23 +287,27 @@ export class GraphVisualizer {
       this.simulation = null;
     }
     
-    // Create a background rectangle to capture pan events
-    // This needs to be added before the container to ensure it's behind everything
+    // Rebuild the SVG structure with consistent approach as constructor
+    // Step 1: Add a rect that covers the entire SVG area to capture click events
     this.svg.append("rect")
-      .attr("width", "100%")
-      .attr("height", "100%")
+      .attr("width", this.width)
+      .attr("height", this.height)
       .attr("fill", "transparent")
-      .style("cursor", "move")
-      .attr("class", "background-rect");
+      .attr("class", "background")
+      .style("cursor", "move");
       
-    // Re-add definitions for markers
+    // Step 2: Create container for graph elements
+    this.container = this.svg.append("g")
+      .attr("class", "graph-container");
+    
+    // Step 3: Re-add definitions for markers
     const defs = this.svg.append("defs");
     
     // Define default gray arrow marker
     defs.append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 20) // Position the arrow away from the end of the line
+      .attr("refX", 20)
       .attr("refY", 0)
       .attr("orient", "auto")
       .attr("markerWidth", 6)
@@ -311,7 +315,7 @@ export class GraphVisualizer {
       .attr("xoverflow", "visible")
       .append("path")
       .attr("d", "M 0,-4 L 8,0 L 0,4")
-      .attr("fill", "#9CA3AF") // Gray color (match the edge color)
+      .attr("fill", "#9CA3AF")
       .attr("stroke", "none");
       
     // Define blue arrow marker for highlighted edges
@@ -326,30 +330,20 @@ export class GraphVisualizer {
       .attr("xoverflow", "visible")
       .append("path")
       .attr("d", "M 0,-4 L 8,0 L 0,4")
-      .attr("fill", "#2563EB") // Blue color for highlighted edges
+      .attr("fill", "#2563EB")
       .attr("stroke", "none");
     
-    // Recreate the container for graph elements
-    this.container = this.svg.append("g");
+    // Step 4: Re-apply zoom to the SVG
+    this.zoom.on("zoom", (event) => {
+      this.container.attr("transform", event.transform);
+    });
     
-    // Re-setup the zoom behavior with panning explicitly enabled
-    this.zoom
-      .filter((event) => {
-        // Always return true to enable all zoom/pan behaviors
-        return true;
-      });
-      
     this.svg.call(this.zoom);
     
-    // Re-apply cursor style for panning
-    this.svg.style("cursor", "move");
-    
-    // Setup click handler using click instead of mousedown to avoid interfering with panning
-    this.svg.on("click", (event) => {
-      // Only deselect on direct SVG background click, not on nodes or edges
-      if (event.target === this.svg.node()) {
-        this.onSelectElement(null);
-      }
+    // Step 5: Add a click handler for background that doesn't interfere with zoom
+    this.svg.select(".background").on("click", (event) => {
+      event.stopPropagation();
+      this.onSelectElement(null);
     });
     
     // Validate graph data
@@ -396,7 +390,11 @@ export class GraphVisualizer {
       .append("g")
       .attr("class", "edge")
       .on("click", (event: MouseEvent, d: SimulationLink) => {
+        // Prevent the click from propagating to the background
         event.stopPropagation();
+        // Prevent the click from triggering the zoom behavior
+        event.preventDefault(); 
+        // Select this edge
         this.onSelectElement(d as unknown as Edge);
       });
     
@@ -422,11 +420,18 @@ export class GraphVisualizer {
       .attr("class", "node")
       .attr("id", (d) => `node-${d.id}`) // Add ID for easier selection
       .on("click", (event: MouseEvent, d: SimulationNode) => {
+        // Prevent the click from propagating to the background
         event.stopPropagation();
+        // Select this node
         this.onSelectElement(d as unknown as Node);
       })
       .call(d3.drag<SVGGElement, SimulationNode>()
+        // Use subject parameter to prevent interference with panning
+        .subject((event, d) => d)
         .on("start", (event: d3.D3DragEvent<SVGGElement, SimulationNode, SimulationNode>, d: SimulationNode) => {
+          // Prevent event from propagating to the zoom behavior
+          if (event.sourceEvent) event.sourceEvent.stopPropagation();
+          
           if (!event.active && this.simulation) {
             this.simulation.alphaTarget(0.3).restart();
           }
@@ -442,6 +447,9 @@ export class GraphVisualizer {
             .attr("stroke-width", 3);
         })
         .on("drag", (event: d3.D3DragEvent<SVGGElement, SimulationNode, SimulationNode>, d: SimulationNode) => {
+          // Prevent event from propagating to the zoom behavior
+          if (event.sourceEvent) event.sourceEvent.stopPropagation();
+          
           // Update fixed position during drag
           d.fx = event.x;
           d.fy = event.y;
