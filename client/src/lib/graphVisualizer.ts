@@ -223,21 +223,26 @@ export class GraphVisualizer {
     this.height = height;
     this.onSelectElement = onSelectElement;
     
-    // Setup zoom behavior
+    // Setup zoom behavior with panning enabled
     this.zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
       .on("zoom", (event) => {
         this.container.attr("transform", event.transform);
       });
     
+    // Apply zoom and allow panning
     this.svg.call(this.zoom);
     
     // Create container for graph elements
     this.container = this.svg.append("g");
     
-    // Handle background click to deselect
-    this.svg.on("click", () => {
-      this.onSelectElement(null);
+    // Handle background click to deselect - use mousedown instead of click to allow for panning
+    this.svg.on("mousedown", (event) => {
+      // Only deselect on direct SVG background click, not on nodes or edges
+      if (event.target === this.svg.node()) {
+        event.stopPropagation();
+        this.onSelectElement(null);
+      }
     });
   }
 
@@ -259,13 +264,16 @@ export class GraphVisualizer {
     // Recreate the container for graph elements
     this.container = this.svg.append("g");
     
-    // Re-setup the zoom behavior
+    // Re-setup the zoom behavior with panning enabled
     this.svg.call(this.zoom);
     
-    // Re-setup background click handler
-    this.svg.on("click", (event) => {
-      event.stopPropagation();
-      this.onSelectElement(null);
+    // Re-setup background click handler - use mousedown instead of click to allow for panning
+    this.svg.on("mousedown", (event) => {
+      // Only deselect on direct SVG background click, not on nodes or edges
+      if (event.target === this.svg.node()) {
+        event.stopPropagation();
+        this.onSelectElement(null);
+      }
     });
     
     // Validate graph data
