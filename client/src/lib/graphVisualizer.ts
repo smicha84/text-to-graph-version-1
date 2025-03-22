@@ -79,10 +79,124 @@ export class GraphVisualizer {
     collisionRadius: 50
   };
   
+  // Custom style maps for individual nodes and edges
+  private nodeStyles: Map<string, NodeStyle> = new Map();
+  private edgeStyles: Map<string, EdgeStyle> = new Map();
+  
   // Expose simulation for cleanup
   public getSimulation(): d3.Simulation<SimulationNode, SimulationLink> | null {
     return this.simulation;
   };
+  
+  /**
+   * Set custom style for a specific node
+   */
+  public setNodeStyle(nodeId: string, style: NodeStyle): void {
+    this.nodeStyles.set(nodeId, style);
+    this.applyStyles();
+  }
+  
+  /**
+   * Set custom style for a specific edge
+   */
+  public setEdgeStyle(edgeId: string, style: EdgeStyle): void {
+    this.edgeStyles.set(edgeId, style);
+    this.applyStyles();
+  }
+  
+  /**
+   * Apply all current styles to the graph elements
+   */
+  private applyStyles(): void {
+    if (!this.graph) return;
+    
+    // Apply node styles
+    this.container.selectAll<SVGGElement, SimulationNode>(".node").each((d, i, nodes) => {
+      const nodeEl = d3.select(nodes[i]);
+      const style = this.nodeStyles.get(d.id);
+      
+      if (style) {
+        // Apply color
+        if (style.color) {
+          nodeEl.select("circle").attr("fill", style.color);
+        }
+        
+        // Apply size
+        if (style.size) {
+          nodeEl.select("circle").attr("r", style.size);
+        }
+        
+        // Apply border
+        if (style.borderColor) {
+          nodeEl.select("circle")
+            .attr("stroke", style.borderColor)
+            .attr("stroke-width", style.borderWidth || 1);
+        }
+        
+        // Apply label color and size
+        if (style.labelColor) {
+          nodeEl.selectAll("text").attr("fill", style.labelColor);
+        }
+        
+        if (style.labelSize) {
+          nodeEl.select("text:first-of-type").attr("font-size", `${style.labelSize}px`);
+          nodeEl.select("text:last-of-type").attr("font-size", `${style.labelSize * 0.9}px`);
+        }
+        
+        // Apply pinned state
+        if (style.pinned) {
+          const node = d as SimulationNode;
+          node.fx = node.x;
+          node.fy = node.y;
+        } else {
+          const node = d as SimulationNode;
+          if (node.fx !== undefined || node.fy !== undefined) {
+            node.fx = null;
+            node.fy = null;
+            
+            // Restart simulation to apply changes
+            if (this.simulation) {
+              this.simulation.alpha(0.3).restart();
+            }
+          }
+        }
+      }
+    });
+    
+    // Apply edge styles
+    this.container.selectAll<SVGGElement, SimulationLink>(".edge").each((d, i, edges) => {
+      const edgeEl = d3.select(edges[i]);
+      const style = this.edgeStyles.get(d.id);
+      
+      if (style) {
+        // Apply color
+        if (style.color) {
+          edgeEl.select("line").attr("stroke", style.color);
+        }
+        
+        // Apply width
+        if (style.width) {
+          edgeEl.select("line").attr("stroke-width", style.width);
+        }
+        
+        // Apply dashed style
+        if (style.dashed) {
+          edgeEl.select("line").attr("stroke-dasharray", "5,5");
+        } else {
+          edgeEl.select("line").attr("stroke-dasharray", null);
+        }
+        
+        // Apply label color and size
+        if (style.labelColor) {
+          edgeEl.select("text").attr("fill", style.labelColor);
+        }
+        
+        if (style.labelSize) {
+          edgeEl.select("text").attr("font-size", `${style.labelSize}px`);
+        }
+      }
+    });
+  }
 
   constructor(
     svgElement: SVGSVGElement,

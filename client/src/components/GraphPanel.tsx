@@ -1,9 +1,10 @@
 import { useRef, useEffect, useState, useMemo } from "react";
-import { Graph, Node, Edge, ZoomPanInfo } from "@/types/graph";
+import { Graph, Node, Edge, ZoomPanInfo, NodeStyle, EdgeStyle } from "@/types/graph";
 import { Button } from "@/components/ui/button";
 import { GraphVisualizer, NODE_COLORS } from "@/lib/graphVisualizer";
 import LayoutControls, { LayoutSettings } from "@/components/LayoutControls";
 import ColorEditor from "@/components/ColorEditor";
+import StylePanel from "@/components/StylePanel";
 import { 
   MinusIcon, 
   PlusIcon, 
@@ -12,7 +13,8 @@ import {
   LayersIcon, 
   XIcon,
   PaintBucketIcon,
-  Layers2Icon
+  Layers2Icon,
+  PenLineIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as d3 from "d3";

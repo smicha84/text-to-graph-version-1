@@ -1,6 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Graph, Node } from '@/types/graph';
+import { Graph } from '@/types/graph';
 import { NODE_COLORS } from '@/lib/graphVisualizer';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { RotateCcw } from 'lucide-react';
 
 interface NodeColorMap {
   [key: string]: string;
@@ -10,29 +14,6 @@ interface ColorEditorProps {
   graph: Graph;
   onColorChange: (newColors: NodeColorMap) => void;
 }
-
-const DEFAULT_COLORS = [
-  "#4f46e5", // indigo-600
-  "#0891b2", // cyan-600
-  "#0d9488", // teal-600
-  "#16a34a", // green-600
-  "#ca8a04", // yellow-600
-  "#ea580c", // orange-600
-  "#dc2626", // red-600
-  "#d946ef", // fuchsia-600
-  "#c026d3", // purple-600
-  "#7c3aed", // violet-600
-  "#2563eb", // blue-600
-  "#0284c7", // sky-600
-  "#059669", // emerald-600
-  "#65a30d", // lime-600
-  "#e11d48", // rose-600
-  "#9f1239", // rose-900
-  "#0f766e", // teal-700
-  "#b45309", // amber-700
-  "#4338ca", // indigo-700
-  "#7e22ce", // purple-700
-];
 
 export default function ColorEditor({ graph, onColorChange }: ColorEditorProps) {
   const [colors, setColors] = useState<NodeColorMap>({});
@@ -52,21 +33,23 @@ export default function ColorEditor({ graph, onColorChange }: ColorEditorProps) 
     return Array.from(types).sort();
   }, [graph]);
 
-  // Initialize colors on first load
+  // Initialize colors on first load or when nodeTypes change
   useEffect(() => {
-    // Create the initial color map from existing NODE_COLORS
-    const colorMap: NodeColorMap = {};
-    
-    // Use default NODE_COLORS as a starting point
-    nodeTypes.forEach((type) => {
-      colorMap[type] = NODE_COLORS[type] || NODE_COLORS.default;
-    });
-    
-    setColors(colorMap);
-    
-    // Call onColorChange with initial colors
-    onColorChange(colorMap);
-  }, [nodeTypes, onColorChange]);
+    if (Object.keys(colors).length === 0 && nodeTypes.length > 0) {
+      // Create the initial color map from existing NODE_COLORS
+      const colorMap: NodeColorMap = {};
+      
+      // Use default NODE_COLORS as a starting point
+      nodeTypes.forEach((type) => {
+        colorMap[type] = NODE_COLORS[type] || NODE_COLORS.default;
+      });
+      
+      setColors(colorMap);
+      
+      // Call onColorChange with initial colors
+      onColorChange(colorMap);
+    }
+  }, [nodeTypes, colors, onColorChange]);
   
   // Handle color change for a specific node type
   const handleColorChange = (nodeType: string, newColor: string) => {
@@ -75,54 +58,58 @@ export default function ColorEditor({ graph, onColorChange }: ColorEditorProps) 
     onColorChange(updatedColors);
   };
   
+  // Reset colors to defaults
+  const resetColors = () => {
+    const defaultColors: NodeColorMap = {};
+    nodeTypes.forEach((type) => {
+      defaultColors[type] = NODE_COLORS[type] || NODE_COLORS.default;
+    });
+    
+    setColors(defaultColors);
+    onColorChange(defaultColors);
+  };
+  
   // If no node types, show a message
   if (nodeTypes.length === 0) {
     return (
-      <div className="text-gray-500 text-sm italic">
+      <div className="text-gray-500 text-sm italic p-4">
         No node types found in the current graph.
       </div>
     );
   }
   
   return (
-    <div className="space-y-4">
-      {nodeTypes.map((nodeType) => (
-        <div key={nodeType} className="flex flex-col space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-medium text-sm text-gray-700">{nodeType}</span>
-            <div className="flex items-center">
-              <div
-                className="w-5 h-5 rounded-full mr-2"
+    <div className="p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-medium">Node Color Customization</h3>
+        <Button variant="ghost" size="sm" onClick={resetColors} title="Reset to defaults">
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <p className="text-xs text-gray-500 mb-4">
+        Customize colors for different node types in the graph
+      </p>
+      
+      <div className="space-y-3">
+        {nodeTypes.map((nodeType) => (
+          <div key={nodeType} className="flex items-center justify-between">
+            <Label className="text-sm text-gray-700">{nodeType}</Label>
+            <div className="flex items-center space-x-2">
+              <div 
+                className="w-4 h-4 rounded-full border border-gray-300"
                 style={{ backgroundColor: colors[nodeType] || NODE_COLORS.default }}
               />
-              <select
+              <Input
+                type="color"
                 value={colors[nodeType] || NODE_COLORS.default}
                 onChange={(e) => handleColorChange(nodeType, e.target.value)}
-                className="text-xs rounded border border-gray-300 py-1 px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                {DEFAULT_COLORS.map((color) => (
-                  <option key={color} value={color}>
-                    {color}
-                  </option>
-                ))}
-              </select>
+                className="w-16 h-8"
+              />
             </div>
           </div>
-          <div className="grid grid-cols-10 gap-1">
-            {DEFAULT_COLORS.map((color) => (
-              <button
-                key={color}
-                className={`w-4 h-4 rounded-full ${
-                  colors[nodeType] === color ? 'ring-2 ring-offset-1 ring-gray-600' : ''
-                }`}
-                style={{ backgroundColor: color }}
-                onClick={() => handleColorChange(nodeType, color)}
-                title={color}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
