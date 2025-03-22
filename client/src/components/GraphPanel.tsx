@@ -289,7 +289,7 @@ export default function GraphPanel({
         
         {/* Controls Sidebar */}
         {graph && !isLoading && (
-          <div className="w-72 border-l border-gray-200 bg-white overflow-y-auto flex flex-col h-full">
+          <div className="w-80 border-l border-gray-200 bg-white overflow-y-auto flex flex-col h-full">
             {/* Tab Navigation */}
             <div className="flex border-b border-gray-200">
               <button

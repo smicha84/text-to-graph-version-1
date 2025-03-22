@@ -127,11 +127,13 @@ export default function Home() {
             onShowExportModal={() => setShowExportModal(true)}
           />
           
-          {showPropertyPanel && (
-            <PropertyPanel 
-              element={selectedElement}
-              onClose={() => setShowPropertyPanel(false)}
-            />
+          {showPropertyPanel && selectedElement && (
+            <div className="absolute top-16 right-80 bg-white shadow-lg border border-gray-200 rounded-lg w-72 z-10">
+              <PropertyPanel 
+                element={selectedElement}
+                onClose={() => setShowPropertyPanel(false)}
+              />
+            </div>
           )}
         </div>
       </div>
