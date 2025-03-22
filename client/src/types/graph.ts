@@ -25,7 +25,7 @@ export interface GraphGenerationOptions {
   extractRelations: boolean;
   inferProperties: boolean;
   mergeEntities: boolean;
-  model: 'claude' | 'fallback';
+  model: 'claude'; // Only Claude model is supported
 }
 
 export interface ZoomPanInfo {

@@ -25,7 +25,7 @@ export default function InputPanel({ onGenerateGraph, isLoading }: InputPanelPro
     extractRelations: true,
     inferProperties: true,
     mergeEntities: true,
-    model: "claude"
+    model: "claude" // Only using Claude model
   });
 
   const handleOptionChange = (option: keyof GraphGenerationOptions, value: boolean | string) => {
@@ -79,7 +79,7 @@ export default function InputPanel({ onGenerateGraph, isLoading }: InputPanelPro
           
           <div className="mt-4">
             <div className="mb-3">
-              <Label className="block text-sm font-medium text-gray-700 mb-1">Generation Options</Label>
+              <Label className="block text-sm font-medium text-gray-700 mb-1">Claude Processing Options</Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center">
                   <Checkbox
@@ -134,24 +134,6 @@ export default function InputPanel({ onGenerateGraph, isLoading }: InputPanelPro
                   </Label>
                 </div>
               </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="modelSelect" className="block text-sm font-medium text-gray-700 mb-1">
-                Model
-              </Label>
-              <Select
-                value={options.model}
-                onValueChange={(value) => handleOptionChange("model", value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="claude">Claude (Recommended)</SelectItem>
-                  <SelectItem value="fallback">Regex Fallback</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           
