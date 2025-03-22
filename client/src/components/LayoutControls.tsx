@@ -20,10 +20,10 @@ interface LayoutControlsProps {
 }
 
 const DEFAULT_SETTINGS: LayoutSettings = {
-  nodeRepulsion: 500,
-  linkDistance: 150,
-  centerStrength: 0.03,
-  collisionRadius: 50
+  nodeRepulsion: 400,     // Reduced from 500 to avoid excessive repulsion
+  linkDistance: 120,      // Reduced from 150 for tighter layout
+  centerStrength: 0.08,   // Increased from 0.03 for stronger pull to center (prevents drift)
+  collisionRadius: 40     // Adequate spacing while allowing tighter formation
 };
 
 export default function LayoutControls({ 

@@ -501,9 +501,13 @@ export class GraphVisualizer {
       .force("link", d3.forceLink<SimulationNode, SimulationLink>(linkData)
         .id((d: SimulationNode) => d.id)
         .distance(this.layoutSettings.linkDistance)) // Distance between connected nodes
-      .force("charge", d3.forceManyBody<SimulationNode>().strength(-this.layoutSettings.nodeRepulsion)) // Repulsion between nodes
-      .force("center", d3.forceCenter<SimulationNode>(this.width / 2, this.height / 2).strength(this.layoutSettings.centerStrength)) // Center of the layout
+      .force("charge", d3.forceManyBody<SimulationNode>()
+        .strength(-this.layoutSettings.nodeRepulsion) // Repulsion between nodes
+        .distanceMax(300)) // Limit the effect distance to prevent runaway behavior
+      .force("center", d3.forceCenter<SimulationNode>(this.width / 2, this.height / 2)
+        .strength(this.layoutSettings.centerStrength * 2)) // Increase center pull to keep nodes from drifting
       .force("collision", d3.forceCollide<SimulationNode>().radius(this.layoutSettings.collisionRadius)) // Prevent node overlap
+      .alphaDecay(0.05) // Increase decay rate to stabilize simulation faster
       .on("tick", () => {
         // Update link positions with adjustments for node radius
         edgeLines
@@ -687,13 +691,15 @@ export class GraphVisualizer {
       // Update node repulsion
       const chargeForce = this.simulation.force("charge") as d3.ForceManyBody<SimulationNode>;
       if (chargeForce) {
-        chargeForce.strength(-settings.nodeRepulsion);
+        chargeForce
+          .strength(-settings.nodeRepulsion)
+          .distanceMax(300); // Maintain distance limit
       }
       
       // Update center gravity
       const centerForce = this.simulation.force("center") as d3.ForceCenter<SimulationNode>;
       if (centerForce) {
-        centerForce.strength(settings.centerStrength);
+        centerForce.strength(settings.centerStrength * 2); // Double strength to prevent drift
       }
       
       // Update collision radius
