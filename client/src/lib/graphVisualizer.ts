@@ -230,7 +230,10 @@ export class GraphVisualizer {
     // Node circles
     nodes.append("circle")
       .attr("r", 20)
-      .attr("fill", (d: SimulationNode) => this.getNodeColor(d.type));
+      .attr("fill", (d: SimulationNode) => {
+        // Use custom color if available, otherwise fall back to default color map
+        return this.customNodeColors[d.type] || NODE_COLORS[d.type] || NODE_COLORS.default;
+      });
     
     // Node labels (inside circle)
     nodes.append("text")
@@ -539,7 +542,7 @@ export class GraphVisualizer {
     if (this.container) {
       this.container.selectAll(".node circle")
         .transition().duration(300)
-        .attr("fill", (d: any) => this.getNodeColor(d.type));
+        .attr("fill", (d: any) => this.customNodeColors[d.type] || NODE_COLORS[d.type] || NODE_COLORS.default);
     }
   }
 }
