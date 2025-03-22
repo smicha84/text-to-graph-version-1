@@ -106,6 +106,7 @@ export class GraphVisualizer {
     this.width = width;
     this.height = height;
     this.onSelectElement = onSelectElement;
+    console.log(`INITIALIZED SVG with dimensions: Width=${width}, Height=${height}`);
     
     // Create a clean SVG structure
     // Step 1: Add a rect that covers the entire SVG area
@@ -256,6 +257,16 @@ export class GraphVisualizer {
   
   public render(graph: Graph): void {
     console.log("Rendering graph:", graph);
+    // Get the current SVG dimensions from the element itself to ensure accuracy
+    const svgElement = this.svg.node();
+    if (svgElement) {
+      const svgRect = svgElement.getBoundingClientRect();
+      // Update dimensions before proceeding
+      this.width = svgRect.width || this.width;
+      this.height = svgRect.height || this.height;
+      console.log(`UPDATED SVG dimensions before rendering: Width=${this.width}, Height=${this.height}`);
+    }
+    
     this.graph = graph;
     
     // Clear all existing elements from the SVG
