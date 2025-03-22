@@ -48,19 +48,33 @@ export const NODE_COLORS: Record<string, string> = {
   'Country': '#EA580C',      // orange dark
   
   // Content types
-  'Product': '#8B5CF6',      // purple
-  'Project': '#6366F1',      // indigo
-  'Document': '#A855F7',     // purple light
-  'Event': '#D946EF',        // fuchsia
-  'Technology': '#2563EB',   // blue
-  'Initiative': '#7C3AED',   // violet
+  'Document': '#EF4444',     // red
+  'Article': '#DC2626',      // red dark
+  'Product': '#F43F5E',      // rose
+  'Service': '#E11D48',      // rose dark
   
-  // Default for any unmatched types
-  'default': '#6B7280'       // gray
+  // Event types
+  'Event': '#6366F1',        // indigo
+  'Conference': '#4F46E5',   // indigo dark
+  
+  // Technology types
+  'Technology': '#06B6D4',   // cyan
+  'Software': '#0891B2',     // cyan dark
+  
+  // Resource types
+  'Resource': '#A78BFA',     // violet
+  'Material': '#8B5CF6',     // violet dark
+  
+  // Default color for unknown types
+  'default': '#6B7280'       // gray-500
 };
 
-// Import layout settings interface
-import { LayoutSettings } from "@/components/LayoutControls";
+export interface LayoutSettings {
+  nodeRepulsion: number;
+  linkDistance: number;
+  centerStrength: number;
+  collisionRadius: number;
+}
 
 export class GraphVisualizer {
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
@@ -73,144 +87,14 @@ export class GraphVisualizer {
   private activeSubgraphId: string | null = null;
   private customNodeColors: Record<string, string> = {};
   private layoutSettings: LayoutSettings = {
-    nodeRepulsion: 500,
-    linkDistance: 150,
-    centerStrength: 0.03,
-    collisionRadius: 50
+    nodeRepulsion: 200,
+    linkDistance: 100,
+    centerStrength: 0.05,
+    collisionRadius: 30
   };
-  
-  // Custom style maps for individual nodes and edges
   private nodeStyles: Map<string, NodeStyle> = new Map();
   private edgeStyles: Map<string, EdgeStyle> = new Map();
-  
-  // Expose simulation for cleanup
-  public getSimulation(): d3.Simulation<SimulationNode, SimulationLink> | null {
-    return this.simulation;
-  };
-  
-  /**
-   * Set custom style for a specific node
-   */
-  public setNodeStyle(nodeId: string, style: NodeStyle): void {
-    this.nodeStyles.set(nodeId, style);
-    this.applyStyles();
-  }
-  
-  /**
-   * Get the current style for a node
-   */
-  public getNodeStyle(nodeId: string): NodeStyle | null {
-    return this.nodeStyles.get(nodeId) || null;
-  }
-  
-  /**
-   * Set custom style for a specific edge
-   */
-  public setEdgeStyle(edgeId: string, style: EdgeStyle): void {
-    this.edgeStyles.set(edgeId, style);
-    this.applyStyles();
-  }
-  
-  /**
-   * Get the current style for an edge
-   */
-  public getEdgeStyle(edgeId: string): EdgeStyle | null {
-    return this.edgeStyles.get(edgeId) || null;
-  }
-  
-  /**
-   * Apply all current styles to the graph elements
-   */
-  private applyStyles(): void {
-    if (!this.graph) return;
-    
-    // Apply node styles
-    this.container.selectAll<SVGGElement, SimulationNode>(".node").each((d, i, nodes) => {
-      const nodeEl = d3.select(nodes[i]);
-      const style = this.nodeStyles.get(d.id);
-      
-      if (style) {
-        // Apply color
-        if (style.color) {
-          nodeEl.select("circle").attr("fill", style.color);
-        }
-        
-        // Apply size
-        if (style.size) {
-          nodeEl.select("circle").attr("r", style.size);
-        }
-        
-        // Apply border
-        if (style.borderColor) {
-          nodeEl.select("circle")
-            .attr("stroke", style.borderColor)
-            .attr("stroke-width", style.borderWidth || 1);
-        }
-        
-        // Apply label color and size
-        if (style.labelColor) {
-          nodeEl.selectAll("text").attr("fill", style.labelColor);
-        }
-        
-        if (style.labelSize) {
-          nodeEl.select("text:first-of-type").attr("font-size", `${style.labelSize}px`);
-          nodeEl.select("text:last-of-type").attr("font-size", `${style.labelSize * 0.9}px`);
-        }
-        
-        // Apply pinned state
-        if (style.pinned) {
-          const node = d as SimulationNode;
-          node.fx = node.x;
-          node.fy = node.y;
-        } else {
-          const node = d as SimulationNode;
-          if (node.fx !== undefined || node.fy !== undefined) {
-            node.fx = null;
-            node.fy = null;
-            
-            // Restart simulation to apply changes
-            if (this.simulation) {
-              this.simulation.alpha(0.3).restart();
-            }
-          }
-        }
-      }
-    });
-    
-    // Apply edge styles
-    this.container.selectAll<SVGGElement, SimulationLink>(".edge").each((d, i, edges) => {
-      const edgeEl = d3.select(edges[i]);
-      const style = this.edgeStyles.get(d.id);
-      
-      if (style) {
-        // Apply color
-        if (style.color) {
-          edgeEl.select("line").attr("stroke", style.color);
-        }
-        
-        // Apply width
-        if (style.width) {
-          edgeEl.select("line").attr("stroke-width", style.width);
-        }
-        
-        // Apply dashed style
-        if (style.dashed) {
-          edgeEl.select("line").attr("stroke-dasharray", "5,5");
-        } else {
-          edgeEl.select("line").attr("stroke-dasharray", null);
-        }
-        
-        // Apply label color and size
-        if (style.labelColor) {
-          edgeEl.select("text").attr("fill", style.labelColor);
-        }
-        
-        if (style.labelSize) {
-          edgeEl.select("text").attr("font-size", `${style.labelSize}px`);
-        }
-      }
-    });
-  }
+  private simulation: d3.Simulation<SimulationNode, SimulationLink> | null = null;
 
   constructor(
     svgElement: SVGSVGElement,
@@ -232,24 +116,25 @@ export class GraphVisualizer {
       .attr("fill", "transparent")
       .attr("class", "background")
       .style("cursor", "move");
-    
-    // Step 2: Create container for graph elements - this will be transformed for zoom/pan
-    this.container = this.svg.append("g")
-      .attr("class", "graph-container");
-    
-    // Step 3: Setup the zoom behavior
-    this.zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.1, 4])  // Zoom limits 
-      .on("zoom", (event) => {
-        // Apply the zoom transform to the container
-        this.container.attr("transform", event.transform);
-      });
-    
-    // Step 4: Apply zoom to the SVG element and initialize with identity transform
-    this.svg.call(this.zoom);
-    
-    // Step 5: Add definitions for markers (arrows)
+      
+    // Step 2: Add definitions
     const defs = this.svg.append("defs");
+    
+    // Create a grid pattern
+    const gridPattern = defs.append("pattern")
+      .attr("id", "grid")
+      .attr("width", 50)
+      .attr("height", 50)
+      .attr("patternUnits", "userSpaceOnUse");
+    
+    // Add the grid lines to the pattern
+    gridPattern.append("path")
+      .attr("d", "M 50 0 L 0 0 0 50")
+      .attr("fill", "none")
+      .attr("stroke", "#EEEEEE")
+      .attr("stroke-width", 1);
+    
+    // Add arrow marker definitions
     defs.append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "0 -5 10 10")
@@ -263,62 +148,8 @@ export class GraphVisualizer {
       .attr("d", "M 0,-4 L 8,0 L 0,4")
       .attr("fill", "#9CA3AF")
       .attr("stroke", "none");
-    
-    // Step 6: Add a click handler for the background that doesn't interfere with zoom
-    this.svg.select(".background").on("click", (event) => {
-      // Prevent propagation to avoid conflict with zoom
-      event.stopPropagation();
-      this.onSelectElement(null);
-    });
-  }
-
-  private simulation: d3.Simulation<SimulationNode, SimulationLink> | null = null;
-  
-  public render(graph: Graph): void {
-    console.log("Rendering graph:", graph);
-    this.graph = graph;
-    
-    // Clear all existing elements from the SVG
-    this.svg.selectAll("*").remove();
-    
-    // Stop any existing simulation
-    if (this.simulation) {
-      this.simulation.stop();
-      this.simulation = null;
-    }
-    
-    // Rebuild the SVG structure with consistent approach as constructor
-    // Step 1: Add a rect that covers the entire SVG area to capture click events
-    this.svg.append("rect")
-      .attr("width", this.width)
-      .attr("height", this.height)
-      .attr("fill", "transparent")
-      .attr("class", "background")
-      .style("cursor", "move");
       
-    // Step 2: Create container for graph elements
-    this.container = this.svg.append("g")
-      .attr("class", "graph-container");
-    
-    // Step 3: Re-add definitions for markers
-    const defs = this.svg.append("defs");
-    
-    // Define default gray arrow marker
-    defs.append("marker")
-      .attr("id", "arrowhead")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 20)
-      .attr("refY", 0)
-      .attr("orient", "auto")
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 6)
-      .attr("xoverflow", "visible")
-      .append("path")
-      .attr("d", "M 0,-4 L 8,0 L 0,4")
-      .attr("fill", "#9CA3AF")
-      .attr("stroke", "none");
-      
-    // Define blue arrow marker for highlighted edges
+    // Add blue arrow marker for highlighted edges
     defs.append("marker")
       .attr("id", "arrowhead-highlighted")
       .attr("viewBox", "0 -5 10 10")
@@ -332,19 +163,187 @@ export class GraphVisualizer {
       .attr("d", "M 0,-4 L 8,0 L 0,4")
       .attr("fill", "#2563EB")
       .attr("stroke", "none");
+      
+    // Step 3: Add grid background with the pattern
+    const gridGroup = this.svg.append("g")
+      .attr("class", "grid-group");
+      
+    gridGroup.append("rect")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("fill", "url(#grid)");
     
-    // Step 4: Re-apply zoom to the SVG
+    // Step 4: Add coordinate labels that show every 100px
+    const gridLabelsGroup = this.svg.append("g")
+      .attr("class", "grid-labels");
+      
+    // X-axis labels (every 100px)
+    for (let x = 0; x <= width; x += 100) {
+      gridLabelsGroup.append("text")
+        .attr("x", x)
+        .attr("y", 15)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "9px")
+        .attr("fill", "#999")
+        .text(x);
+    }
+    
+    // Y-axis labels (every 100px)
+    for (let y = 0; y <= height; y += 100) {
+      gridLabelsGroup.append("text")
+        .attr("x", 15)
+        .attr("y", y)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "9px")
+        .attr("fill", "#999")
+        .text(y);
+    }
+    
+    // Step 5: Create a tooltip for coordinates
+    const tooltip = this.svg.append("g")
+      .attr("class", "tooltip")
+      .style("display", "none");
+      
+    tooltip.append("rect")
+      .attr("width", 80)
+      .attr("height", 30)
+      .attr("fill", "white")
+      .attr("stroke", "#ccc")
+      .attr("rx", 5);
+      
+    const tooltipText = tooltip.append("text")
+      .attr("x", 5)
+      .attr("y", 15)
+      .attr("font-size", "10px")
+      .attr("fill", "#333");
+    
+    // Step 6: Create container for graph elements - this will be transformed for zoom/pan
+    this.container = this.svg.append("g")
+      .attr("class", "graph-container");
+    
+    // Step 7: Setup the zoom behavior
+    this.zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 4])  // Zoom limits 
+      .on("zoom", (event) => {
+        // Apply the zoom transform to the container
+        this.container.attr("transform", event.transform);
+      });
+    
+    // Apply zoom to the SVG element
+    this.svg.call(this.zoom);
+    
+    // Add a click handler for the background that doesn't interfere with zoom
+    this.svg.select(".background").on("click", (event) => {
+      // Prevent propagation to avoid conflict with zoom
+      event.stopPropagation();
+      this.onSelectElement(null);
+    });
+    
+    // Add mousemove handler to show coordinates
+    this.svg.on("mousemove", (event) => {
+      const [x, y] = d3.pointer(event);
+      tooltip.style("display", "block")
+        .attr("transform", `translate(${x + 10},${y - 30})`);
+      
+      tooltipText.text(`X: ${Math.round(x)}, Y: ${Math.round(y)}`);
+    });
+    
+    // Hide tooltip when mouse leaves SVG
+    this.svg.on("mouseleave", () => {
+      tooltip.style("display", "none");
+    });
+  }
+  
+  public render(graph: Graph): void {
+    console.log("Rendering graph:", graph);
+    this.graph = graph;
+    
+    // Clear all existing elements from the SVG
+    this.svg.selectAll(".graph-container, .tooltip, .grid-labels, .grid-group").remove();
+    
+    // Stop any existing simulation
+    if (this.simulation) {
+      this.simulation.stop();
+      this.simulation = null;
+    }
+    
+    // Re-create the grid
+    const gridGroup = this.svg.append("g")
+      .attr("class", "grid-group");
+      
+    gridGroup.append("rect")
+      .attr("width", this.width)
+      .attr("height", this.height)
+      .attr("fill", "url(#grid)");
+    
+    // Re-create coordinate labels
+    const gridLabelsGroup = this.svg.append("g")
+      .attr("class", "grid-labels");
+      
+    // X-axis labels (every 100px)
+    for (let x = 0; x <= this.width; x += 100) {
+      gridLabelsGroup.append("text")
+        .attr("x", x)
+        .attr("y", 15)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "9px")
+        .attr("fill", "#999")
+        .text(x);
+    }
+    
+    // Y-axis labels (every 100px)
+    for (let y = 0; y <= this.height; y += 100) {
+      gridLabelsGroup.append("text")
+        .attr("x", 15)
+        .attr("y", y)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "9px")
+        .attr("fill", "#999")
+        .text(y);
+    }
+    
+    // Re-create tooltip
+    const tooltip = this.svg.append("g")
+      .attr("class", "tooltip")
+      .style("display", "none");
+      
+    tooltip.append("rect")
+      .attr("width", 80)
+      .attr("height", 30)
+      .attr("fill", "white")
+      .attr("stroke", "#ccc")
+      .attr("rx", 5);
+      
+    const tooltipText = tooltip.append("text")
+      .attr("x", 5)
+      .attr("y", 15)
+      .attr("font-size", "10px")
+      .attr("fill", "#333");
+    
+    // Add mousemove handler to show coordinates
+    this.svg.on("mousemove", (event) => {
+      const [x, y] = d3.pointer(event);
+      tooltip.style("display", "block")
+        .attr("transform", `translate(${x + 10},${y - 30})`);
+      
+      tooltipText.text(`X: ${Math.round(x)}, Y: ${Math.round(y)}`);
+    });
+    
+    // Hide tooltip when mouse leaves SVG
+    this.svg.on("mouseleave", () => {
+      tooltip.style("display", "none");
+    });
+    
+    // Create container for graph elements
+    this.container = this.svg.append("g")
+      .attr("class", "graph-container");
+    
+    // Re-apply zoom handler
     this.zoom.on("zoom", (event) => {
       this.container.attr("transform", event.transform);
     });
     
     this.svg.call(this.zoom);
-    
-    // Step 5: Add a click handler for background that doesn't interfere with zoom
-    this.svg.select(".background").on("click", (event) => {
-      event.stopPropagation();
-      this.onSelectElement(null);
-    });
     
     // Validate graph data
     if (!graph || !graph.nodes || !graph.edges) {
@@ -716,6 +715,95 @@ export class GraphVisualizer {
   }
 
   /**
+   * Get the simulation to access or modify it directly
+   */
+  public getSimulation(): d3.Simulation<SimulationNode, SimulationLink> | null {
+    return this.simulation;
+  }
+  
+  /**
+   * Set custom style for a specific node
+   */
+  public setNodeStyle(nodeId: string, style: NodeStyle): void {
+    this.nodeStyles.set(nodeId, style);
+    this.applyStyles();
+  }
+  
+  /**
+   * Get the current style for a node
+   */
+  public getNodeStyle(nodeId: string): NodeStyle | null {
+    return this.nodeStyles.get(nodeId) || null;
+  }
+  
+  /**
+   * Set custom style for a specific edge
+   */
+  public setEdgeStyle(edgeId: string, style: EdgeStyle): void {
+    this.edgeStyles.set(edgeId, style);
+    this.applyStyles();
+  }
+  
+  /**
+   * Get the current style for an edge
+   */
+  public getEdgeStyle(edgeId: string): EdgeStyle | null {
+    return this.edgeStyles.get(edgeId) || null;
+  }
+  
+  /**
+   * Apply all current styles to the graph elements
+   */
+  private applyStyles(): void {
+    if (!this.container) return;
+    
+    // Apply node styles
+    this.container.selectAll<SVGGElement, SimulationNode>(".node")
+      .each((d, i, nodes) => {
+        const nodeElement = d3.select(nodes[i]);
+        const style = this.nodeStyles.get(d.id);
+        
+        if (style) {
+          // Apply circle styles
+          nodeElement.select("circle")
+            .transition().duration(300)
+            .attr("fill", style.color || null)
+            .attr("r", style.size || 20)
+            .attr("stroke", style.borderColor || null)
+            .attr("stroke-width", style.borderWidth || 0);
+          
+          // Apply label styles
+          nodeElement.select("text")
+            .transition().duration(300)
+            .attr("fill", style.labelColor || "white")
+            .attr("font-size", `${style.labelSize || 12}px`);
+        }
+      });
+    
+    // Apply edge styles
+    this.container.selectAll<SVGGElement, SimulationLink>(".edge")
+      .each((d, i, edges) => {
+        const edgeElement = d3.select(edges[i]);
+        const style = this.edgeStyles.get(d.id);
+        
+        if (style) {
+          // Apply line styles
+          edgeElement.select("line")
+            .transition().duration(300)
+            .attr("stroke", style.color || "#9CA3AF")
+            .attr("stroke-width", style.width || 1.5)
+            .attr("stroke-dasharray", style.dashed ? "5,5" : null);
+          
+          // Apply label styles
+          edgeElement.select("text")
+            .transition().duration(300)
+            .attr("fill", style.labelColor || "#4B5563")
+            .attr("font-size", `${style.labelSize || 10}px`);
+        }
+      });
+  }
+
+  /**
    * Update the layout settings and apply them to the simulation
    */
   public updateLayoutSettings(settings: LayoutSettings): void {
@@ -776,7 +864,21 @@ export class GraphVisualizer {
       this.container.selectAll(".node circle")
         .transition().duration(300)
         .attr("opacity", 1.0)
-        .attr("stroke-width", 0);
+        .attr("stroke-width", (d: any) => {
+          // Preserve the stroke-width for the anchored node
+          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+          return nodeIndex === 0 ? 2 : 0;
+        })
+        .attr("stroke-dasharray", (d: any) => {
+          // Preserve the dash array for the anchored node
+          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+          return nodeIndex === 0 ? "3,3" : null;
+        })
+        .attr("stroke", (d: any) => {
+          // Preserve the stroke color for the anchored node
+          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+          return nodeIndex === 0 ? "#000" : null;
+        });
         
       this.container.selectAll(".edge line")
         .transition().duration(300)
