@@ -228,19 +228,22 @@ export class GraphVisualizer {
       .scaleExtent([0.1, 4])
       .on("zoom", (event) => {
         this.container.attr("transform", event.transform);
-      })
-      // Ensure panning is enabled
-      .filter((event) => {
-        // Always return true to enable all zoom/pan behaviors
-        // This overrides any default event filtering
-        return true;
       });
     
-    // Apply zoom and enable panning, and ensure it's active immediately
+    // Apply zoom and enable panning directly to SVG element
     this.svg.call(this.zoom);
     
-    // Enable the pan behavior on the SVG element
-    this.svg.style("cursor", "move");
+    // Create a background rectangle to capture pan events
+    // This needs to be added before the container to ensure it's behind everything
+    this.svg.append("rect")
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("fill", "transparent")
+      .style("cursor", "move")
+      .attr("class", "background-rect");
+    
+    // Create container for graph elements
+    this.container = this.svg.append("g").attr("class", "graph-container");
     
     // Add definitions for markers (arrows)
     const defs = this.svg.append("defs");
@@ -259,9 +262,6 @@ export class GraphVisualizer {
       .attr("d", "M 0,-4 L 8,0 L 0,4")
       .attr("fill", "#9CA3AF") // Match the edge color
       .attr("stroke", "none");
-    
-    // Create container for graph elements
-    this.container = this.svg.append("g");
     
     // Handle background click to deselect - use click event to avoid interfering with panning
     this.svg.on("click", (event) => {
@@ -287,6 +287,15 @@ export class GraphVisualizer {
       this.simulation = null;
     }
     
+    // Create a background rectangle to capture pan events
+    // This needs to be added before the container to ensure it's behind everything
+    this.svg.append("rect")
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("fill", "transparent")
+      .style("cursor", "move")
+      .attr("class", "background-rect");
+      
     // Re-add definitions for markers
     const defs = this.svg.append("defs");
     
