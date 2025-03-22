@@ -248,6 +248,23 @@ export default function GraphPanel({
     
     setElementStyle(style);
   };
+  
+  // Handle custom center point changes
+  const handleCenterPointChange = (centerPoint: CenterPoint) => {
+    if (!visualizer) return;
+    
+    // Update the custom center point
+    setCustomCenterPoint(centerPoint);
+    // Apply it to the visualizer
+    visualizer.setCustomCenterPoint(centerPoint);
+    
+    // Reset simulation to apply the changes
+    setIsSimulating(true);
+    
+    setTimeout(() => {
+      setIsSimulating(false);
+    }, 1000);
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full">
@@ -415,6 +432,16 @@ export default function GraphPanel({
               {/* Layout Controls Section */}
               {activeTab === 'layout' && (
                 <div>
+                  {/* Center Point Controls */}
+                  <CenterControls 
+                    defaultCenter={{
+                      x: customCenterPoint?.x || (svgRef.current?.clientWidth || 0) / 2,
+                      y: customCenterPoint?.y || (svgRef.current?.clientHeight || 0) / 2
+                    }}
+                    onCenterChange={handleCenterPointChange}
+                  />
+                  
+                  {/* Layout Force Controls */}
                   <LayoutControls 
                     onSettingsChange={handleLayoutSettingsChange}
                     onRestart={handleRestartSimulation}

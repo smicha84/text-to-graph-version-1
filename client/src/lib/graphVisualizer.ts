@@ -564,8 +564,10 @@ export class GraphVisualizer {
       .force("charge", d3.forceManyBody<SimulationNode>()
         .strength(-this.layoutSettings.nodeRepulsion) // Repulsion between nodes
         .distanceMax(300)) // Limit the effect distance to prevent runaway behavior
-      .force("center", d3.forceCenter<SimulationNode>(this.width / 2, this.height / 2)
-        .strength(this.layoutSettings.centerStrength * 2)) // Double strength to prevent drift
+      .force("center", d3.forceCenter<SimulationNode>(
+        this.customCenterPoint ? this.customCenterPoint.x : this.width / 2,
+        this.customCenterPoint ? this.customCenterPoint.y : this.height / 2
+      ).strength(this.layoutSettings.centerStrength * 2)) // Double strength to prevent drift
       .force("collision", d3.forceCollide<SimulationNode>().radius(this.layoutSettings.collisionRadius)) // Prevent node overlap
       .alphaDecay(0.05) // Increase decay rate to stabilize simulation faster
       .on("tick", () => {
