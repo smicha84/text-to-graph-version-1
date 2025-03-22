@@ -67,6 +67,7 @@ export class GraphVisualizer {
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private onSelectElement: (element: Node | Edge | null) => void;
   private activeSubgraphId: string | null = null;
+  private customNodeColors: Record<string, string> = {};
   private layoutSettings: LayoutSettings = {
     nodeRepulsion: 500,
     linkDistance: 150,
@@ -229,7 +230,7 @@ export class GraphVisualizer {
     // Node circles
     nodes.append("circle")
       .attr("r", 20)
-      .attr("fill", (d: SimulationNode) => NODE_COLORS[d.type] || NODE_COLORS.default);
+      .attr("fill", (d: SimulationNode) => this.getNodeColor(d.type));
     
     // Node labels (inside circle)
     nodes.append("text")
@@ -509,5 +510,36 @@ export class GraphVisualizer {
     });
     
     return Array.from(subgraphIds).sort();
+  }
+
+  /**
+   * Get the color for a specific node type
+   * @param nodeType The node type to get the color for
+   * @returns The color hex value
+   */
+  private getNodeColor(nodeType: string): string {
+    // First check if we have a custom color for this type
+    if (this.customNodeColors[nodeType]) {
+      return this.customNodeColors[nodeType];
+    }
+    
+    // Otherwise use the default colors
+    return NODE_COLORS[nodeType] || NODE_COLORS.default;
+  }
+
+  /**
+   * Update the color mapping for node types and refresh the graph colors
+   * @param newColors Object mapping node types to colors
+   */
+  public updateNodeColors(newColors: Record<string, string>): void {
+    // Update the custom colors
+    this.customNodeColors = { ...newColors };
+    
+    // Update existing node colors in the visualization
+    if (this.container) {
+      this.container.selectAll(".node circle")
+        .transition().duration(300)
+        .attr("fill", (d: any) => this.getNodeColor(d.type));
+    }
   }
 }
