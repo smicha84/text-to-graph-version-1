@@ -233,6 +233,24 @@ export class GraphVisualizer {
     // Apply zoom and enable panning
     this.svg.call(this.zoom);
     
+    // Add definitions for markers (arrows)
+    const defs = this.svg.append("defs");
+    
+    // Define arrow marker
+    defs.append("marker")
+      .attr("id", "arrowhead")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", 20) // Position the arrow away from the end of the line
+      .attr("refY", 0)
+      .attr("orient", "auto")
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 6)
+      .attr("xoverflow", "visible")
+      .append("path")
+      .attr("d", "M 0,-4 L 8,0 L 0,4")
+      .attr("fill", "#9CA3AF") // Match the edge color
+      .attr("stroke", "none");
+    
     // Create container for graph elements
     this.container = this.svg.append("g");
     
@@ -260,6 +278,39 @@ export class GraphVisualizer {
       this.simulation.stop();
       this.simulation = null;
     }
+    
+    // Re-add definitions for markers
+    const defs = this.svg.append("defs");
+    
+    // Define default gray arrow marker
+    defs.append("marker")
+      .attr("id", "arrowhead")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", 20) // Position the arrow away from the end of the line
+      .attr("refY", 0)
+      .attr("orient", "auto")
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 6)
+      .attr("xoverflow", "visible")
+      .append("path")
+      .attr("d", "M 0,-4 L 8,0 L 0,4")
+      .attr("fill", "#9CA3AF") // Gray color (match the edge color)
+      .attr("stroke", "none");
+      
+    // Define blue arrow marker for highlighted edges
+    defs.append("marker")
+      .attr("id", "arrowhead-highlighted")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", 20)
+      .attr("refY", 0)
+      .attr("orient", "auto")
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 6)
+      .attr("xoverflow", "visible")
+      .append("path")
+      .attr("d", "M 0,-4 L 8,0 L 0,4")
+      .attr("fill", "#2563EB") // Blue color for highlighted edges
+      .attr("stroke", "none");
     
     // Recreate the container for graph elements
     this.container = this.svg.append("g");
@@ -324,10 +375,11 @@ export class GraphVisualizer {
         this.onSelectElement(d as unknown as Edge);
       });
     
-    // Draw edge lines
+    // Draw edge lines with directional arrows
     const edgeLines = links.append("line")
       .attr("stroke", "#9CA3AF") // gray-400
-      .attr("stroke-width", 1.5);
+      .attr("stroke-width", 1.5)
+      .attr("marker-end", "url(#arrowhead)");
     
     // Add edge labels
     const edgeLabels = links.append("text")
@@ -401,10 +453,14 @@ export class GraphVisualizer {
       .force("center", d3.forceCenter<SimulationNode>(this.width / 2, this.height / 2).strength(this.layoutSettings.centerStrength)) // Center of the layout
       .force("collision", d3.forceCollide<SimulationNode>().radius(this.layoutSettings.collisionRadius)) // Prevent node overlap
       .on("tick", () => {
-        // Update link positions
+        // Update link positions with adjustments for node radius
         edgeLines
           .attr("x1", (d: SimulationLink) => {
             const sourceNode = d.source as SimulationNode;
+            const targetNode = d.target as SimulationNode;
+            const nodeRadius = 20; // Same as the circle radius
+            
+            // No adjustment needed for source
             return sourceNode.x || 0;
           })
           .attr("y1", (d: SimulationLink) => {
@@ -412,12 +468,46 @@ export class GraphVisualizer {
             return sourceNode.y || 0;
           })
           .attr("x2", (d: SimulationLink) => {
+            const sourceNode = d.source as SimulationNode;
             const targetNode = d.target as SimulationNode;
-            return targetNode.x || 0;
+            
+            // Calculate the direction vector
+            const dx = (targetNode.x || 0) - (sourceNode.x || 0);
+            const dy = (targetNode.y || 0) - (sourceNode.y || 0);
+            
+            // Calculate the length of the vector
+            const length = Math.sqrt(dx * dx + dy * dy);
+            
+            // If source and target are at the same position, return the target position
+            if (length === 0) return targetNode.x || 0;
+            
+            // Calculate the normalized direction vector
+            const normX = dx / length;
+            
+            // Calculate the position with an offset from the target node's edge
+            const nodeRadius = 20; // Same as the circle radius
+            return (targetNode.x || 0) - normX * nodeRadius;
           })
           .attr("y2", (d: SimulationLink) => {
+            const sourceNode = d.source as SimulationNode;
             const targetNode = d.target as SimulationNode;
-            return targetNode.y || 0;
+            
+            // Calculate the direction vector
+            const dx = (targetNode.x || 0) - (sourceNode.x || 0);
+            const dy = (targetNode.y || 0) - (sourceNode.y || 0);
+            
+            // Calculate the length of the vector
+            const length = Math.sqrt(dx * dx + dy * dy);
+            
+            // If source and target are at the same position, return the target position
+            if (length === 0) return targetNode.y || 0;
+            
+            // Calculate the normalized direction vector
+            const normY = dy / length;
+            
+            // Calculate the position with an offset from the target node's edge
+            const nodeRadius = 20; // Same as the circle radius
+            return (targetNode.y || 0) - normY * nodeRadius;
           });
         
         // Update edge label positions
@@ -593,7 +683,8 @@ export class GraphVisualizer {
       this.container.selectAll(".edge line")
         .transition().duration(300)
         .attr("opacity", 1.0)
-        .attr("stroke-width", 1.5);
+        .attr("stroke-width", 1.5)
+        .attr("marker-end", "url(#arrowhead)");
         
       this.container.selectAll(".edge text, .node text")
         .transition().duration(300)
@@ -611,7 +702,8 @@ export class GraphVisualizer {
     this.container.selectAll(".edge line")
       .transition().duration(300)
       .attr("opacity", 0.2)
-      .attr("stroke-width", 1);
+      .attr("stroke-width", 1)
+      .attr("marker-end", "url(#arrowhead)");
       
     this.container.selectAll(".edge text, .node text")
       .transition().duration(300)
@@ -638,7 +730,8 @@ export class GraphVisualizer {
       .transition().duration(300)
       .attr("opacity", 1.0)
       .attr("stroke-width", 2.5)
-      .attr("stroke", "#2563EB"); // blue-600
+      .attr("stroke", "#2563EB") // blue-600
+      .attr("marker-end", "url(#arrowhead-highlighted)");
       
     this.container.selectAll(".edge")
       .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
