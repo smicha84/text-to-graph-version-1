@@ -81,6 +81,7 @@ export class GraphVisualizer {
   private simulation: d3.Simulation<SimulationNode, SimulationLink> | null = null;
   
   public render(graph: Graph): void {
+    console.log("Rendering graph:", graph);
     this.graph = graph;
     
     // Clear existing elements
@@ -91,6 +92,14 @@ export class GraphVisualizer {
       this.simulation.stop();
     }
     
+    // Validate graph data
+    if (!graph || !graph.nodes || !graph.edges) {
+      console.error("Invalid graph data:", graph);
+      return;
+    }
+    
+    console.log(`Processing ${graph.nodes.length} nodes and ${graph.edges.length} edges`);
+    
     // Prepare node and link data for force simulation
     const nodeData = graph.nodes.map(node => ({
       ...node,
@@ -98,16 +107,26 @@ export class GraphVisualizer {
       y: node.y || this.height / 2 + (Math.random() - 0.5) * 100
     })) as SimulationNode[];
     
+    // Create a map for faster node lookup
+    const nodeMap = new Map<string, SimulationNode>();
+    nodeData.forEach(node => {
+      nodeMap.set(node.id, node);
+    });
+    
     // Create link data with references to node objects
     const linkData = graph.edges.map(edge => {
-      const source = nodeData.find(n => n.id === edge.source);
-      const target = nodeData.find(n => n.id === edge.target);
+      const source = nodeMap.get(edge.source);
+      const target = nodeMap.get(edge.target);
+      
       if (!source || !target) {
-        console.error(`Could not find nodes for edge: ${edge.id}`);
+        console.error(`Could not find nodes for edge: ${edge.id}, source: ${edge.source}, target: ${edge.target}`);
         return null;
       }
+      
       return { ...edge, source, target } as SimulationLink;
     }).filter(Boolean) as SimulationLink[];
+    
+    console.log(`Processed ${nodeData.length} simulation nodes and ${linkData.length} simulation links`);
     
     // Draw edges first
     const links = this.container
