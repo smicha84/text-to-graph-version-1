@@ -263,13 +263,30 @@ export class GraphVisualizer {
   
   public render(graph: Graph): void {
     console.log("Rendering graph:", graph);
+    
     // Get the current SVG dimensions from the element itself to ensure accuracy
+    // This is critical for ensuring visualization works properly on all device sizes
     const svgElement = this.svg.node();
     if (svgElement) {
-      const svgRect = svgElement.getBoundingClientRect();
-      // Update dimensions before proceeding
-      this.width = svgRect.width || this.width;
-      this.height = svgRect.height || this.height;
+      if (svgElement.parentElement) {
+        // Use the parent container's dimensions which is more reliable 
+        // especially when dealing with flexbox layouts
+        const containerRect = svgElement.parentElement.getBoundingClientRect();
+        this.width = containerRect.width;
+        this.height = containerRect.height;
+      } else {
+        // Fallback to SVG's dimensions if parent not available
+        const svgRect = svgElement.getBoundingClientRect();
+        this.width = svgRect.width || this.width;
+        this.height = svgRect.height || this.height;
+      }
+      
+      // Ensure SVG always fills its container
+      this.svg
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("preserveAspectRatio", "xMidYMid meet");
+        
       console.log(`UPDATED SVG dimensions before rendering: Width=${this.width}, Height=${this.height}`);
     }
     
@@ -762,15 +779,57 @@ export class GraphVisualizer {
     this.width = width;
     this.height = height;
     
+    // Update SVG to ensure it fills its container completely
+    this.svg
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("preserveAspectRatio", "xMidYMid meet")
+      .attr("viewBox", `0 0 ${width} ${height}`);
+    
     // Update the background rect
     this.svg.select(".background")
       .attr("width", width)
       .attr("height", height);
+      
+    // Update the grid
+    this.svg.select(".grid-group").select("rect")
+      .attr("width", width)
+      .attr("height", height);
+      
+    // Update coordinate labels
+    // First remove existing labels
+    this.svg.select(".grid-labels").selectAll("text").remove();
+    
+    const gridLabelsGroup = this.svg.select(".grid-labels");
+    
+    // X-axis labels (every 100px)
+    for (let x = 0; x <= width; x += 100) {
+      gridLabelsGroup.append("text")
+        .attr("x", x)
+        .attr("y", 15)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "9px")
+        .attr("fill", "#999")
+        .text(x);
+    }
+    
+    // Y-axis labels (every 100px)
+    for (let y = 0; y <= height; y += 100) {
+      gridLabelsGroup.append("text")
+        .attr("x", 15)
+        .attr("y", y)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "9px")
+        .attr("fill", "#999")
+        .text(y);
+    }
     
     // Update center force if simulation exists
     if (this.simulation) {
       const centerX = this.customCenterPoint ? this.customCenterPoint.x : width / 2;
       const centerY = this.customCenterPoint ? this.customCenterPoint.y : height / 2;
+      
+      console.log(`Updating simulation center to: (${centerX}, ${centerY})`);
       
       this.simulation.force("center", d3.forceCenter<SimulationNode>(centerX, centerY)
         .strength(this.layoutSettings.centerStrength * 2));

@@ -380,11 +380,18 @@ export default function GraphPanel({
           {/* Graph Canvas Container with Flexbox - similar to empty state centering */}
           <div 
             className={`absolute inset-0 flex items-center justify-center ${!graph || isLoading ? 'hidden' : ''}`}
+            style={{ touchAction: 'none' }} /* Disable browser touch handling for better mobile experience */
           >
             <svg 
               ref={svgRef}
               className="w-full h-full graph-svg"
-              style={{ maxWidth: '100%', maxHeight: '100%' }}
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '100%',
+                width: '100%', /* Ensure SVG fills the container */
+                height: '100%', /* Ensure SVG fills the container */
+                overflow: 'visible' /* Allow content to extend beyond SVG boundaries */
+              }}
             ></svg>
           </div>
           
