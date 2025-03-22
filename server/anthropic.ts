@@ -33,7 +33,7 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     const response = await anthropic.messages.create({
       model: CLAUDE_MODEL,
       max_tokens: 4000,
-      temperature: 0.2,
+      temperature: 1.0, // Must be exactly 1.0 when thinking is enabled
       system: "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.",
       messages: [
         {
