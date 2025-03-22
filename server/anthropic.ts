@@ -6,6 +6,9 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+const CLAUDE_MODEL = 'claude-3-7-sonnet-20250219';
+
 interface Entity {
   id: string;
   label: string;
@@ -28,7 +31,7 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
   try {
     // Call Claude API
     const response = await anthropic.messages.create({
-      model: 'claude-3-opus-20240229',
+      model: CLAUDE_MODEL,
       max_tokens: 4000,
       temperature: 0.2,
       system: "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph.",
@@ -41,15 +44,21 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     });
 
     // Extract the JSON response from Claude
-    const content = response.content[0].text;
-    const jsonStart = content.indexOf('{');
-    const jsonEnd = content.lastIndexOf('}') + 1;
+    const content = response.content[0];
+    
+    if (content.type !== 'text') {
+      throw new Error('Expected text response from Claude API');
+    }
+    
+    const contentText = content.text;
+    const jsonStart = contentText.indexOf('{');
+    const jsonEnd = contentText.lastIndexOf('}') + 1;
     
     if (jsonStart === -1 || jsonEnd === -1) {
       throw new Error('Could not extract valid JSON from Claude response');
     }
     
-    const jsonResponse = content.substring(jsonStart, jsonEnd);
+    const jsonResponse = contentText.substring(jsonStart, jsonEnd);
     const graphData = JSON.parse(jsonResponse);
 
     // Apply simple layout algorithm to position nodes

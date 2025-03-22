@@ -4,12 +4,11 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { generateGraphInputSchema, exportGraphSchema } from "@shared/schema";
 import { storage } from "./storage";
+import { generateGraphWithClaude } from "./anthropic";
 
-// Simulate O1 Pro API for graph generation
-async function generateGraphFromText(text: string, options: any) {
-  // This would call the actual O1 Pro API in production
-  // Here we're creating a simple graph based on the input text
-  
+// Fallback function if Claude API fails
+async function generateGraphFromTextFallback(text: string, options: any) {
+  console.log("Using fallback graph generation method");
   // Simple entity extraction
   const entities: Record<string, any> = {};
   const personRegex = /([A-Z][a-z]+ [A-Z][a-z]+)/g;
@@ -158,7 +157,7 @@ async function generateGraphFromText(text: string, options: any) {
     }
   }
   
-  // Simple layout calculation
+  // Apply layout
   const nodes = Object.values(entities);
   const centerX = 400;
   const centerY = 300;
@@ -176,6 +175,19 @@ async function generateGraphFromText(text: string, options: any) {
   };
 }
 
+// Main graph generation function using Claude
+async function generateGraphFromText(text: string, options: any) {
+  try {
+    // Use Claude API for AI-powered graph generation
+    return await generateGraphWithClaude(text, options);
+  } catch (error) {
+    console.error("Error using Claude API for graph generation:", error);
+    console.log("Falling back to regex-based generation");
+    // Fall back to the regex approach if Claude fails
+    return generateGraphFromTextFallback(text, options);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to generate a graph from text
   app.post('/api/generate-graph', async (req, res) => {
@@ -183,20 +195,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body
       const { text, options } = generateGraphInputSchema.parse(req.body);
       
-      // Call the O1 Pro API (simulated for now)
+      // Generate graph using Claude or fallback
       const result = await generateGraphFromText(text, options);
       
-      // Store the graph in history if there's a logged-in user
-      if (req.session?.userId) {
-        await storage.createGraph({
-          userId: req.session.userId,
-          text,
-          options,
-          result,
-          createdAt: new Date().toISOString()
-        });
-      }
-      
+      // Return the generated graph
       res.json(result);
     } catch (error) {
       if (error instanceof ZodError) {
