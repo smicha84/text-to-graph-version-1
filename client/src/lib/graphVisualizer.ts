@@ -7,6 +7,7 @@ interface SimulationNode extends d3.SimulationNodeDatum {
   label: string;
   type: string;
   properties: Record<string, any>;
+  subgraphIds?: string[]; // Array of subgraph IDs this node belongs to
   x?: number;
   y?: number;
   fx?: number | null;
@@ -19,6 +20,7 @@ interface SimulationLink {
   target: SimulationNode | string;
   label: string;
   properties: Record<string, any>;
+  subgraphIds?: string[]; // Array of subgraph IDs this edge belongs to
 }
 
 // Node colors based on node type

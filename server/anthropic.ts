@@ -104,6 +104,23 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
       // Apply simple layout algorithm to position nodes
       applyLayout(graphData);
       
+      // Initialize subgraph tracking for new graphs
+      const initialSubgraphId = 'sg1';
+      graphData.subgraphCounter = 1;
+      
+      // Add subgraph IDs to all nodes and edges
+      if (graphData.nodes) {
+        graphData.nodes.forEach(node => {
+          node.subgraphIds = [initialSubgraphId];
+        });
+      }
+      
+      if (graphData.edges) {
+        graphData.edges.forEach(edge => {
+          edge.subgraphIds = [initialSubgraphId];
+        });
+      }
+      
       return graphData;
     } catch (parseError) {
       console.error('Error parsing JSON response:', parseError);
@@ -195,7 +212,7 @@ function applyLayout(graph: { nodes: any[], edges: any[] }): void {
   const spreadFactor = 250; // Higher value means more spread out initial positions
   
   // Apply a slight randomization to the positions
-  graph.nodes.forEach((node) => {
+  graph.nodes.forEach((node: any) => {
     // Use a combination of random positioning and node index to achieve 
     // better distribution while still maintaining some determinism
     node.x = centerX + (Math.random() - 0.5) * spreadFactor;
