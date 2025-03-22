@@ -29,7 +29,7 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
   const extractionPrompt = buildPrompt(text, options);
   
   try {
-    // Call Claude API with advanced system prompt for deep analysis
+    // Call Claude API with advanced system prompt and thinking enabled for deeper analysis
     const response = await anthropic.messages.create({
       model: CLAUDE_MODEL,
       max_tokens: 4000,
@@ -40,7 +40,11 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
           role: 'user',
           content: extractionPrompt
         }
-      ]
+      ],
+      thinking: {
+        type: "enabled",
+        budget_tokens: 2000
+      }
     });
 
     // Extract the JSON response from Claude
