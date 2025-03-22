@@ -52,6 +52,7 @@ export default function GraphPanel({
     let visualizerInstance: GraphVisualizer | null = null;
     
     // Create a ResizeObserver to get accurate dimensions even when initially hidden
+    // This is critical for ensuring responsive behavior across all devices
     const resizeObserver = new ResizeObserver(entries => {
       const entry = entries[0];
       if (!entry) return;
@@ -63,8 +64,8 @@ export default function GraphPanel({
       
       // Get the actual dimensions from the DOM
       const containerRect = container.getBoundingClientRect();
-      const width = containerRect.width;
-      const height = containerRect.height;
+      const width = Math.floor(containerRect.width);
+      const height = Math.floor(containerRect.height);
       
       // Wait for non-zero dimensions
       if (width === 0 || height === 0) return;
@@ -74,26 +75,40 @@ export default function GraphPanel({
       
       console.log(`SVG dimensions updated: ${width}x${height}, Center: (${centerX}, ${centerY})`);
       
-      // If visualizer already exists, update its dimensions
-      if (visualizerInstance) {
-        visualizerInstance.updateDimensions(width, height);
-      } else if (svgRef.current) {
-        // Clear any existing SVG content
-        d3.select(svgRef.current).selectAll("*").remove();
-        
-        // Create new visualizer with the detected dimensions
-        visualizerInstance = new GraphVisualizer(
-          svgRef.current, 
-          width, 
-          height,
-          handleElementSelect
-        );
-        
-        // Store the natural center point for reference
-        setCustomCenterPoint({ x: centerX, y: centerY });
-        
-        setVisualizer(visualizerInstance);
-      }
+      // Debounce rapid resize events (especially important on mobile)
+      const debounceResize = () => {
+        if (visualizerInstance) {
+          // Update dimensions of existing visualizer
+          visualizerInstance.updateDimensions(width, height);
+          
+          // If we have a graph, fit it to the new dimensions
+          if (graph) {
+            setTimeout(() => {
+              visualizerInstance.fitToView();
+            }, 100);
+          }
+        } else if (svgRef.current) {
+          // Clear any existing SVG content
+          d3.select(svgRef.current).selectAll("*").remove();
+          
+          // Create new visualizer with the detected dimensions
+          visualizerInstance = new GraphVisualizer(
+            svgRef.current, 
+            width, 
+            height,
+            handleElementSelect
+          );
+          
+          // Store the natural center point for reference
+          setCustomCenterPoint({ x: centerX, y: centerY });
+          
+          setVisualizer(visualizerInstance);
+        }
+      };
+      
+      // Clear any existing timeout to prevent multiple executions
+      if (window.resizeTimer) clearTimeout(window.resizeTimer);
+      window.resizeTimer = setTimeout(debounceResize, 100); // 100ms debounce
     });
     
     // Start observing the SVG container for size changes

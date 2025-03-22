@@ -667,6 +667,25 @@ export class GraphVisualizer {
   public fitToView(): void {
     if (!this.graph || this.graph.nodes.length === 0) return;
     
+    // Get the current SVG dimensions from the element itself to ensure accuracy
+    // This is critical for ensuring visualization works properly on all device sizes
+    const svgElement = this.svg.node();
+    if (svgElement) {
+      if (svgElement.parentElement) {
+        // Use the parent container's dimensions which is more reliable 
+        // especially when dealing with flexbox layouts
+        const containerRect = svgElement.parentElement.getBoundingClientRect();
+        this.width = containerRect.width;
+        this.height = containerRect.height;
+      } else {
+        // Fallback to SVG's dimensions if parent not available
+        const svgRect = svgElement.getBoundingClientRect();
+        this.width = svgRect.width || this.width;
+        this.height = svgRect.height || this.height;
+      }
+      console.log(`UPDATED SVG dimensions before fitToView: Width=${this.width}, Height=${this.height}`);
+    }
+    
     // Find bounds of graph
     let minX = Infinity;
     let minY = Infinity;
@@ -687,36 +706,51 @@ export class GraphVisualizer {
     // Default to center points if no valid positions found
     if (minX === Infinity || minY === Infinity || maxX === -Infinity || maxY === -Infinity) {
       console.log("Using default center positioning - no valid node positions found");
-      minX = this.width / 2 - 100;
-      maxX = this.width / 2 + 100;
-      minY = this.height / 2 - 100;
-      maxY = this.height / 2 + 100;
+      // Use the custom center point if available, otherwise use the SVG center
+      const centerX = this.customCenterPoint ? this.customCenterPoint.x : this.width / 2;
+      const centerY = this.customCenterPoint ? this.customCenterPoint.y : this.height / 2;
+      
+      minX = centerX - 100;
+      maxX = centerX + 100;
+      minY = centerY - 100;
+      maxY = centerY + 100;
     }
     
-    // Add padding
-    const padding = 80; // Increased padding for better visuals
-    minX -= padding;
-    minY -= padding;
-    maxX += padding;
-    maxY += padding;
+    // Calculate padding as a percentage of the container size
+    // This ensures proper scaling on different device sizes
+    const paddingPercentX = 0.1; // 10% of width
+    const paddingPercentY = 0.1; // 10% of height
+    const paddingX = this.width * paddingPercentX;
+    const paddingY = this.height * paddingPercentY;
+    
+    minX -= paddingX;
+    minY -= paddingY;
+    maxX += paddingX;
+    maxY += paddingY;
     
     const graphWidth = maxX - minX;
     const graphHeight = maxY - minY;
     
-    if (graphWidth === 0 || graphHeight === 0) {
-      console.log("Graph has zero width or height, using default sizing");
-      // Default to reasonable values if graph has zero dimensions
-      minX = this.width / 2 - 100;
-      maxX = this.width / 2 + 100;
-      minY = this.height / 2 - 100;
-      maxY = this.height / 2 + 100;
+    if (graphWidth <= 0 || graphHeight <= 0) {
+      console.log("Graph has zero or negative dimensions, using default sizing");
+      // Use the custom center point if available, otherwise use the SVG center
+      const centerX = this.customCenterPoint ? this.customCenterPoint.x : this.width / 2;
+      const centerY = this.customCenterPoint ? this.customCenterPoint.y : this.height / 2;
+      
+      minX = centerX - this.width * 0.2; // 20% of width
+      maxX = centerX + this.width * 0.2; // 20% of width
+      minY = centerY - this.height * 0.2; // 20% of height
+      maxY = centerY + this.height * 0.2; // 20% of height
     }
     
-    // Calculate scale to fit
+    // Calculate scale to fit, with a responsive max scale based on device dimensions
+    // For smaller screens, we allow a bit more zoom out to ensure everything fits
+    const maxScale = Math.max(0.5, Math.min(1.5, this.width / 800)); // Adaptive max scale
+    
     const scale = Math.min(
       this.width / graphWidth,
       this.height / graphHeight,
-      1.5 // Reduced max scale for better overall view
+      maxScale
     );
     
     // Calculate translation to center
@@ -725,8 +759,10 @@ export class GraphVisualizer {
     
     console.log(`Centering graph: translate(${translateX}, ${translateY}) scale(${scale})`);
     
-    // Apply transform
-    this.svg.transition().duration(500).call( // Increased duration for smoother transition
+    // Apply transform with a smooth transition that's appropriate for the device
+    // Shorter duration on mobile devices to feel more responsive
+    const transitionDuration = this.width < 768 ? 300 : 750;
+    this.svg.transition().duration(transitionDuration).call( // Responsive transition
       this.zoom.transform,
       d3.zoomIdentity.translate(translateX, translateY).scale(scale)
     );
