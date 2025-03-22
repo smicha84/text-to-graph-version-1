@@ -66,6 +66,7 @@ export class GraphVisualizer {
   private graph: Graph | null = null;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private onSelectElement: (element: Node | Edge | null) => void;
+  private activeSubgraphId: string | null = null;
   private layoutSettings: LayoutSettings = {
     nodeRepulsion: 500,
     linkDistance: 150,
@@ -409,5 +410,104 @@ export class GraphVisualizer {
     if (this.simulation && this.graph) {
       this.simulation.alpha(1).restart();
     }
+  }
+
+  /**
+   * Highlight a specific subgraph by ID, fading other elements
+   * @param subgraphId The ID of the subgraph to highlight, or null to clear highlighting
+   */
+  public highlightSubgraph(subgraphId: string | null): void {
+    this.activeSubgraphId = subgraphId;
+    
+    if (!this.graph) return;
+    
+    // If no subgraph is selected, reset all elements to normal appearance
+    if (!subgraphId) {
+      this.container.selectAll(".node circle")
+        .transition().duration(300)
+        .attr("opacity", 1.0)
+        .attr("stroke-width", 0);
+        
+      this.container.selectAll(".edge line")
+        .transition().duration(300)
+        .attr("opacity", 1.0)
+        .attr("stroke-width", 1.5);
+        
+      this.container.selectAll(".edge text, .node text")
+        .transition().duration(300)
+        .attr("opacity", 1.0);
+        
+      return;
+    }
+    
+    // Fade all elements first
+    this.container.selectAll(".node circle")
+      .transition().duration(300)
+      .attr("opacity", 0.3)
+      .attr("stroke-width", 0);
+      
+    this.container.selectAll(".edge line")
+      .transition().duration(300)
+      .attr("opacity", 0.2)
+      .attr("stroke-width", 1);
+      
+    this.container.selectAll(".edge text, .node text")
+      .transition().duration(300)
+      .attr("opacity", 0.2);
+    
+    // Then highlight the elements that belong to the selected subgraph
+    this.container.selectAll(".node")
+      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
+      .selectAll("circle")
+      .transition().duration(300)
+      .attr("opacity", 1.0)
+      .attr("stroke", "#2563EB") // blue-600
+      .attr("stroke-width", 3);
+      
+    this.container.selectAll(".node")
+      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
+      .selectAll("text")
+      .transition().duration(300)
+      .attr("opacity", 1.0);
+      
+    this.container.selectAll(".edge")
+      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
+      .selectAll("line")
+      .transition().duration(300)
+      .attr("opacity", 1.0)
+      .attr("stroke-width", 2.5)
+      .attr("stroke", "#2563EB"); // blue-600
+      
+    this.container.selectAll(".edge")
+      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
+      .selectAll("text")
+      .transition().duration(300)
+      .attr("opacity", 1.0)
+      .attr("fill", "#2563EB"); // blue-600
+  }
+  
+  /**
+   * Get list of all subgraph IDs in the current graph
+   * @returns Array of unique subgraph IDs
+   */
+  public getSubgraphIds(): string[] {
+    if (!this.graph) return [];
+    
+    const subgraphIds = new Set<string>();
+    
+    // Collect all unique subgraph IDs from nodes and edges
+    this.graph.nodes.forEach(node => {
+      if (node.subgraphIds) {
+        node.subgraphIds.forEach(id => subgraphIds.add(id));
+      }
+    });
+    
+    this.graph.edges.forEach(edge => {
+      if (edge.subgraphIds) {
+        edge.subgraphIds.forEach(id => subgraphIds.add(id));
+      }
+    });
+    
+    return Array.from(subgraphIds).sort();
   }
 }

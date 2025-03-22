@@ -110,13 +110,13 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
       
       // Add subgraph IDs to all nodes and edges
       if (graphData.nodes) {
-        graphData.nodes.forEach(node => {
+        graphData.nodes.forEach((node: { subgraphIds?: string[] }) => {
           node.subgraphIds = [initialSubgraphId];
         });
       }
       
       if (graphData.edges) {
-        graphData.edges.forEach(edge => {
+        graphData.edges.forEach((edge: { subgraphIds?: string[] }) => {
           edge.subgraphIds = [initialSubgraphId];
         });
       }

@@ -3,7 +3,15 @@ import { Graph, Node, Edge, ZoomPanInfo } from "@/types/graph";
 import { Button } from "@/components/ui/button";
 import { GraphVisualizer } from "@/lib/graphVisualizer";
 import LayoutControls, { LayoutSettings } from "@/components/LayoutControls";
-import { MinusIcon, PlusIcon, ExpandIcon, DownloadIcon } from "lucide-react";
+import { 
+  MinusIcon, 
+  PlusIcon, 
+  ExpandIcon, 
+  DownloadIcon, 
+  LayersIcon, 
+  XIcon 
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import * as d3 from "d3";
 
 interface GraphPanelProps {
@@ -23,6 +31,8 @@ export default function GraphPanel({
   const [visualizer, setVisualizer] = useState<GraphVisualizer | null>(null);
   const [zoomInfo, setZoomInfo] = useState<ZoomPanInfo>({ scale: 1, translateX: 0, translateY: 0 });
   const [isSimulating, setIsSimulating] = useState(false);
+  const [subgraphIds, setSubgraphIds] = useState<string[]>([]);
+  const [activeSubgraphId, setActiveSubgraphId] = useState<string | null>(null);
 
   // Setup D3 visualization
   useEffect(() => {
@@ -65,6 +75,13 @@ export default function GraphPanel({
     setTimeout(() => {
       visualizer.fitToView();
       setIsSimulating(false);
+      
+      // Get available subgraph IDs from the graph
+      const ids = visualizer.getSubgraphIds();
+      setSubgraphIds(ids);
+      
+      // Clear active subgraph when loading a new graph
+      setActiveSubgraphId(null);
     }, 100);
     
     // Update zoom info periodically during simulation
@@ -118,6 +135,21 @@ export default function GraphPanel({
         setZoomInfo(visualizer.getZoomInfo());
         setIsSimulating(false);
       }, 1000);
+    }
+  };
+  
+  // Handle subgraph selection
+  const handleSubgraphSelect = (subgraphId: string | null) => {
+    if (visualizer) {
+      if (activeSubgraphId === subgraphId) {
+        // If clicking the active subgraph, clear selection
+        setActiveSubgraphId(null);
+        visualizer.highlightSubgraph(null);
+      } else {
+        // Otherwise set new active subgraph
+        setActiveSubgraphId(subgraphId);
+        visualizer.highlightSubgraph(subgraphId);
+      }
     }
   };
 
@@ -200,14 +232,64 @@ export default function GraphPanel({
           ></svg>
         </div>
         
-        {/* Layout Controls Sidebar */}
+        {/* Layout Controls & Subgraph Sidebar */}
         {graph && !isLoading && (
           <div className="w-72 border-l border-gray-200 bg-white p-4 overflow-y-auto">
-            <LayoutControls 
-              onSettingsChange={handleLayoutSettingsChange}
-              onRestart={handleRestartSimulation}
-              isLoading={isSimulating}
-            />
+            
+            {/* Layout Controls Section */}
+            <div className="mb-6">
+              <LayoutControls 
+                onSettingsChange={handleLayoutSettingsChange}
+                onRestart={handleRestartSimulation}
+                isLoading={isSimulating}
+              />
+            </div>
+            
+            {/* Subgraph Controls Section */}
+            {subgraphIds.length > 0 && (
+              <div className="border-t pt-5">
+                <h3 className="flex items-center gap-2 font-semibold text-gray-700 mb-3">
+                  <LayersIcon size={16} className="text-gray-500" />
+                  Subgraphs
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Select a subgraph to highlight portions of the graph that were added in different interactions
+                </p>
+                
+                {/* Clear selection option */}
+                <button
+                  className={cn(
+                    "flex items-center w-full p-2 rounded mb-2 text-left font-medium text-sm",
+                    activeSubgraphId === null
+                      ? "bg-blue-100 text-blue-700 border border-blue-200"
+                      : "text-gray-700 hover:bg-gray-100"
+                  )}
+                  onClick={() => handleSubgraphSelect(null)}
+                >
+                  <XIcon size={14} className="mr-2" />
+                  Show all / Clear selection
+                </button>
+                
+                {/* Subgraph list */}
+                <div className="space-y-1 mt-2">
+                  {subgraphIds.map((id) => (
+                    <button
+                      key={id}
+                      className={cn(
+                        "flex items-center w-full p-2 rounded text-left font-medium text-sm",
+                        activeSubgraphId === id
+                          ? "bg-blue-100 text-blue-700 border border-blue-200"
+                          : "text-gray-700 hover:bg-gray-100"
+                      )}
+                      onClick={() => handleSubgraphSelect(id)}
+                    >
+                      <span className="w-3 h-3 rounded-full bg-blue-500 mr-2" />
+                      Subgraph {id}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
