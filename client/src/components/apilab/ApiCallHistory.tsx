@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   Table, 
@@ -28,6 +28,16 @@ import {
   Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+// Type guard for checking if an object has the shape of a Graph
+function isGraphLike(obj: any): obj is Graph {
+  return (
+    obj && 
+    typeof obj === 'object' && 
+    Array.isArray(obj.nodes) && 
+    Array.isArray(obj.edges)
+  );
+}
 
 interface ApiCallHistoryProps {
   calls: ApiCall[];
@@ -278,7 +288,7 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                             </AccordionContent>
                           </AccordionItem>
                           
-                          {call.status === 'success' && call.responseData && (
+                          {call.status === 'success' && call.responseData !== null && call.responseData !== undefined && (
                             <AccordionItem value="output" className="border-t">
                               <AccordionTrigger className="px-4 py-2 text-sm">
                                 Response Data
@@ -293,7 +303,18 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                                       className="h-7 gap-1 text-xs"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        copyToClipboard(JSON.stringify(call.responseData, null, 2), 'Response JSON');
+                                        try {
+                                          const jsonString = JSON.stringify(call.responseData, null, 2) || '{}';
+                                          copyToClipboard(jsonString, 'Response JSON');
+                                        } catch (err) {
+                                          console.error('Error stringifying response data:', err);
+                                          copyToClipboard('{}', 'Response JSON (error)');
+                                          toast({
+                                            title: "Error copying data",
+                                            description: "Could not convert response data to JSON",
+                                            variant: "destructive"
+                                          });
+                                        }
                                       }}
                                     >
                                       <Copy className="h-3 w-3" />
@@ -302,10 +323,14 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                                   </div>
                                   <div className="flex text-sm mb-2 text-gray-600">
                                     <div className="mr-4">
-                                      <span className="font-medium">Nodes:</span> {(call.responseData as Graph)?.nodes?.length || 0}
+                                      <span className="font-medium">Nodes:</span> {
+                                        isGraphLike(call.responseData) ? call.responseData.nodes.length : 0
+                                      }
                                     </div>
                                     <div>
-                                      <span className="font-medium">Edges:</span> {(call.responseData as Graph)?.edges?.length || 0}
+                                      <span className="font-medium">Edges:</span> {
+                                        isGraphLike(call.responseData) ? call.responseData.edges.length : 0
+                                      }
                                     </div>
                                   </div>
                                   <div className="text-right mt-2">

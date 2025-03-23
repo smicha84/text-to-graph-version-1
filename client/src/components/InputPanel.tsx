@@ -112,21 +112,27 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
     // Set the text from the API call
     setText(apiCall.text);
     
-    // Set the options from the API call
-    const callOptions = apiCall.options || {};
+    // First safely convert jsonb object to a typed object
+    const callOptions = apiCall.options ? 
+      (apiCall.options as Record<string, any>) : {};
+    
+    // Now create a properly typed options object
     setOptions(prev => ({
       ...prev,
-      extractEntities: callOptions.extractEntities ?? true,
-      extractRelations: callOptions.extractRelations ?? true,
-      inferProperties: callOptions.inferProperties ?? true,
-      mergeEntities: callOptions.mergeEntities ?? true,
-      appendMode: callOptions.appendMode ?? false,
+      // Base options with fallbacks
+      extractEntities: typeof callOptions.extractEntities === 'boolean' ? callOptions.extractEntities : true,
+      extractRelations: typeof callOptions.extractRelations === 'boolean' ? callOptions.extractRelations : true,
+      inferProperties: typeof callOptions.inferProperties === 'boolean' ? callOptions.inferProperties : true,
+      mergeEntities: typeof callOptions.mergeEntities === 'boolean' ? callOptions.mergeEntities : true,
+      appendMode: typeof callOptions.appendMode === 'boolean' ? callOptions.appendMode : false,
+      
+      // API settings
       systemPrompt: apiCall.systemPrompt || prev.systemPrompt,
       customExtractionPrompt: apiCall.extractionPrompt || prev.customExtractionPrompt,
-      temperature: callOptions.temperature || prev.temperature,
-      thinkingEnabled: callOptions.thinkingEnabled ?? prev.thinkingEnabled,
-      thinkingBudget: callOptions.thinkingBudget ?? prev.thinkingBudget,
-      apiTemplateId: callOptions.apiTemplateId ?? null
+      temperature: typeof callOptions.temperature === 'string' ? callOptions.temperature : prev.temperature,
+      thinkingEnabled: typeof callOptions.thinkingEnabled === 'boolean' ? callOptions.thinkingEnabled : prev.thinkingEnabled,
+      thinkingBudget: typeof callOptions.thinkingBudget === 'number' ? callOptions.thinkingBudget : prev.thinkingBudget,
+      apiTemplateId: typeof callOptions.apiTemplateId === 'number' ? callOptions.apiTemplateId : null
     }));
     
     // Close the API Lab dialog
