@@ -156,7 +156,7 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
   };
 
   // Format JSON for display
-  const formatJSON = (data: any): React.ReactNode => {
+  const formatJSON = (data: unknown): string => {
     try {
       return JSON.stringify(data, null, 2);
     } catch (e) {
