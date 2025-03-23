@@ -25,8 +25,11 @@ export default function Home() {
         options,
         ...(options.appendMode && graph ? { existingGraph: graph, appendMode: true } : {})
       };
-      const response = await apiRequest('POST', '/api/generate-graph', payload);
-      return response.json();
+      console.log("Submitting graph generation with payload:", payload);
+      return await apiRequest('/api/generate-graph', {
+        method: 'POST',
+        body: payload
+      });
     },
     onSuccess: (data: Graph, variables) => {
       setGraph(data);
@@ -55,13 +58,16 @@ export default function Home() {
         return { clientSide: true, format };
       }
       
-      const response = await apiRequest('POST', '/api/export-graph', { 
-        format, 
-        graph, 
-        includeProperties, 
-        includeStyles 
+      // Using the correct apiRequest format
+      return await apiRequest('/api/export-graph', {
+        method: 'POST',
+        body: {
+          format, 
+          graph, 
+          includeProperties, 
+          includeStyles
+        }
       });
-      return response.json();
     },
     onSuccess: (data) => {
       if (data.clientSide) {

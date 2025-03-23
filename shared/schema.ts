@@ -99,7 +99,11 @@ export const graphOptionsSchema = z.object({
   // New advanced API options
   customSystemPrompt: z.string().optional(),
   customExtractionPrompt: z.string().optional(),
-  temperature: z.number().min(0).max(1).optional(),
+  // Allow temperature to be a string to match UI input field
+  temperature: z.union([
+    z.string(),
+    z.number().min(0).max(1)
+  ]).optional(),
   thinkingEnabled: z.boolean().optional(),
   thinkingBudget: z.number().optional(),
   apiTemplateId: z.number().optional(), // Reference to a saved template

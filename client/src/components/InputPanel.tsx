@@ -75,8 +75,17 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
   };
 
   const handleGenerateClick = () => {
-    if (!text.trim()) return;
-    onGenerateGraph(text, options);
+    if (!text.trim()) {
+      console.error("No text provided for graph generation");
+      return;
+    }
+    console.log("InputPanel: Calling onGenerateGraph with text and options");
+    try {
+      onGenerateGraph(text, options);
+      console.log("InputPanel: onGenerateGraph call completed");
+    } catch (error) {
+      console.error("InputPanel: Error calling onGenerateGraph:", error);
+    }
   };
 
   const handleClearClick = () => {
@@ -437,7 +446,9 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
             <Button
               onClick={handleGenerateClick}
               disabled={isLoading || !text.trim()}
-              className={`w-full mt-4 ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white font-medium py-2 rounded transition-colors flex items-center justify-center`}
+              variant="default"
+              className={`w-full mt-4 ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : ''}`}
+              className="w-full mt-4"
             >
               {isLoading ? (
                 <>
@@ -461,7 +472,8 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
           <Button
             onClick={handleGenerateClick}
             disabled={isLoading || !text.trim()}
-            className={`w-full ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white text-sm py-1 rounded transition-colors flex items-center justify-center`}
+            variant={options.appendMode ? "success" : "default"}
+            className="w-full"
             size="sm"
           >
             {isLoading ? (
