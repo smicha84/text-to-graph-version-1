@@ -41,20 +41,19 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Typesafe ResponseData component to handle React node conversion
-const ResponseData = ({ data }: { data: unknown }) => {
-  if (data === null || data === undefined) {
-    return <span className="text-gray-400">No data available</span>;
-  }
-  
-  if (typeof data === 'string') {
-    return <span>{data}</span>;
-  }
-  
+// Helper components for type-safety
+// Safe wrapper to render JSON with proper type handling
+const SafeWrapper = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
+
+// Typesafe JSON formatter component for options display
+const FormattedJSON = ({ data }: { data: unknown }) => {
   try {
-    return <pre>{JSON.stringify(data, null, 2)}</pre>;
+    const formatted = JSON.stringify(data, null, 2);
+    return <SafeWrapper><pre>{formatted}</pre></SafeWrapper>;
   } catch (err) {
-    return <span className="text-red-500">Error displaying data</span>;
+    return <SafeWrapper><span className="text-red-500">Error formatting JSON</span></SafeWrapper>;
   }
 };
 
@@ -67,6 +66,76 @@ function isGraphLike(obj: any): obj is Graph {
     Array.isArray(obj.edges)
   );
 }
+
+// Type-safe graph renderer component
+const GraphDisplay = ({ graph }: { graph: unknown }) => {
+  if (!isGraphLike(graph)) {
+    return <div className="text-gray-500">Not a valid graph structure</div>;
+  }
+  
+  const nodes = graph.nodes || [];
+  const edges = graph.edges || [];
+  
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="bg-white border border-gray-200 rounded-md p-4">
+        <h4 className="font-medium mb-2">Nodes ({nodes.length})</h4>
+        <div className="max-h-[400px] overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Label</TableHead>
+                <TableHead>Type</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {nodes.map((node: GraphNode) => (
+                <TableRow key={node.id}>
+                  <TableCell className="font-mono text-xs">{node.id}</TableCell>
+                  <TableCell>{node.label}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{node.type}</Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+      
+      <div className="bg-white border border-gray-200 rounded-md p-4">
+        <h4 className="font-medium mb-2">Edges ({edges.length})</h4>
+        <div className="max-h-[400px] overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Source</TableHead>
+                <TableHead>Relation</TableHead>
+                <TableHead>Target</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {edges.map((edge: GraphEdge) => {
+                // Find source and target node labels
+                const sourceNode = nodes.find(n => n.id === edge.source);
+                const targetNode = nodes.find(n => n.id === edge.target);
+                
+                return (
+                  <TableRow key={edge.id}>
+                    <TableCell className="truncate max-w-[100px]">{sourceNode?.label || edge.source}</TableCell>
+                    <TableCell className="truncate max-w-[100px]">{edge.label}</TableCell>
+                    <TableCell className="truncate max-w-[100px]">{targetNode?.label || edge.target}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface ApiCallHistoryProps {
   calls: ApiCall[];
@@ -359,7 +428,9 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                                 <div>
                                   <h4 className="font-medium text-sm mb-1">Options</h4>
                                   <div className="bg-white border border-gray-200 rounded p-2 font-mono text-xs overflow-auto max-h-32">
-                                    {JSON.stringify(call.options, null, 2)}
+                                    <SafeWrapper>
+                                      <pre>{JSON.stringify(call.options, null, 2)}</pre>
+                                    </SafeWrapper>
                                   </div>
                                 </div>
                               </div>
@@ -533,7 +604,9 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                       <div>
                         <h3 className="text-lg font-semibold mb-2">Options</h3>
                         <div className="bg-gray-50 border border-gray-200 rounded-md p-4 font-mono text-sm whitespace-pre-wrap">
-                          {formatJSON(selectedCall.options)}
+                          <SafeWrapper>
+                            <pre>{formatJSON(selectedCall.options)}</pre>
+                          </SafeWrapper>
                         </div>
                       </div>
                     </div>
@@ -541,7 +614,7 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                 </TabsContent>
                 
                 <TabsContent value="response" className="flex-1 p-0 m-0 overflow-hidden">
-                  {selectedCall && selectedCall.status === 'success' && selectedCall.responseData && (
+                  {selectedCall && selectedCall.status === 'success' && (
                     <ScrollArea className="h-full w-full px-6 py-4">
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
@@ -584,64 +657,8 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                           </div>
                         </div>
                         
-                        {isGraphLike(selectedCall.responseData as any) && (
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white border border-gray-200 rounded-md p-4">
-                              <h4 className="font-medium mb-2">Nodes ({getGraphNodes(selectedCall.responseData).length})</h4>
-                              <div className="max-h-[400px] overflow-y-auto">
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>ID</TableHead>
-                                      <TableHead>Label</TableHead>
-                                      <TableHead>Type</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {getGraphNodes(selectedCall.responseData).map((node: GraphNode) => (
-                                      <TableRow key={node.id}>
-                                        <TableCell className="font-mono text-xs">{node.id}</TableCell>
-                                        <TableCell>{node.label}</TableCell>
-                                        <TableCell>
-                                          <Badge variant="outline">{node.type}</Badge>
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
-                              </div>
-                            </div>
-                            
-                            <div className="bg-white border border-gray-200 rounded-md p-4">
-                              <h4 className="font-medium mb-2">Edges ({getGraphEdges(selectedCall.responseData).length})</h4>
-                              <div className="max-h-[400px] overflow-y-auto">
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Source</TableHead>
-                                      <TableHead>Relation</TableHead>
-                                      <TableHead>Target</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {getGraphEdges(selectedCall.responseData).map((edge: GraphEdge) => {
-                                      // Find source and target node labels
-                                      const sourceNode = getNodeById(selectedCall.responseData, edge.source);
-                                      const targetNode = getNodeById(selectedCall.responseData, edge.target);
-                                      
-                                      return (
-                                        <TableRow key={edge.id}>
-                                          <TableCell className="truncate max-w-[100px]">{sourceNode?.label || edge.source}</TableCell>
-                                          <TableCell className="truncate max-w-[100px]">{edge.label}</TableCell>
-                                          <TableCell className="truncate max-w-[100px]">{targetNode?.label || edge.target}</TableCell>
-                                        </TableRow>
-                                      );
-                                    })}
-                                  </TableBody>
-                                </Table>
-                              </div>
-                            </div>
-                          </div>
+                        {selectedCall.responseData !== undefined && selectedCall.responseData !== null && (
+                          <GraphDisplay graph={selectedCall.responseData} />
                         )}
                       </div>
                     </ScrollArea>
@@ -661,11 +678,15 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                 </TabsContent>
                 
                 <TabsContent value="json" className="flex-1 p-0 m-0 overflow-hidden">
-                  {selectedCall && selectedCall.status === 'success' && selectedCall.responseData && (
+                  {selectedCall && selectedCall.status === 'success' && (
                     <div className="h-full relative">
                       <ScrollArea className="h-full w-full">
                         <div className="p-4 font-mono text-sm whitespace-pre bg-gray-50">
-                          <ResponseData data={selectedCall.responseData} />
+                          {selectedCall.responseData !== undefined && selectedCall.responseData !== null ? (
+                            <FormattedJSON data={selectedCall.responseData} />
+                          ) : (
+                            <span className="text-gray-400">No response data available</span>
+                          )}
                         </div>
                       </ScrollArea>
                       <div className="absolute top-2 right-2">
