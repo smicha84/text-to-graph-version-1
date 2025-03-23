@@ -496,6 +496,14 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
             <ApiLab
               onSelectTemplate={handleSelectTemplate}
               onSelectApiCall={handleSelectApiCall}
+              initialMode={apiLabMode}
+              currentOptions={{
+                systemPrompt: options.systemPrompt,
+                extractionPrompt: options.customExtractionPrompt,
+                temperature: options.temperature,
+                thinkingEnabled: options.thinkingEnabled,
+                thinkingBudget: options.thinkingBudget
+              }}
             />
           </div>
         </DialogContent>

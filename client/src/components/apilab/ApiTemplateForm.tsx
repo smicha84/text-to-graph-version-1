@@ -10,12 +10,25 @@ import { X, Save, FileText } from 'lucide-react';
 
 interface ApiTemplateFormProps {
   template?: ApiTemplate;
+  initialOptions?: {
+    systemPrompt?: string;
+    extractionPrompt?: string;
+    temperature?: string;
+    thinkingEnabled?: boolean;
+    thinkingBudget?: number;
+  };
   onSubmit: (template: Omit<ApiTemplate, 'id' | 'userId' | 'createdAt'>) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-export default function ApiTemplateForm({ template, onSubmit, onCancel, isLoading = false }: ApiTemplateFormProps) {
+export default function ApiTemplateForm({ 
+  template, 
+  initialOptions, 
+  onSubmit, 
+  onCancel, 
+  isLoading = false 
+}: ApiTemplateFormProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
@@ -39,8 +52,21 @@ export default function ApiTemplateForm({ template, onSubmit, onCancel, isLoadin
         thinkingEnabled: template.thinkingEnabled,
         thinkingBudget: template.thinkingBudget
       });
+    } else if (initialOptions) {
+      // If we have initial options but no template, we're creating a new template
+      // from current settings
+      setFormData(prevData => ({
+        ...prevData,
+        systemPrompt: initialOptions.systemPrompt || prevData.systemPrompt,
+        extractionPrompt: initialOptions.extractionPrompt || prevData.extractionPrompt,
+        temperature: initialOptions.temperature || prevData.temperature,
+        thinkingEnabled: initialOptions.thinkingEnabled !== undefined 
+          ? initialOptions.thinkingEnabled 
+          : prevData.thinkingEnabled,
+        thinkingBudget: initialOptions.thinkingBudget || prevData.thinkingBudget
+      }));
     }
-  }, [template]);
+  }, [template, initialOptions]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

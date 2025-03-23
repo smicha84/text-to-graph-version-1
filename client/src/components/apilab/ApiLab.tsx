@@ -230,6 +230,7 @@ export default function ApiLab({
           <div className="p-4 h-full overflow-auto">
             <ApiTemplateForm 
               template={editingTemplate} 
+              initialOptions={initialMode === "saveTemplate" ? currentOptions : undefined}
               onSubmit={handleSubmitTemplate} 
               onCancel={handleCancelForm}
               isLoading={createTemplateMutation.isPending || updateTemplateMutation.isPending}
