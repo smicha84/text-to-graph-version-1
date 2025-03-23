@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { GlobeIcon, SearchIcon, RefreshCwIcon, ChevronUpIcon, ChevronDownIcon } from "lucide-react";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
 import { Graph, Node } from "@/types/graph";
+import { useToast } from "@/hooks/use-toast";
 
 interface SidebarPromptStationProps {
   onWebSearch: (nodeId: string, query: string) => void;
@@ -23,6 +24,7 @@ export default function SidebarPromptStation({
   const [searchPrompt, setSearchPrompt] = useState("");
   const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(true);
+  const { toast } = useToast();
   
   // Auto-generate search prompt and suggestions when a node is selected
   useEffect(() => {
@@ -139,7 +141,7 @@ export default function SidebarPromptStation({
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <GlobeIcon className="mr-2 h-4 w-4 text-blue-500" />
-            <h3 className="font-medium text-sm text-gray-700">Web Search for Node</h3>
+            <h3 className="font-medium text-sm text-gray-700">Web Search Prompt Station</h3>
           </div>
           <Button 
             variant="ghost" 
@@ -151,15 +153,17 @@ export default function SidebarPromptStation({
           </Button>
         </div>
         
-        {/* Node identifier */}
-        <div className="mt-2 flex items-center">
-          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-300">
-            {selectedNode.type}
-          </Badge>
-          <span className="ml-2 text-sm font-medium text-gray-600 truncate">
-            {selectedNode.properties.name || selectedNode.label}
-          </span>
-        </div>
+        {/* Node identifier - only show when node is selected */}
+        {selectedNode && (
+          <div className="mt-2 flex items-center">
+            <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-300">
+              {selectedNode.type}
+            </Badge>
+            <span className="ml-2 text-sm font-medium text-gray-600 truncate">
+              {selectedNode.properties.name || selectedNode.label}
+            </span>
+          </div>
+        )}
       </div>
       
       {isExpanded && (
