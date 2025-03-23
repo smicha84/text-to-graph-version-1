@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
-import { PromptStation, CompactPromptStation } from "@/components/PromptStation";
+import SidebarPromptStation from "@/components/SidebarPromptStation";
 
 interface InputPanelProps {
   onGenerateGraph: (text: string, options: GraphGenerationOptions) => void;
@@ -204,8 +204,8 @@ export default function InputPanel({
       </div>
       
       {expanded ? (
-        <div className="flex-1 overflow-auto">
-          <div className="p-4">
+        <div className="flex-1 overflow-auto flex flex-col">
+          <div className="p-4 flex-grow">
             <Textarea
               id="textInput"
               className="w-full h-56 p-3 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
@@ -313,85 +313,54 @@ export default function InputPanel({
                 </>
               )}
             </Button>
-            
-            {/* Prompt Station for Web Search */}
-            {hasExistingGraph && selectedNodeId && (
-              <div className="mt-6">
-                <Separator className="mb-4" />
-                <div className="flex justify-between items-center mb-2">
-                  <Label className="block text-sm font-medium text-gray-700">Prompt Station (Web Search)</Label>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="text-xs"
-                    onClick={prepareWebSearch}
-                  >
-                    <GlobeIcon size={12} className="mr-1" />
-                    Refresh
-                  </Button>
-                </div>
-                
-                <PromptStation 
-                  searchPrompt={searchPrompt}
-                  onSearchPromptChange={setSearchPrompt}
-                  suggestedQueries={suggestedQueries}
-                  onSelectSuggestion={useSuggestedQuery}
-                  onSearch={executeSearch}
-                  isSearching={isSearching}
-                />
-              </div>
-            )}
           </div>
+          
+          {/* Persistent Sidebar Prompt Station for Web Search */}
+          {hasExistingGraph && (
+            <SidebarPromptStation
+              onWebSearch={onWebSearch!}
+              isSearching={isSearching}
+              selectedNodeId={selectedNodeId}
+              graph={graph}
+            />
+          )}
         </div>
       ) : (
-        <div className="p-3 flex flex-col space-y-3">
-          <div className="text-xs text-gray-500 truncate max-w-full">
-            {text ? text.substring(0, 80) + (text.length > 80 ? "..." : "") : "Enter text to generate a graph..."}
+        <div className="flex flex-col h-full">
+          <div className="p-3 flex flex-col space-y-3">
+            <div className="text-xs text-gray-500 truncate max-w-full">
+              {text ? text.substring(0, 80) + (text.length > 80 ? "..." : "") : "Enter text to generate a graph..."}
+            </div>
+            <Button
+              onClick={handleGenerateClick}
+              disabled={isLoading || !text.trim()}
+              className={`w-full ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white text-sm py-1 rounded transition-colors flex items-center justify-center`}
+              size="sm"
+            >
+              {isLoading ? (
+                <>
+                  <RotateCwIcon size={12} className="mr-1 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <Share2Icon size={12} className="mr-1" />
+                  <span>Generate Graph</span>
+                </>
+              )}
+            </Button>
           </div>
-          <Button
-            onClick={handleGenerateClick}
-            disabled={isLoading || !text.trim()}
-            className={`w-full ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white text-sm py-1 rounded transition-colors flex items-center justify-center`}
-            size="sm"
-          >
-            {isLoading ? (
-              <>
-                <RotateCwIcon size={12} className="mr-1 animate-spin" />
-                <span>Processing...</span>
-              </>
-            ) : (
-              <>
-                <Share2Icon size={12} className="mr-1" />
-                <span>Generate Graph</span>
-              </>
-            )}
-          </Button>
           
-          {/* Compact Prompt Station for Web Search */}
-          {hasExistingGraph && selectedNodeId && (
-            <>
-              <Separator className="my-2" />
-              <div className="flex justify-between items-center mb-1">
-                <Label className="text-xs text-gray-600">Web Search</Label>
-                <Button
-                  onClick={prepareWebSearch}
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0"
-                >
-                  <RotateCwIcon size={10} />
-                </Button>
-              </div>
-              
-              <CompactPromptStation 
-                searchPrompt={searchPrompt}
-                onSearchPromptChange={setSearchPrompt}
-                suggestedQueries={suggestedQueries}
-                onSelectSuggestion={useSuggestedQuery}
-                onSearch={executeSearch}
+          {/* Persistent Sidebar Prompt Station in collapsed view */}
+          {hasExistingGraph && (
+            <div className="mt-auto">
+              <SidebarPromptStation
+                onWebSearch={onWebSearch!}
                 isSearching={isSearching}
+                selectedNodeId={selectedNodeId}
+                graph={graph}
               />
-            </>
+            </div>
           )}
         </div>
       )}
