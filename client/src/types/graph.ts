@@ -49,6 +49,8 @@ export interface GraphGenerationOptions {
   mergeEntities: boolean;
   model: 'claude'; // Only Claude model is supported
   appendMode?: boolean; // Whether to append to existing graph instead of replacing it
+  webSearchNode?: string; // ID of the node that triggered a web search
+  webSearchQuery?: string; // The query used for web search
 }
 
 export interface ZoomPanInfo {
@@ -63,4 +65,9 @@ export interface ExportOptions {
   format: ExportFormat;
   includeProperties: boolean;
   includeStyles: boolean;
+}
+
+export interface WebSearchOptions {
+  nodeId: string;
+  query: string;
 }
