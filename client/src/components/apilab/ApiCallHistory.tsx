@@ -15,6 +15,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ApiCall, Graph } from '@shared/schema';
 import { 
   History, 
@@ -25,7 +34,10 @@ import {
   X, 
   RefreshCcw,
   Copy,
-  Eye
+  Eye,
+  Code,
+  MessageSquare,
+  Terminal
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -48,6 +60,9 @@ interface ApiCallHistoryProps {
 export default function ApiCallHistory({ calls, onReuse, isLoading = false }: ApiCallHistoryProps) {
   const { toast } = useToast();
   const [expandedCallId, setExpandedCallId] = useState<number | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedCall, setSelectedCall] = useState<ApiCall | null>(null);
+  const [activeDetailTab, setActiveDetailTab] = useState('request');
 
   const handleToggleExpand = (id: number) => {
     setExpandedCallId(expandedCallId === id ? null : id);
@@ -131,6 +146,27 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
     } catch (e) {
       return 'N/A';
     }
+  };
+
+  // Open the detailed view modal
+  const openDetailView = (call: ApiCall) => {
+    setSelectedCall(call);
+    setDetailModalOpen(true);
+    setActiveDetailTab('request');
+  };
+
+  // Format JSON for display
+  const formatJSON = (data: any): string => {
+    try {
+      return JSON.stringify(data, null, 2);
+    } catch (e) {
+      return 'Error formatting data';
+    }
+  };
+  
+  // Type guard for response data
+  const isValidResponseData = (data: unknown): data is Graph => {
+    return isGraphLike(data as any);
   };
 
   return (
@@ -333,7 +369,20 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                                       }
                                     </div>
                                   </div>
-                                  <div className="text-right mt-2">
+                                  <div className="flex justify-end mt-2 gap-2">
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      className="gap-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openDetailView(call);
+                                      }}
+                                    >
+                                      <Eye className="h-3.5 w-3.5" />
+                                      Detailed View
+                                    </Button>
+                                    
                                     <Button
                                       variant="outline"
                                       size="sm"
@@ -343,8 +392,8 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                                         onReuse(call);
                                       }}
                                     >
-                                      <Eye className="h-3.5 w-3.5" />
-                                      View & Reuse Configuration
+                                      <Copy className="h-3.5 w-3.5" />
+                                      Reuse Configuration
                                     </Button>
                                   </div>
                                 </div>
@@ -374,6 +423,240 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
           </Table>
         </div>
       )}
+      
+      {/* Detailed View Modal */}
+      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              API Call Details
+              {selectedCall && (
+                <Badge variant="outline" className="ml-2">
+                  {formatDate(selectedCall.requestTime)}
+                </Badge>
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              {selectedCall?.status === 'success' && (
+                <span>
+                  Processed in {calculateResponseTime(selectedCall.requestTime, selectedCall.responseTime)}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedCall && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <Tabs value={activeDetailTab} onValueChange={setActiveDetailTab} className="w-full flex-grow flex flex-col">
+                <TabsList className="w-full justify-start px-4 pt-2 border-b rounded-none gap-2">
+                  <TabsTrigger value="request" className="gap-1">
+                    <MessageSquare className="h-4 w-4" />
+                    Request
+                  </TabsTrigger>
+                  <TabsTrigger value="response" className="gap-1" disabled={selectedCall.status !== 'success'}>
+                    <Terminal className="h-4 w-4" />
+                    Response
+                  </TabsTrigger>
+                  <TabsTrigger value="json" className="gap-1" disabled={selectedCall.status !== 'success'}>
+                    <Code className="h-4 w-4" />
+                    JSON
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="request" className="flex-1 p-0 m-0 overflow-hidden">
+                  <ScrollArea className="h-full w-full px-6 py-4">
+                    <div className="space-y-5">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Input Text</h3>
+                        <div className="bg-white border border-gray-200 rounded-md p-4">
+                          {selectedCall.text}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">System Prompt</h3>
+                        <div className="bg-gray-50 border border-gray-200 rounded-md p-4 font-mono text-sm whitespace-pre-wrap">
+                          {selectedCall.systemPrompt}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Extraction Prompt</h3>
+                        <div className="bg-gray-50 border border-gray-200 rounded-md p-4 font-mono text-sm whitespace-pre-wrap">
+                          {selectedCall.extractionPrompt}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Options</h3>
+                        <div className="bg-gray-50 border border-gray-200 rounded-md p-4 font-mono text-sm whitespace-pre-wrap">
+                          {formatJSON(selectedCall.options)}
+                        </div>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                
+                <TabsContent value="response" className="flex-1 p-0 m-0 overflow-hidden">
+                  {selectedCall.status === 'success' && selectedCall.responseData && (
+                    <ScrollArea className="h-full w-full px-6 py-4">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold">Graph Response</h3>
+                          
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1"
+                              onClick={() => {
+                                try {
+                                  const jsonString = JSON.stringify(selectedCall.responseData, null, 2) || '{}';
+                                  copyToClipboard(jsonString, 'Response JSON');
+                                } catch (err) {
+                                  console.error('Error stringifying response data:', err);
+                                  toast({
+                                    title: "Error copying data",
+                                    description: "Could not convert response data to JSON",
+                                    variant: "destructive"
+                                  });
+                                }
+                              }}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                              Copy JSON
+                            </Button>
+                            
+                            <Button 
+                              size="sm" 
+                              className="gap-1"
+                              onClick={() => {
+                                onReuse(selectedCall);
+                                setDetailModalOpen(false);
+                              }}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              Apply Configuration
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {isGraphLike(selectedCall.responseData) && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white border border-gray-200 rounded-md p-4">
+                              <h4 className="font-medium mb-2">Nodes ({selectedCall.responseData.nodes.length})</h4>
+                              <div className="max-h-[400px] overflow-y-auto">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>ID</TableHead>
+                                      <TableHead>Label</TableHead>
+                                      <TableHead>Type</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {selectedCall.responseData.nodes.map((node: any) => (
+                                      <TableRow key={node.id}>
+                                        <TableCell className="font-mono text-xs">{node.id}</TableCell>
+                                        <TableCell>{node.label}</TableCell>
+                                        <TableCell>
+                                          <Badge variant="outline">{node.type}</Badge>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </div>
+                            
+                            <div className="bg-white border border-gray-200 rounded-md p-4">
+                              <h4 className="font-medium mb-2">Edges ({selectedCall.responseData.edges.length})</h4>
+                              <div className="max-h-[400px] overflow-y-auto">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Source</TableHead>
+                                      <TableHead>Relation</TableHead>
+                                      <TableHead>Target</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {selectedCall.responseData.edges.map((edge: any) => {
+                                      // Find source and target node labels
+                                      const sourceNode = selectedCall.responseData.nodes.find((n: any) => n.id === edge.source);
+                                      const targetNode = selectedCall.responseData.nodes.find((n: any) => n.id === edge.target);
+                                      
+                                      return (
+                                        <TableRow key={edge.id}>
+                                          <TableCell className="truncate max-w-[100px]">{sourceNode?.label || edge.source}</TableCell>
+                                          <TableCell className="truncate max-w-[100px]">{edge.label}</TableCell>
+                                          <TableCell className="truncate max-w-[100px]">{targetNode?.label || edge.target}</TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  )}
+                  
+                  {selectedCall.status === 'error' && selectedCall.errorMessage && (
+                    <div className="p-6">
+                      <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
+                        <h3 className="font-medium mb-2 flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4" />
+                          Error Response
+                        </h3>
+                        <p className="whitespace-pre-wrap">{selectedCall.errorMessage}</p>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="json" className="flex-1 p-0 m-0 overflow-hidden">
+                  {selectedCall.status === 'success' && selectedCall.responseData && (
+                    <div className="h-full relative">
+                      <ScrollArea className="h-full w-full">
+                        <div className="p-4 font-mono text-sm whitespace-pre bg-gray-50">
+                          {formatJSON(selectedCall.responseData)}
+                        </div>
+                      </ScrollArea>
+                      <div className="absolute top-2 right-2">
+                        <Button 
+                          size="sm" 
+                          variant="secondary"
+                          className="gap-1"
+                          onClick={() => {
+                            try {
+                              const jsonString = JSON.stringify(selectedCall.responseData, null, 2) || '{}';
+                              copyToClipboard(jsonString, 'Response JSON');
+                            } catch (err) {
+                              console.error('Error stringifying response data:', err);
+                              toast({
+                                title: "Error copying data",
+                                description: "Could not convert response data to JSON",
+                                variant: "destructive"
+                              });
+                            }
+                          }}
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          Copy JSON
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
