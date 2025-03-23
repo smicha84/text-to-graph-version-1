@@ -295,24 +295,13 @@ export class GraphVisualizer {
     const nodeName = d.properties.name || d.label;
     const nodeType = d.type || '';
     
-    // Create tooltip content
+    // Create tooltip content - simplified without web search button
     this.nodeTooltip
       .html(`
         <h4>${nodeName}</h4>
         <div class="node-tooltip-content">
           ${nodeType ? `<div><strong>Type:</strong> ${nodeType}</div>` : ''}
         </div>
-        ${this.onWebSearch ? `
-          <button class="web-search-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              <path d="M2 12h20"></path>
-              <path d="M12 2a12 12 0 0 0 0 20z"></path>
-            </svg>
-            Web Search
-          </button>
-        ` : ''}
       `)
       .style("left", `${x}px`)
       .style("top", `${y}px`)
@@ -321,22 +310,6 @@ export class GraphVisualizer {
       .transition()
       .duration(200)
       .style("opacity", 1);
-    
-    // Add click event to the web search button
-    if (this.onWebSearch) {
-      this.nodeTooltip.select(".web-search-btn").on("click", () => {
-        if (this.onWebSearch && this.graph) {
-          // Import the generateWebSearchQuery function dynamically to avoid circular dependencies
-          import("./webSearchUtils").then(({ generateWebSearchQuery }) => {
-            const query = generateWebSearchQuery(this.graph!, d.id);
-            this.onWebSearch!(d.id, query);
-            
-            // Hide tooltip after click
-            this.hideNodeTooltip();
-          });
-        }
-      });
-    }
   }
   
   // Hide node tooltip
@@ -562,10 +535,8 @@ export class GraphVisualizer {
       .attr("class", "node")
       .attr("id", (d) => `node-${d.id}`) // Add ID for easier selection
       .on("mouseover", (event: MouseEvent, d: SimulationNode) => {
-        // Show tooltip only if web search is enabled
-        if (this.onWebSearch) {
-          this.showNodeTooltip(event, d);
-        }
+        // Always show tooltip, regardless of whether web search is enabled
+        this.showNodeTooltip(event, d);
       })
       .on("mouseout", (event: MouseEvent) => {
         // Hide tooltip
