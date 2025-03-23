@@ -165,20 +165,7 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
   };
   
   // Safe content for ReactNode to avoid type issues
-  const safeContent = (content: unknown): React.ReactNode => {
-    if (typeof content === 'string' || typeof content === 'number' || typeof content === 'boolean') {
-      return content;
-    } else if (content === null || content === undefined) {
-      return '';
-    } else {
-      try {
-        return JSON.stringify(content, null, 2);
-      } catch (err) {
-        console.error('Error converting content to string:', err);
-        return 'Error displaying content';
-      }
-    }
-  };
+  // Display content safely (handled directly in the JSX via formatJSON and type checks)
   
   // Type guard for response data
   const isValidResponseData = (data: unknown): data is Graph => {
@@ -661,7 +648,9 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                     <div className="h-full relative">
                       <ScrollArea className="h-full w-full">
                         <div className="p-4 font-mono text-sm whitespace-pre bg-gray-50">
-                          {safeContent(selectedCall.responseData)}
+                          {typeof selectedCall.responseData === 'string' 
+                            ? selectedCall.responseData
+                            : formatJSON(selectedCall.responseData)}
                         </div>
                       </ScrollArea>
                       <div className="absolute top-2 right-2">
