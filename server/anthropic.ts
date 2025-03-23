@@ -24,54 +24,31 @@ interface Relationship {
   properties: Record<string, any>;
 }
 
-export async function generateGraphWithClaude(
-  text: string, 
-  options: GraphOptions
-): Promise<Graph> {
+export async function generateGraphWithClaude(text: string, options: GraphOptions): Promise<Graph> {
   // Construct a prompt for Claude to extract entities and relationships
-  // If a custom extraction prompt is provided, use it; otherwise build the default one
-  const extractionPrompt = options.customExtractionPrompt || buildPrompt(text, options);
+  const extractionPrompt = buildPrompt(text, options);
   
   try {
-    // Default system prompt
-    const defaultSystemPrompt = "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.";
-    
-    // Setup the API call parameters
-    const apiParams: any = {
+    // Call Claude API with advanced system prompt and thinking enabled for deeper analysis
+    const response = await anthropic.messages.create({
       model: CLAUDE_MODEL,
       max_tokens: 4000,
-      temperature: options.temperature !== undefined ? options.temperature : 1.0,
-      system: options.customSystemPrompt || defaultSystemPrompt,
+      temperature: 1.0, // Must be exactly 1.0 when thinking is enabled
+      system: "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.",
       messages: [
         {
           role: 'user',
           content: extractionPrompt
         }
-      ]
-    };
-    
-    // Add thinking configuration if enabled
-    if (options.thinkingEnabled !== false) { // Default to enabled if not specified
-      // Thinking requires temperature to be exactly 1.0
-      apiParams.temperature = 1.0;
-      apiParams.thinking = {
+      ],
+      thinking: {
         type: "enabled",
-        budget_tokens: options.thinkingBudget || 2000
-      };
-    }
-    
-    console.log('Sending request to Claude API with parameters:', JSON.stringify({
-      model: apiParams.model,
-      temperature: apiParams.temperature,
-      thinkingEnabled: !!apiParams.thinking,
-      promptLength: extractionPrompt.length
-    }));
-    
-    // Call Claude API with the configured parameters
-    const response = await anthropic.messages.create(apiParams);
+        budget_tokens: 2000
+      }
+    });
 
     // Extract the JSON response from Claude
-    console.log('Claude API response received, content items:', response.content?.length || 0);
+    console.log('Claude API response:', JSON.stringify(response.content, null, 2));
     
     // Handle different content types from Claude API
     let contentText = '';
@@ -108,10 +85,7 @@ export async function generateGraphWithClaude(
       throw new Error('No text content found in Claude API response');
     }
     
-    // Clean up the content text - remove any markdown code block markers and trim whitespace
-    contentText = contentText.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
-    
-    console.log('Content text sample:', contentText.substring(0, Math.min(200, contentText.length)));
+    console.log('Extracted content text:', contentText);
     
     // Try to find and extract a valid JSON object using regex for better reliability
     // This regex looks for objects with "nodes" and "edges" arrays which are the essential parts of our graph
@@ -119,13 +93,13 @@ export async function generateGraphWithClaude(
     const match = graphJsonRegex.exec(contentText);
     
     if (!match) {
-      console.error('Could not find valid graph JSON in Claude response using regex');
+      console.error('Could not find valid graph JSON in Claude response');
       // Fallback to simple extraction
       const jsonStart = contentText.indexOf('{');
       const jsonEnd = contentText.lastIndexOf('}') + 1;
       
-      if (jsonStart === -1 || jsonEnd === 0 || jsonStart >= jsonEnd) {
-        throw new Error('Could not extract any JSON object from Claude response - no valid brackets found');
+      if (jsonStart === -1 || jsonEnd === -1) {
+        throw new Error('Could not extract any JSON object from Claude response');
       }
       
       const jsonResponse = contentText.substring(jsonStart, jsonEnd);

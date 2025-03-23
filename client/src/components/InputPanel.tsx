@@ -1,35 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { GraphGenerationOptions } from "@/types/graph";
-import { Input } from "@/components/ui/input";
-import { ApiLab } from "@/components/apilab";
-import { ApiTemplate, ApiCall } from "@shared/schema";
-import { 
-  ChevronLeftIcon, 
-  ChevronRightIcon, 
-  Share2Icon, 
-  XIcon, 
-  RotateCwIcon,
-  Beaker,
-  Code,
-  Brain,
-  Settings,
-  Info,
-  Save
-} from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, Share2Icon, XIcon, RotateCwIcon } from "lucide-react";
 
 interface InputPanelProps {
   onGenerateGraph: (text: string, options: GraphGenerationOptions) => void;
@@ -47,45 +22,22 @@ const EXAMPLES = [
 export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGraph }: InputPanelProps) {
   const [text, setText] = useState(EXAMPLES[0]);
   const [expanded, setExpanded] = useState(false);
-  const [showApiLab, setShowApiLab] = useState(false);
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
-  const [apiLabMode, setApiLabMode] = useState<"browse" | "saveTemplate">("browse");
   const [options, setOptions] = useState<GraphGenerationOptions>({
     extractEntities: true,
     extractRelations: true,
     inferProperties: true,
     mergeEntities: true,
-    model: "claude", // Only Claude model is supported
-    appendMode: false,
-    // Advanced options with default values
-    saveApiCall: true, // Track API calls in history
-    thinkingEnabled: true, // Enable thinking mode for debugging
-    thinkingBudget: 2000, // Default token budget for thinking
-    temperature: "1.0", // Default temperature
-    systemPrompt: "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph.", // Default system prompt
-    customExtractionPrompt: "", // Custom extraction prompt (empty = use default)
-    apiTemplateId: null, // Selected API template ID
+    model: "claude", // Only using Claude model
+    appendMode: false
   });
 
-  const handleOptionChange = <T extends keyof GraphGenerationOptions>(
-    option: T, 
-    value: GraphGenerationOptions[T]
-  ) => {
+  const handleOptionChange = (option: keyof GraphGenerationOptions, value: boolean | string) => {
     setOptions(prev => ({ ...prev, [option]: value }));
   };
 
   const handleGenerateClick = () => {
-    if (!text.trim()) {
-      console.error("No text provided for graph generation");
-      return;
-    }
-    console.log("InputPanel: Calling onGenerateGraph with text and options");
-    try {
-      onGenerateGraph(text, options);
-      console.log("InputPanel: onGenerateGraph call completed");
-    } catch (error) {
-      console.error("InputPanel: Error calling onGenerateGraph:", error);
-    }
+    if (!text.trim()) return;
+    onGenerateGraph(text, options);
   };
 
   const handleClearClick = () => {
@@ -100,54 +52,6 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
   
   const toggleExpanded = () => {
     setExpanded(!expanded);
-  };
-
-  // Handle template selection from API Lab
-  const handleSelectTemplate = (template: ApiTemplate) => {
-    setOptions(prev => ({
-      ...prev,
-      systemPrompt: template.systemPrompt,
-      customExtractionPrompt: template.extractionPrompt,
-      temperature: template.temperature,
-      thinkingEnabled: template.thinkingEnabled,
-      thinkingBudget: template.thinkingBudget,
-      apiTemplateId: template.id
-    }));
-    
-    // Close the API Lab dialog
-    setShowApiLab(false);
-  };
-
-  // Handle reusing an API call configuration
-  const handleSelectApiCall = (apiCall: ApiCall) => {
-    // Set the text from the API call
-    setText(apiCall.text);
-    
-    // First safely convert jsonb object to a typed object
-    const callOptions = apiCall.options ? 
-      (apiCall.options as Record<string, any>) : {};
-    
-    // Now create a properly typed options object
-    setOptions(prev => ({
-      ...prev,
-      // Base options with fallbacks
-      extractEntities: typeof callOptions.extractEntities === 'boolean' ? callOptions.extractEntities : true,
-      extractRelations: typeof callOptions.extractRelations === 'boolean' ? callOptions.extractRelations : true,
-      inferProperties: typeof callOptions.inferProperties === 'boolean' ? callOptions.inferProperties : true,
-      mergeEntities: typeof callOptions.mergeEntities === 'boolean' ? callOptions.mergeEntities : true,
-      appendMode: typeof callOptions.appendMode === 'boolean' ? callOptions.appendMode : false,
-      
-      // API settings
-      systemPrompt: apiCall.systemPrompt || prev.systemPrompt,
-      customExtractionPrompt: apiCall.extractionPrompt || prev.customExtractionPrompt,
-      temperature: typeof callOptions.temperature === 'string' ? callOptions.temperature : prev.temperature,
-      thinkingEnabled: typeof callOptions.thinkingEnabled === 'boolean' ? callOptions.thinkingEnabled : prev.thinkingEnabled,
-      thinkingBudget: typeof callOptions.thinkingBudget === 'number' ? callOptions.thinkingBudget : prev.thinkingBudget,
-      apiTemplateId: typeof callOptions.apiTemplateId === 'number' ? callOptions.apiTemplateId : null
-    }));
-    
-    // Close the API Lab dialog
-    setShowApiLab(false);
   };
 
   return (
@@ -177,13 +81,6 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
             >
               Example
             </button>
-            <button 
-              onClick={() => setShowApiLab(true)}
-              className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors flex items-center"
-            >
-              <Beaker className="h-3 w-3 mr-1" />
-              API Lab
-            </button>
           </div>
         )}
       </div>
@@ -193,7 +90,7 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
           <div className="p-4">
             <Textarea
               id="textInput"
-              className="w-full h-48 p-3 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+              className="w-full h-56 p-3 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
               placeholder="Enter your text here to generate a property graph..."
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -201,20 +98,7 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
             
             <div className="mt-4">
               <div className="mb-3">
-                <div className="flex justify-between items-center mb-2">
-                  <Label className="block text-sm font-medium text-gray-700">Graph Extraction Options</Label>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                    className="h-7 text-xs flex items-center gap-1 text-gray-600"
-                  >
-                    <Settings className="h-3 w-3" />
-                    {showAdvancedOptions ? 'Hide Advanced' : 'Advanced Options'}
-                  </Button>
-                </div>
-                
+                <Label className="block text-sm font-medium text-gray-700 mb-1">Claude Processing Options</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center">
                     <Checkbox
@@ -291,163 +175,13 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
                     </p>
                   </div>
                 )}
-                
-                {/* Advanced Claude API Options */}
-                {showAdvancedOptions && (
-                  <div className="mt-4 p-3 border border-gray-200 rounded">
-                    <h4 className="font-medium text-sm mb-2 flex items-center gap-1 text-gray-700">
-                      <Brain className="h-4 w-4" />
-                      Claude API Configuration
-                      {options.apiTemplateId && (
-                        <Badge className="ml-1" variant="outline">Template ID: {options.apiTemplateId}</Badge>
-                      )}
-                    </h4>
-                    
-                    <div className="space-y-3 text-sm">
-                      {/* Temperature Setting */}
-                      <div className="grid grid-cols-2 gap-2 items-center">
-                        <Label htmlFor="temperature" className="text-gray-700">
-                          Temperature:
-                        </Label>
-                        <Input 
-                          id="temperature" 
-                          type="text" 
-                          value={options.temperature} 
-                          onChange={(e) => handleOptionChange("temperature", e.target.value)}
-                          className="h-7 text-sm"
-                          pattern="^(0(\.\d{1,2})?|1(\.0{1,2})?)$"
-                          title="Value between 0 and 1 with up to 2 decimal places"
-                        />
-                      </div>
-                      
-                      {/* Thinking Mode Toggle */}
-                      <div className="grid grid-cols-2 gap-2 items-center">
-                        <Label htmlFor="thinkingEnabled" className="text-gray-700">
-                          Thinking Mode:
-                        </Label>
-                        <div className="flex items-center">
-                          <Switch 
-                            id="thinkingEnabled" 
-                            checked={options.thinkingEnabled === true}
-                            onCheckedChange={(checked) => 
-                              handleOptionChange("thinkingEnabled", checked)
-                            }
-                          />
-                          <span className="ml-2 text-xs text-gray-500">
-                            {options.thinkingEnabled ? 'Enabled' : 'Disabled'}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Thinking Budget (only when thinking is enabled) */}
-                      {options.thinkingEnabled && (
-                        <div className="grid grid-cols-2 gap-2 items-center">
-                          <Label htmlFor="thinkingBudget" className="text-gray-700">
-                            Thinking Budget:
-                          </Label>
-                          <Input 
-                            id="thinkingBudget" 
-                            type="number" 
-                            min="500" 
-                            max="10000" 
-                            step="100" 
-                            value={options.thinkingBudget} 
-                            onChange={(e) => handleOptionChange("thinkingBudget", parseInt(e.target.value))}
-                            className="h-7 text-sm"
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Save API Call Toggle */}
-                      <div className="grid grid-cols-2 gap-2 items-center">
-                        <Label htmlFor="saveApiCall" className="text-gray-700">
-                          Save to History:
-                        </Label>
-                        <div className="flex items-center">
-                          <Switch 
-                            id="saveApiCall" 
-                            checked={options.saveApiCall === true}
-                            onCheckedChange={(checked) => 
-                              handleOptionChange("saveApiCall", checked)
-                            }
-                          />
-                          <span className="ml-2 text-xs text-gray-500">
-                            {options.saveApiCall ? 'Yes' : 'No'}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* System Prompt */}
-                      <div className="pt-2">
-                        <Label htmlFor="systemPrompt" className="text-gray-700 block mb-1">
-                          System Prompt:
-                        </Label>
-                        <Textarea 
-                          id="systemPrompt" 
-                          value={options.systemPrompt} 
-                          onChange={(e) => handleOptionChange("systemPrompt", e.target.value)}
-                          className="h-20 text-xs font-mono"
-                          placeholder="Instructions for Claude on how to approach the task..."
-                        />
-                      </div>
-                      
-                      {/* Custom Extraction Prompt */}
-                      <div>
-                        <Label htmlFor="customExtractionPrompt" className="text-gray-700 block mb-1">
-                          Custom Extraction Prompt:
-                        </Label>
-                        <Textarea 
-                          id="customExtractionPrompt" 
-                          value={options.customExtractionPrompt} 
-                          onChange={(e) => handleOptionChange("customExtractionPrompt", e.target.value)}
-                          className="h-20 text-xs font-mono"
-                          placeholder="Leave empty to use the default prompt..."
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          <Info className="h-3 w-3 inline mr-1" />
-                          Leave empty to use the default extraction prompt
-                        </p>
-                      </div>
-                      
-                      <div className="flex justify-between pt-2">
-                        <Button 
-                          variant="secondary" 
-                          size="sm"
-                          onClick={() => {
-                            // Set save template mode in API Lab
-                            setShowApiLab(true);
-                            // We'll immediately open the create template form with current values
-                            setApiLabMode("saveTemplate");
-                          }}
-                          className="text-xs gap-1"
-                        >
-                          <Save className="h-3 w-3" />
-                          Save as Template
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setShowApiLab(true);
-                            setApiLabMode("browse");
-                          }}
-                          className="text-xs gap-1"
-                        >
-                          <Beaker className="h-3 w-3" />
-                          Open API Lab
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
             
             <Button
               onClick={handleGenerateClick}
               disabled={isLoading || !text.trim()}
-              variant="default"
-              className={`w-full mt-4 ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : ''}`}
+              className={`w-full mt-4 ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white font-medium py-2 rounded transition-colors flex items-center justify-center`}
             >
               {isLoading ? (
                 <>
@@ -471,8 +205,7 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
           <Button
             onClick={handleGenerateClick}
             disabled={isLoading || !text.trim()}
-            variant="default"
-            className={`w-full ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : ''}`}
+            className={`w-full ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white text-sm py-1 rounded transition-colors flex items-center justify-center`}
             size="sm"
           >
             {isLoading ? (
@@ -489,36 +222,6 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
           </Button>
         </div>
       )}
-      
-      {/* API Lab Dialog */}
-      <Dialog open={showApiLab} onOpenChange={setShowApiLab}>
-        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Beaker className="h-5 w-5" />
-              API Lab
-            </DialogTitle>
-            <DialogDescription>
-              Create and manage custom API templates and view call history
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-hidden">
-            <ApiLab
-              onSelectTemplate={handleSelectTemplate}
-              onSelectApiCall={handleSelectApiCall}
-              initialMode={apiLabMode}
-              currentOptions={{
-                systemPrompt: options.systemPrompt,
-                extractionPrompt: options.customExtractionPrompt,
-                temperature: options.temperature,
-                thinkingEnabled: options.thinkingEnabled,
-                thinkingBudget: options.thinkingBudget
-              }}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

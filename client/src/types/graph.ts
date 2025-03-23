@@ -49,15 +49,6 @@ export interface GraphGenerationOptions {
   mergeEntities: boolean;
   model: 'claude'; // Only Claude model is supported
   appendMode?: boolean; // Whether to append to existing graph instead of replacing it
-  
-  // Advanced Claude API options
-  saveApiCall?: boolean; // Whether to save this API call to history
-  thinkingEnabled?: boolean; // Enable Claude "thinking" mode
-  thinkingBudget?: number; // Token budget for Claude's thinking
-  temperature?: string; // Temperature for generation (0-1)
-  systemPrompt?: string; // System instructions for Claude
-  customExtractionPrompt?: string; // Custom prompt for extraction (empty = use default)
-  apiTemplateId?: number | null; // Reference to a saved API template
 }
 
 export interface ZoomPanInfo {
