@@ -156,16 +156,61 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
 
 // Main graph generation function using Claude API
 async function generateGraphFromText(text: string, options: any, existingGraph?: any, appendMode = false) {
-  console.log("Using Claude API for graph generation");
-  const newGraph = await generateGraphWithClaude(text, options);
+  // Log detailed request information for debugging
+  console.log("Starting graph generation with Claude API");
+  console.log("Text length:", text.length);
+  console.log("Options:", JSON.stringify(options, null, 2));
+  console.log("Append mode:", appendMode);
   
-  // If append mode is true and we have an existing graph, merge them
-  if (appendMode && existingGraph) {
-    console.log("Merging with existing graph");
-    return mergeGraphs(existingGraph, newGraph);
+  if (existingGraph) {
+    console.log("Existing graph stats:", {
+      nodes: existingGraph.nodes?.length || 0,
+      edges: existingGraph.edges?.length || 0
+    });
   }
   
-  return newGraph;
+  try {
+    // Generate new graph
+    const newGraph = await generateGraphWithClaude(text, options);
+    
+    // Log and validate the returned graph
+    if (!newGraph) {
+      console.error("Claude API returned null or undefined graph");
+      throw new Error("Invalid response from Claude API: null or undefined graph");
+    }
+    
+    if (!Array.isArray(newGraph.nodes)) {
+      console.error("Claude API returned graph without nodes array:", newGraph);
+      throw new Error("Invalid response from Claude API: missing nodes array");
+    }
+    
+    if (!Array.isArray(newGraph.edges)) {
+      console.error("Claude API returned graph without edges array:", newGraph);
+      throw new Error("Invalid response from Claude API: missing edges array");
+    }
+    
+    console.log("Successfully generated new graph:", {
+      nodes: newGraph.nodes.length,
+      edges: newGraph.edges.length
+    });
+    
+    // If append mode is true and we have an existing graph, merge them
+    if (appendMode && existingGraph) {
+      console.log("Merging with existing graph");
+      const mergedGraph = mergeGraphs(existingGraph, newGraph);
+      console.log("Merged graph stats:", {
+        nodes: mergedGraph.nodes.length,
+        edges: mergedGraph.edges.length
+      });
+      return mergedGraph;
+    }
+    
+    return newGraph;
+  } catch (error) {
+    console.error("Error in generateGraphFromText:", error);
+    // Re-throw to be handled by the calling function
+    throw error;
+  }
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {

@@ -448,7 +448,6 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
               disabled={isLoading || !text.trim()}
               variant="default"
               className={`w-full mt-4 ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : ''}`}
-              className="w-full mt-4"
             >
               {isLoading ? (
                 <>
@@ -472,8 +471,8 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
           <Button
             onClick={handleGenerateClick}
             disabled={isLoading || !text.trim()}
-            variant={options.appendMode ? "success" : "default"}
-            className="w-full"
+            variant="default"
+            className={`w-full ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : ''}`}
             size="sm"
           >
             {isLoading ? (
