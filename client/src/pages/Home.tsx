@@ -4,7 +4,7 @@ import InputPanel from "@/components/InputPanel";
 import GraphPanel from "@/components/GraphPanel";
 import PropertyPanel from "@/components/PropertyPanel";
 import ExportModal from "@/components/ExportModal";
-import { Graph, Node, Edge, GraphGenerationOptions, ExportOptions } from "@/types/graph";
+import { Graph, Node, Edge, GraphGenerationOptions, ExportOptions, WebSearchOptions } from "@/types/graph";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

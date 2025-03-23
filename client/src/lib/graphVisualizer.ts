@@ -560,6 +560,16 @@ export class GraphVisualizer {
       .append("g")
       .attr("class", "node")
       .attr("id", (d) => `node-${d.id}`) // Add ID for easier selection
+      .on("mouseover", (event: MouseEvent, d: SimulationNode) => {
+        // Show tooltip only if web search is enabled
+        if (this.onWebSearch) {
+          this.showNodeTooltip(event, d);
+        }
+      })
+      .on("mouseout", (event: MouseEvent) => {
+        // Hide tooltip
+        this.hideNodeTooltip();
+      })
       .on("click", (event: MouseEvent, d: SimulationNode) => {
         // Prevent the click from propagating to the background
         event.stopPropagation();
