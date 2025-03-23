@@ -15,7 +15,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ApiCall } from '@shared/schema';
+import { ApiCall, Graph } from '@shared/schema';
 import { 
   History, 
   Clock, 
@@ -111,7 +111,7 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
   };
 
   // Calculate response time in seconds
-  const calculateResponseTime = (requestTime: string, responseTime?: string) => {
+  const calculateResponseTime = (requestTime: string, responseTime: string | null) => {
     if (!responseTime) return 'N/A';
     try {
       const request = new Date(requestTime).getTime();
@@ -302,10 +302,10 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                                   </div>
                                   <div className="flex text-sm mb-2 text-gray-600">
                                     <div className="mr-4">
-                                      <span className="font-medium">Nodes:</span> {call.responseData.nodes?.length || 0}
+                                      <span className="font-medium">Nodes:</span> {(call.responseData as Graph)?.nodes?.length || 0}
                                     </div>
                                     <div>
-                                      <span className="font-medium">Edges:</span> {call.responseData.edges?.length || 0}
+                                      <span className="font-medium">Edges:</span> {(call.responseData as Graph)?.edges?.length || 0}
                                     </div>
                                   </div>
                                   <div className="text-right mt-2">
