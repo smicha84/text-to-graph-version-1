@@ -40,9 +40,9 @@ export default function ApiLab({ onSelectTemplate, onSelectApiCall }: ApiLabProp
     isLoading: templatesLoading,
     error: templatesError,
     refetch: refetchTemplates
-  } = useQuery({
+  } = useQuery<ApiTemplate[]>({
     queryKey: ['/api/templates'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
+    queryFn: getQueryFn<ApiTemplate[]>({ on401: 'returnNull' }),
   });
 
   // Fetch API call history
@@ -51,15 +51,15 @@ export default function ApiLab({ onSelectTemplate, onSelectApiCall }: ApiLabProp
     isLoading: callsLoading,
     error: callsError,
     refetch: refetchCalls
-  } = useQuery({
+  } = useQuery<ApiCall[]>({
     queryKey: ['/api/call-history'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
+    queryFn: getQueryFn<ApiCall[]>({ on401: 'returnNull' }),
   });
 
   // Create a new API template
   const createTemplateMutation = useMutation({
     mutationFn: async (template: Omit<ApiTemplate, 'id' | 'userId' | 'createdAt'>) => {
-      const response = await apiRequest('/api/templates', {
+      const response = await apiRequest<ApiTemplate>('/api/templates', {
         method: 'POST',
         body: template,
       });
@@ -83,7 +83,7 @@ export default function ApiLab({ onSelectTemplate, onSelectApiCall }: ApiLabProp
   // Update an existing API template
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, template }: { id: number, template: Omit<ApiTemplate, 'id' | 'userId' | 'createdAt'> }) => {
-      const response = await apiRequest(`/api/templates/${id}`, {
+      const response = await apiRequest<ApiTemplate>(`/api/templates/${id}`, {
         method: 'PUT',
         body: template,
       });
@@ -107,7 +107,7 @@ export default function ApiLab({ onSelectTemplate, onSelectApiCall }: ApiLabProp
   // Delete an API template
   const deleteTemplateMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest(`/api/templates/${id}`, {
+      await apiRequest<void>(`/api/templates/${id}`, {
         method: 'DELETE',
       });
       return id;
