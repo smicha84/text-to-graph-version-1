@@ -1,14 +1,16 @@
 import { Node, Edge } from "@/types/graph";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { XIcon } from "lucide-react";
+import { XIcon, GlobeIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PropertyPanelProps {
   element: Node | Edge | null;
   onClose: () => void;
+  onWebSearch?: (nodeId: string, query: string) => void;
 }
 
-export default function PropertyPanel({ element, onClose }: PropertyPanelProps) {
+export default function PropertyPanel({ element, onClose, onWebSearch }: PropertyPanelProps) {
   if (!element) return null;
   
   const isNode = 'type' in element;
@@ -19,6 +21,14 @@ export default function PropertyPanel({ element, onClose }: PropertyPanelProps) 
   
   const properties = element.properties || {};
   const propertyEntries = Object.entries(properties);
+  
+  // Function to handle web search button click
+  const handleWebSearch = () => {
+    if (isNode && onWebSearch) {
+      // This will trigger the prompt station in the sidebar
+      onWebSearch(element.id, element.label + " " + element.type);
+    }
+  };
   
   return (
     <div className="bg-white border-t border-gray-200 overflow-auto h-64">
@@ -57,6 +67,21 @@ export default function PropertyPanel({ element, onClose }: PropertyPanelProps) 
                 <span className="ml-2 text-sm text-gray-600">{element.target}</span>
               </div>
             </>
+          )}
+          
+          {/* Web Search Button - only for nodes, not edges */}
+          {isNode && onWebSearch && (
+            <div className="mt-3">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full flex items-center justify-center gap-2 text-sm"
+                onClick={handleWebSearch}
+              >
+                <GlobeIcon size={14} />
+                Web Search
+              </Button>
+            </div>
           )}
         </div>
         

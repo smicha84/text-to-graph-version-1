@@ -174,6 +174,7 @@ export default function Home() {
               <PropertyPanel 
                 element={selectedElement}
                 onClose={() => setShowPropertyPanel(false)}
+                onWebSearch={handleWebSearch}
               />
             </div>
           )}
