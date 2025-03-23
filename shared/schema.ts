@@ -40,6 +40,14 @@ export const graphOptionsSchema = z.object({
   mergeEntities: z.boolean().default(true),
   model: z.literal("claude").default("claude"),
   appendMode: z.boolean().optional().default(false), // Whether to append to existing graph
+  saveApiCall: z.boolean().optional().default(true), // Whether to save the API call in the database
+  thinkingEnabled: z.boolean().optional().default(true), // Whether to enable Claude's thinking
+  thinkingBudget: z.number().optional().default(2000), // Budget for Claude's thinking in tokens
+  temperature: z.string().optional().default("1.0"), // Temperature for Claude generation
+  systemPrompt: z.string().optional(), // Custom system prompt
+  customExtractionPrompt: z.string().optional(), // Custom extraction prompt
+  useFunctionCalling: z.boolean().optional().default(false), // Whether to use function calling
+  apiTemplateId: z.string().nullable().optional(), // ID of the API template to use
 });
 
 // API Input Schema
