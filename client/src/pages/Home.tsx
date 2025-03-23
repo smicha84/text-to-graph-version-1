@@ -107,6 +107,44 @@ export default function Home() {
   const handleExportGraph = (options: ExportOptions) => {
     exportMutation.mutate(options);
   };
+  
+  // Web search mutation
+  const webSearchMutation = useMutation({
+    mutationFn: async ({ nodeId, query }: WebSearchOptions) => {
+      if (!graph) throw new Error("No graph to search with");
+      
+      const payload = {
+        query,
+        nodeId,
+        graph
+      };
+      
+      const response = await apiRequest('POST', '/api/web-search', payload);
+      return response.json();
+    },
+    onSuccess: (data: Graph) => {
+      setGraph(data);
+      toast({
+        title: "Web Search Completed",
+        description: `Successfully expanded graph with ${data.nodes.length - (graph?.nodes.length || 0)} new nodes from web search.`
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Web Search Error",
+        description: `Failed to perform web search: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleWebSearch = (nodeId: string, query: string) => {
+    toast({
+      title: "Web Search Started",
+      description: "Searching the web for relevant information...",
+    });
+    webSearchMutation.mutate({ nodeId, query });
+  };
 
   return (
     <div className="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col">
@@ -122,9 +160,10 @@ export default function Home() {
         <div className="flex-1 flex flex-col h-full">
           <GraphPanel 
             graph={graph}
-            isLoading={generateMutation.isPending}
+            isLoading={generateMutation.isPending || webSearchMutation.isPending}
             onElementSelect={handleElementSelect}
             onShowExportModal={() => setShowExportModal(true)}
+            onWebSearch={handleWebSearch}
           />
           
           {showPropertyPanel && selectedElement && (

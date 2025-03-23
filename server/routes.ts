@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { generateGraphInputSchema, exportGraphSchema } from "@shared/schema";
 import { storage } from "./storage";
-import { generateGraphWithClaude } from "./anthropic";
+import { generateGraphWithClaude, performWebSearch } from "./anthropic";
 
 // Function to merge two graphs with subgraph tracking
 function mergeGraphs(existingGraph: any, newGraph: any): any {
@@ -99,7 +99,14 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
 // Main graph generation function using Claude API
 async function generateGraphFromText(text: string, options: any, existingGraph?: any, appendMode = false) {
   console.log("Using Claude API for graph generation");
-  const newGraph = await generateGraphWithClaude(text, options);
+  
+  // If we're doing a web search, update the context to inform Claude about the source
+  const webSearchMode = options.webSearchNode && options.webSearchQuery;
+  const textToProcess = webSearchMode 
+    ? `The following information was retrieved from a web search about "${options.webSearchQuery}":\n\n${text}`
+    : text;
+    
+  const newGraph = await generateGraphWithClaude(textToProcess, options);
   
   // If append mode is true and we have an existing graph, merge them
   if (appendMode && existingGraph) {
@@ -108,6 +115,91 @@ async function generateGraphFromText(text: string, options: any, existingGraph?:
   }
   
   return newGraph;
+}
+
+async function webSearchAndExpandGraph(query: string, nodeId: string, existingGraph: any) {
+  if (!existingGraph || !existingGraph.nodes || existingGraph.nodes.length === 0) {
+    throw new Error("Cannot perform web search with an empty graph.");
+  }
+  
+  // Find the node that triggered the search
+  const sourceNode = existingGraph.nodes.find((node: any) => node.id === nodeId);
+  if (!sourceNode) {
+    throw new Error(`Node with ID ${nodeId} not found in the graph.`);
+  }
+  
+  console.log(`Performing web search for node ${nodeId} with query: ${query}`);
+  
+  // Generate a new subgraph ID for this web search
+  const subgraphId = `webSearch_${Date.now()}`;
+  
+  // Mark the source node as part of this new subgraph
+  if (!sourceNode.subgraphIds) {
+    sourceNode.subgraphIds = [];
+  }
+  if (!sourceNode.subgraphIds.includes(subgraphId)) {
+    sourceNode.subgraphIds.push(subgraphId);
+  }
+  
+  // Set up options for graph generation
+  const options = {
+    extractEntities: true,
+    extractRelations: true,
+    inferProperties: true,
+    mergeEntities: true,
+    model: 'claude',
+    appendMode: true,
+    webSearchNode: nodeId,
+    webSearchQuery: query
+  };
+  
+  // Perform the web search to get search results
+  const searchResults = await performWebSearch(query);
+  
+  // Use the search results to generate the graph
+  const graphWithWebResults = await generateGraphFromText(searchResults, options, existingGraph, true);
+  
+  // Add metadata to all new nodes and edges
+  const originalNodeIds = new Set(existingGraph.nodes.map((node: any) => node.id));
+  const originalEdgeIds = new Set(existingGraph.edges.map((edge: any) => edge.id));
+  
+  // Mark new nodes as part of the web search subgraph
+  graphWithWebResults.nodes.forEach((node: any) => {
+    if (!originalNodeIds.has(node.id)) {
+      if (!node.subgraphIds) {
+        node.subgraphIds = [];
+      }
+      if (!node.subgraphIds.includes(subgraphId)) {
+        node.subgraphIds.push(subgraphId);
+      }
+      
+      // Add metadata to indicate this is from web search
+      if (!node.properties) {
+        node.properties = {};
+      }
+      node.properties.source = "web search result";
+    }
+  });
+  
+  // Mark new edges as part of the web search subgraph
+  graphWithWebResults.edges.forEach((edge: any) => {
+    if (!originalEdgeIds.has(edge.id)) {
+      if (!edge.subgraphIds) {
+        edge.subgraphIds = [];
+      }
+      if (!edge.subgraphIds.includes(subgraphId)) {
+        edge.subgraphIds.push(subgraphId);
+      }
+      
+      // Add metadata to indicate this is from web search
+      if (!edge.properties) {
+        edge.properties = {};
+      }
+      edge.properties.source = "web search result";
+    }
+  });
+  
+  return graphWithWebResults;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -147,6 +239,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
           details: errorMessage
         });
       }
+    }
+  });
+  
+  // API endpoint for web search
+  app.post('/api/web-search', async (req, res) => {
+    try {
+      // Validate request body (ideally, we'd create a Zod schema for this)
+      const { query, nodeId, graph } = req.body;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ message: 'A query string is required' });
+      }
+      
+      if (!nodeId || typeof nodeId !== 'string') {
+        return res.status(400).json({ message: 'A node ID is required' });
+      }
+      
+      if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+        return res.status(400).json({ message: 'A valid graph object is required' });
+      }
+      
+      // Perform web search and expand the graph
+      const expandedGraph = await webSearchAndExpandGraph(query, nodeId, graph);
+      
+      // Return the expanded graph
+      res.json(expandedGraph);
+    } catch (error) {
+      console.error('Error performing web search:', error);
+      let errorMessage = 'Failed to perform web search';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      res.status(500).json({ 
+        message: 'Failed to perform web search',
+        details: errorMessage
+      });
     }
   });
   
