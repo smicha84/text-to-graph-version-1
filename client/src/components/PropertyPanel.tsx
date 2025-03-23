@@ -1,20 +1,14 @@
 import { Node, Edge } from "@/types/graph";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { GlobeIcon } from "lucide-react";
-import { useState } from "react";
-import { generateWebSearchQuery } from "@/lib/webSearchUtils";
-import { Textarea } from "@/components/ui/textarea";
+import { XIcon } from "lucide-react";
 
 interface PropertyPanelProps {
   element: Node | Edge | null;
   onClose: () => void;
-  onWebSearch?: (nodeId: string, query: string) => void;
-  graph?: any; // Full graph for generating better queries
 }
 
-export default function PropertyPanel({ element, onClose, onWebSearch, graph }: PropertyPanelProps) {
+export default function PropertyPanel({ element, onClose }: PropertyPanelProps) {
   if (!element) return null;
   
   const isNode = 'type' in element;
@@ -26,52 +20,13 @@ export default function PropertyPanel({ element, onClose, onWebSearch, graph }: 
   const properties = element.properties || {};
   const propertyEntries = Object.entries(properties);
   
-  // State for managing the prompt display
-  const [showPromptStation, setShowPromptStation] = useState(false);
-  const [searchPrompt, setSearchPrompt] = useState("");
-  
-  // Function to handle web search button click
-  const handleWebSearch = () => {
-    if (isNode && onWebSearch) {
-      // Generate a search query based on the node
-      let query = "";
-      if (graph) {
-        // Use the utility function if we have access to the full graph
-        query = generateWebSearchQuery(graph, element.id);
-      } else {
-        // Fallback to a simple query based on node data
-        query = element.label + " " + element.type;
-        if (element.properties.name) {
-          query = element.properties.name + " " + query;
-        }
-      }
-      
-      // Set the search prompt and show the prompt station
-      setSearchPrompt(query);
-      setShowPromptStation(true);
-    }
-  };
-  
-  // Function to execute the web search with the current prompt
-  const executeSearch = () => {
-    if (isNode && onWebSearch) {
-      onWebSearch(element.id, searchPrompt);
-      // Keep the prompt station open to show the query that was sent
-    }
-  };
-  
-  // Update prompt when it changes in the text area
-  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setSearchPrompt(e.target.value);
-  };
-  
   return (
-    <div className="bg-white border-t border-gray-200 overflow-auto" style={{ height: showPromptStation ? "auto" : "16rem" }}>
+    <div className="bg-white border-t border-gray-200 overflow-auto h-64">
       <div className="p-4">
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-medium text-gray-800">Properties</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <i className="fas fa-times"></i>
+            <XIcon size={16} />
           </button>
         </div>
         
@@ -102,44 +57,6 @@ export default function PropertyPanel({ element, onClose, onWebSearch, graph }: 
                 <span className="ml-2 text-sm text-gray-600">{element.target}</span>
               </div>
             </>
-          )}
-          
-          {/* Web Search Button - only for nodes, not edges */}
-          {isNode && onWebSearch && (
-            <div className="mt-3">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="w-full flex items-center justify-center gap-2 text-sm"
-                onClick={handleWebSearch}
-              >
-                <GlobeIcon size={14} />
-                Web Search
-              </Button>
-            </div>
-          )}
-          
-          {/* Prompt Station */}
-          {showPromptStation && (
-            <div className="mt-4 border rounded p-2 bg-gray-50">
-              <h5 className="text-sm font-medium text-gray-700 mb-1">Prompt Station</h5>
-              <Textarea 
-                value={searchPrompt}
-                onChange={handlePromptChange}
-                placeholder="Edit search query..."
-                className="min-h-[100px] text-sm mb-2"
-              />
-              <div className="flex justify-end">
-                <Button 
-                  size="sm"
-                  variant="default"
-                  onClick={executeSearch}
-                  className="text-xs"
-                >
-                  Execute Search
-                </Button>
-              </div>
-            </div>
           )}
         </div>
         

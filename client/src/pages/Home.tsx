@@ -153,8 +153,11 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
         <InputPanel 
           onGenerateGraph={handleGenerateGraph}
+          onWebSearch={handleWebSearch}
           isLoading={generateMutation.isPending}
+          isSearching={webSearchMutation.isPending}
           hasExistingGraph={!!graph && graph.nodes.length > 0}
+          selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
         />
         
         <div className="flex-1 flex flex-col h-full">
@@ -171,8 +174,6 @@ export default function Home() {
               <PropertyPanel 
                 element={selectedElement}
                 onClose={() => setShowPropertyPanel(false)}
-                onWebSearch={handleWebSearch}
-                graph={graph}
               />
             </div>
           )}

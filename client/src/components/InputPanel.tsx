@@ -3,13 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { GraphGenerationOptions } from "@/types/graph";
-import { ChevronLeftIcon, ChevronRightIcon, Share2Icon, XIcon, RotateCwIcon } from "lucide-react";
+import { GraphGenerationOptions, WebSearchOptions } from "@/types/graph";
+import { 
+  ChevronLeftIcon, ChevronRightIcon, Share2Icon, 
+  XIcon, RotateCwIcon, GlobeIcon 
+} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 interface InputPanelProps {
   onGenerateGraph: (text: string, options: GraphGenerationOptions) => void;
+  onWebSearch?: (nodeId: string, query: string) => void; // Added for web search
   isLoading: boolean;
+  isSearching?: boolean; // Added to show loading state for search
   hasExistingGraph: boolean; // Whether there's already a graph to append to
+  selectedNodeId?: string; // ID of the selected node for web search
 }
 
 // Sample examples to populate the textarea
@@ -19,7 +26,14 @@ const EXAMPLES = [
   "The movie Inception was directed by Christopher Nolan and stars Leonardo DiCaprio. Christopher Nolan also directed The Dark Knight which stars Christian Bale as Batman."
 ];
 
-export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGraph }: InputPanelProps) {
+export default function InputPanel({ 
+  onGenerateGraph, 
+  onWebSearch, 
+  isLoading, 
+  isSearching = false, 
+  hasExistingGraph, 
+  selectedNodeId 
+}: InputPanelProps) {
   const [text, setText] = useState(EXAMPLES[0]);
   const [expanded, setExpanded] = useState(false);
   const [options, setOptions] = useState<GraphGenerationOptions>({
@@ -30,6 +44,10 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
     model: "claude", // Only using Claude model
     appendMode: false
   });
+
+  // State for prompt station (web search)
+  const [showPromptStation, setShowPromptStation] = useState(false);
+  const [searchPrompt, setSearchPrompt] = useState("");
 
   const handleOptionChange = (option: keyof GraphGenerationOptions, value: boolean | string) => {
     setOptions(prev => ({ ...prev, [option]: value }));
@@ -52,6 +70,21 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
   
   const toggleExpanded = () => {
     setExpanded(!expanded);
+  };
+
+  // Function to prepare the web search prompt
+  const prepareWebSearch = () => {
+    if (selectedNodeId) {
+      setSearchPrompt(`Search for information about this ${selectedNodeId} node`);
+      setShowPromptStation(true);
+    }
+  };
+
+  // Function to execute the web search
+  const executeSearch = () => {
+    if (selectedNodeId && onWebSearch && searchPrompt) {
+      onWebSearch(selectedNodeId, searchPrompt);
+    }
   };
 
   return (
@@ -195,6 +228,55 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
                 </>
               )}
             </Button>
+            
+            {/* Prompt Station for Web Search */}
+            {hasExistingGraph && selectedNodeId && (
+              <div className="mt-6">
+                <Separator className="mb-4" />
+                <div className="flex justify-between items-center mb-2">
+                  <Label className="block text-sm font-medium text-gray-700">Prompt Station (Web Search)</Label>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs"
+                    onClick={prepareWebSearch}
+                  >
+                    <GlobeIcon size={12} className="mr-1" />
+                    Prepare Search
+                  </Button>
+                </div>
+                
+                {showPromptStation && (
+                  <div className="mt-2">
+                    <Textarea
+                      id="searchPrompt"
+                      className="w-full p-2 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all min-h-[80px]"
+                      placeholder="Edit search query..."
+                      value={searchPrompt}
+                      onChange={(e) => setSearchPrompt(e.target.value)}
+                    />
+                    <Button
+                      onClick={executeSearch}
+                      disabled={isSearching || !searchPrompt.trim()}
+                      className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-1 rounded transition-colors flex items-center justify-center"
+                      size="sm"
+                    >
+                      {isSearching ? (
+                        <>
+                          <RotateCwIcon size={12} className="mr-1 animate-spin" />
+                          <span>Searching...</span>
+                        </>
+                      ) : (
+                        <>
+                          <GlobeIcon size={12} className="mr-1" />
+                          <span>Execute Web Search</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -220,6 +302,42 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
               </>
             )}
           </Button>
+          
+          {/* Compact Prompt Station for Web Search */}
+          {hasExistingGraph && selectedNodeId && (
+            <>
+              <Separator className="my-2" />
+              <Button
+                onClick={prepareWebSearch}
+                variant="outline"
+                size="sm"
+                className="w-full text-xs flex items-center justify-center"
+              >
+                <GlobeIcon size={12} className="mr-1" />
+                <span>Web Search</span>
+              </Button>
+              
+              {showPromptStation && (
+                <div className="mt-2">
+                  <Textarea
+                    id="searchPromptCompact"
+                    className="w-full p-2 text-xs border border-gray-300 rounded resize-none focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all min-h-[60px]"
+                    placeholder="Edit search query..."
+                    value={searchPrompt}
+                    onChange={(e) => setSearchPrompt(e.target.value)}
+                  />
+                  <Button
+                    onClick={executeSearch}
+                    disabled={isSearching || !searchPrompt.trim()}
+                    className="w-full mt-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-1 rounded transition-colors flex items-center justify-center"
+                    size="sm"
+                  >
+                    {isSearching ? "Searching..." : "Execute Search"}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>
