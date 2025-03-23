@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
+import { PromptStation, CompactPromptStation } from "@/components/PromptStation";
 
 interface InputPanelProps {
   onGenerateGraph: (text: string, options: GraphGenerationOptions) => void;
@@ -48,10 +49,31 @@ export default function InputPanel({
     appendMode: false
   });
 
-  // State for prompt station (web search) - always visible
+  // State for prompt station (web search) - always visible when node is selected
   const [searchPrompt, setSearchPrompt] = useState("");
   const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
-  const [showPromptSection, setShowPromptSection] = useState(false);
+
+  // Auto-generate search prompt and suggestions when a node is selected
+  useEffect(() => {
+    if (selectedNodeId && graph) {
+      // Generate default search prompt when a node is selected
+      try {
+        const searchQuery = generateWebSearchQuery(graph, selectedNodeId);
+        setSearchPrompt(searchQuery);
+      } catch (error) {
+        const node = graph.nodes.find(n => n.id === selectedNodeId);
+        const nodeName = node ? (node.properties.name || node.label) : "this entity";
+        setSearchPrompt(`Find more information about ${nodeName} and its relationships`);
+      }
+      
+      // Generate contextual suggestions
+      setSuggestedQueries(generateSuggestions());
+    } else {
+      // Clear when no node is selected
+      setSearchPrompt("");
+      setSuggestedQueries([]);
+    }
+  }, [selectedNodeId, graph]);
 
   const handleOptionChange = (option: keyof GraphGenerationOptions, value: boolean | string) => {
     setOptions(prev => ({ ...prev, [option]: value }));
@@ -119,7 +141,7 @@ export default function InputPanel({
     return [];
   };
 
-  // Function to prepare the web search prompt using webSearchUtils
+  // Function to prepare the web search prompt using webSearchUtils - refreshes the suggestions
   const prepareWebSearch = () => {
     if (selectedNodeId && graph) {
       try {
@@ -128,13 +150,19 @@ export default function InputPanel({
         setSearchPrompt(searchQuery);
       } catch (error) {
         // Fallback if there's an error with the utility
-        setSearchPrompt(`Find more information about this entity and its relationships`);
+        const node = graph.nodes.find(n => n.id === selectedNodeId);
+        const nodeName = node ? (node.properties.name || node.label) : "this entity";
+        setSearchPrompt(`Find more information about ${nodeName} and its relationships`);
       }
       
-      // Generate contextual suggestions
+      // Refresh contextual suggestions
       setSuggestedQueries(generateSuggestions());
-      setShowPromptSection(true);
     }
+  };
+  
+  // Function to use a suggested query
+  const useSuggestedQuery = (query: string) => {
+    setSearchPrompt(query);
   };
 
   // Function to execute the web search
@@ -299,39 +327,18 @@ export default function InputPanel({
                     onClick={prepareWebSearch}
                   >
                     <GlobeIcon size={12} className="mr-1" />
-                    Prepare Search
+                    Refresh
                   </Button>
                 </div>
                 
-                {showPromptSection && (
-                  <div className="mt-2">
-                    <Textarea
-                      id="searchPrompt"
-                      className="w-full p-2 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all min-h-[80px]"
-                      placeholder="Edit search query..."
-                      value={searchPrompt}
-                      onChange={(e) => setSearchPrompt(e.target.value)}
-                    />
-                    <Button
-                      onClick={executeSearch}
-                      disabled={isSearching || !searchPrompt.trim()}
-                      className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-1 rounded transition-colors flex items-center justify-center"
-                      size="sm"
-                    >
-                      {isSearching ? (
-                        <>
-                          <RotateCwIcon size={12} className="mr-1 animate-spin" />
-                          <span>Searching...</span>
-                        </>
-                      ) : (
-                        <>
-                          <GlobeIcon size={12} className="mr-1" />
-                          <span>Execute Web Search</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
+                <PromptStation 
+                  searchPrompt={searchPrompt}
+                  onSearchPromptChange={setSearchPrompt}
+                  suggestedQueries={suggestedQueries}
+                  onSelectSuggestion={useSuggestedQuery}
+                  onSearch={executeSearch}
+                  isSearching={isSearching}
+                />
               </div>
             )}
           </div>
@@ -364,35 +371,26 @@ export default function InputPanel({
           {hasExistingGraph && selectedNodeId && (
             <>
               <Separator className="my-2" />
-              <Button
-                onClick={prepareWebSearch}
-                variant="outline"
-                size="sm"
-                className="w-full text-xs flex items-center justify-center"
-              >
-                <GlobeIcon size={12} className="mr-1" />
-                <span>Web Search</span>
-              </Button>
+              <div className="flex justify-between items-center mb-1">
+                <Label className="text-xs text-gray-600">Web Search</Label>
+                <Button
+                  onClick={prepareWebSearch}
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 p-0"
+                >
+                  <RotateCwIcon size={10} />
+                </Button>
+              </div>
               
-              {showPromptSection && (
-                <div className="mt-2">
-                  <Textarea
-                    id="searchPromptCompact"
-                    className="w-full p-2 text-xs border border-gray-300 rounded resize-none focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all min-h-[60px]"
-                    placeholder="Edit search query..."
-                    value={searchPrompt}
-                    onChange={(e) => setSearchPrompt(e.target.value)}
-                  />
-                  <Button
-                    onClick={executeSearch}
-                    disabled={isSearching || !searchPrompt.trim()}
-                    className="w-full mt-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-1 rounded transition-colors flex items-center justify-center"
-                    size="sm"
-                  >
-                    {isSearching ? "Searching..." : "Execute Search"}
-                  </Button>
-                </div>
-              )}
+              <CompactPromptStation 
+                searchPrompt={searchPrompt}
+                onSearchPromptChange={setSearchPrompt}
+                suggestedQueries={suggestedQueries}
+                onSelectSuggestion={useSuggestedQuery}
+                onSearch={executeSearch}
+                isSearching={isSearching}
+              />
             </>
           )}
         </div>
