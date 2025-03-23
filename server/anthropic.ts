@@ -29,32 +29,22 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
   const extractionPrompt = buildPrompt(text, options);
   
   try {
-    // Determine if we should use function calling based on options
-    if (options.useFunctionCalling) {
-      return await generateGraphWithFunctionCalling(text, options);
-    }
-    
-    // Temperature needs to be a number for the API call
-    const temperature = parseFloat(options.temperature || "1.0");
-    const systemPrompt = options.systemPrompt || "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.";
-    const thinkingBudget = options.thinkingBudget || 2000;
-    
     // Call Claude API with advanced system prompt and thinking enabled for deeper analysis
     const response = await anthropic.messages.create({
       model: CLAUDE_MODEL,
       max_tokens: 4000,
-      temperature: options.thinkingEnabled ? 1.0 : temperature, // Must be exactly 1.0 when thinking is enabled
-      system: systemPrompt,
+      temperature: 1.0, // Must be exactly 1.0 when thinking is enabled
+      system: "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.",
       messages: [
         {
           role: 'user',
           content: extractionPrompt
         }
       ],
-      thinking: options.thinkingEnabled ? {
+      thinking: {
         type: "enabled",
-        budget_tokens: thinkingBudget
-      } : undefined
+        budget_tokens: 2000
+      }
     });
 
     // Extract the JSON response from Claude
