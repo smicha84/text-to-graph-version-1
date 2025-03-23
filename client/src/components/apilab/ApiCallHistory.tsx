@@ -41,6 +41,23 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+// Typesafe ResponseData component to handle React node conversion
+const ResponseData = ({ data }: { data: unknown }) => {
+  if (data === null || data === undefined) {
+    return <span className="text-gray-400">No data available</span>;
+  }
+  
+  if (typeof data === 'string') {
+    return <span>{data}</span>;
+  }
+  
+  try {
+    return <pre>{JSON.stringify(data, null, 2)}</pre>;
+  } catch (err) {
+    return <span className="text-red-500">Error displaying data</span>;
+  }
+};
+
 // Type guard for checking if an object has the shape of a Graph
 function isGraphLike(obj: any): obj is Graph {
   return (
@@ -648,9 +665,7 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                     <div className="h-full relative">
                       <ScrollArea className="h-full w-full">
                         <div className="p-4 font-mono text-sm whitespace-pre bg-gray-50">
-                          {typeof selectedCall.responseData === 'string' 
-                            ? selectedCall.responseData
-                            : formatJSON(selectedCall.responseData)}
+                          <ResponseData data={selectedCall.responseData} />
                         </div>
                       </ScrollArea>
                       <div className="absolute top-2 right-2">
