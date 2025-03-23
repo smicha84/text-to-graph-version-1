@@ -217,7 +217,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enhanced API endpoint to generate a graph from text with API call history tracking
   app.post('/api/generate-graph', async (req, res) => {
     try {
-      // Validate request body
+      console.log('Received request payload:', JSON.stringify(req.body, null, 2));
+      
+      try {
+        // Validate request body
+        const validationResult = generateGraphInputSchema.safeParse(req.body);
+        if (!validationResult.success) {
+          console.error('Validation error:', validationResult.error.format());
+          return res.status(400).json({ 
+            message: `Validation error: ${validationResult.error.message}`,
+            details: validationResult.error.format()
+          });
+        }
+        
+        const { text, options, existingGraph, appendMode, saveApiCall } = validationResult.data;
+      } catch (validationError) {
+        console.error('Schema parsing error:', validationError);
+        return res.status(400).json({ message: `Validation error: ${validationError.message}` });
+      }
+      
       const { text, options, existingGraph, appendMode, saveApiCall } = generateGraphInputSchema.parse(req.body);
       
       // Create an API call record if tracking is enabled (default is true)
