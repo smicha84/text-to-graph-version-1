@@ -65,7 +65,10 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
     apiTemplateId: null, // Selected API template ID
   });
 
-  const handleOptionChange = (option: keyof GraphGenerationOptions, value: boolean | string | number | null) => {
+  const handleOptionChange = <T extends keyof GraphGenerationOptions>(
+    option: T, 
+    value: GraphGenerationOptions[T]
+  ) => {
     setOptions(prev => ({ ...prev, [option]: value }));
   };
 
