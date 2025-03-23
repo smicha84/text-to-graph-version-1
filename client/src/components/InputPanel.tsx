@@ -18,7 +18,7 @@ interface InputPanelProps {
   isSearching?: boolean; // Added to show loading state for search
   hasExistingGraph: boolean; // Whether there's already a graph to append to
   selectedNodeId?: string; // ID of the selected node for web search
-  graph: Graph | null; // The current graph data
+  graph?: Graph | null; // The current graph data (optional)
 }
 
 // Sample examples to populate the textarea
