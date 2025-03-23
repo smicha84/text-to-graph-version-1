@@ -156,11 +156,27 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
   };
 
   // Format JSON for display
-  const formatJSON = (data: any): string => {
+  const formatJSON = (data: any): React.ReactNode => {
     try {
       return JSON.stringify(data, null, 2);
     } catch (e) {
       return 'Error formatting data';
+    }
+  };
+  
+  // Safe content for ReactNode to avoid type issues
+  const safeContent = (content: unknown): React.ReactNode => {
+    if (typeof content === 'string' || typeof content === 'number' || typeof content === 'boolean') {
+      return content;
+    } else if (content === null || content === undefined) {
+      return '';
+    } else {
+      try {
+        return JSON.stringify(content, null, 2);
+      } catch (err) {
+        console.error('Error converting content to string:', err);
+        return 'Error displaying content';
+      }
     }
   };
   
@@ -521,7 +537,7 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                 </TabsContent>
                 
                 <TabsContent value="response" className="flex-1 p-0 m-0 overflow-hidden">
-                  {selectedCall.status === 'success' && selectedCall.responseData && (
+                  {selectedCall && selectedCall.status === 'success' && selectedCall.responseData && (
                     <ScrollArea className="h-full w-full px-6 py-4">
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
@@ -641,11 +657,11 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                 </TabsContent>
                 
                 <TabsContent value="json" className="flex-1 p-0 m-0 overflow-hidden">
-                  {selectedCall.status === 'success' && selectedCall.responseData && (
+                  {selectedCall && selectedCall.status === 'success' && selectedCall.responseData && (
                     <div className="h-full relative">
                       <ScrollArea className="h-full w-full">
                         <div className="p-4 font-mono text-sm whitespace-pre bg-gray-50">
-                          {formatJSON(selectedCall.responseData)}
+                          {safeContent(selectedCall.responseData)}
                         </div>
                       </ScrollArea>
                       <div className="absolute top-2 right-2">
