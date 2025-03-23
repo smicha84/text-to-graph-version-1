@@ -129,13 +129,9 @@ export default function SidebarPromptStation({
     }
   };
 
-  // No node selected, nothing to display
-  if (!selectedNodeId || !graph) {
-    return null;
-  }
-
-  const selectedNode = graph.nodes.find(n => n.id === selectedNodeId);
-  if (!selectedNode) return null;
+  // Always display, even if no node selected
+  const selectedNode = selectedNodeId && graph ? 
+    graph.nodes.find(n => n.id === selectedNodeId) : null;
 
   return (
     <div className="border-t border-gray-200 bg-gray-50">
