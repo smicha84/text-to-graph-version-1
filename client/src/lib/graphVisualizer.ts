@@ -89,6 +89,7 @@ export class GraphVisualizer {
   private graph: Graph | null = null;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private onSelectElement: (element: Node | Edge | null) => void;
+  private onWebSearch?: (nodeId: string, query: string) => void;
   private activeSubgraphId: string | null = null;
   private customNodeColors: Record<string, string> = {};
   private customCenterPoint: CenterPoint | null = null;
@@ -101,18 +102,24 @@ export class GraphVisualizer {
   private nodeStyles: Map<string, NodeStyle> = new Map();
   private edgeStyles: Map<string, EdgeStyle> = new Map();
   private simulation: d3.Simulation<SimulationNode, SimulationLink> | null = null;
+  private nodeTooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
 
   constructor(
     svgElement: SVGSVGElement,
     width: number,
     height: number,
-    onSelectElement: (element: Node | Edge | null) => void
+    onSelectElement: (element: Node | Edge | null) => void,
+    onWebSearch?: (nodeId: string, query: string) => void
   ) {
+    this.onWebSearch = onWebSearch;
     this.svg = d3.select(svgElement);
     this.width = width;
     this.height = height;
     this.onSelectElement = onSelectElement;
     console.log(`INITIALIZED SVG with dimensions: Width=${width}, Height=${height}`);
+    
+    // Initialize node tooltip
+    this.initNodeTooltip();
     
     // Create a clean SVG structure
     // Step 1: Add a rect that covers the entire SVG area
@@ -261,6 +268,89 @@ export class GraphVisualizer {
     });
   }
   
+  // Initialize node tooltip
+  private initNodeTooltip(): void {
+    // Remove any existing tooltip
+    if (this.nodeTooltip) {
+      this.nodeTooltip.remove();
+    }
+    
+    // Create tooltip div
+    this.nodeTooltip = d3.select(document.body)
+      .append("div")
+      .attr("class", "node-tooltip")
+      .style("opacity", 0)
+      .style("display", "none");
+  }
+  
+  // Show tooltip for a node
+  private showNodeTooltip(event: MouseEvent, d: SimulationNode): void {
+    if (!this.nodeTooltip || !this.graph) return;
+    
+    // Position the tooltip near the mouse but slightly offset
+    const x = event.pageX + 10;
+    const y = event.pageY - 10;
+    
+    // Get node name or label
+    const nodeName = d.properties.name || d.label;
+    const nodeType = d.type || '';
+    
+    // Create tooltip content
+    this.nodeTooltip
+      .html(`
+        <h4>${nodeName}</h4>
+        <div class="node-tooltip-content">
+          ${nodeType ? `<div><strong>Type:</strong> ${nodeType}</div>` : ''}
+        </div>
+        ${this.onWebSearch ? `
+          <button class="web-search-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            Web Search
+          </button>
+        ` : ''}
+      `)
+      .style("left", `${x}px`)
+      .style("top", `${y}px`)
+      .style("display", "block")
+      .style("opacity", 0)
+      .transition()
+      .duration(200)
+      .style("opacity", 1);
+    
+    // Add click event to the web search button
+    if (this.onWebSearch) {
+      this.nodeTooltip.select(".web-search-btn").on("click", () => {
+        if (this.onWebSearch && this.graph) {
+          // Import the generateWebSearchQuery function dynamically to avoid circular dependencies
+          import("./webSearchUtils").then(({ generateWebSearchQuery }) => {
+            const query = generateWebSearchQuery(this.graph!, d.id);
+            this.onWebSearch!(d.id, query);
+            
+            // Hide tooltip after click
+            this.hideNodeTooltip();
+          });
+        }
+      });
+    }
+  }
+  
+  // Hide node tooltip
+  private hideNodeTooltip(): void {
+    if (!this.nodeTooltip) return;
+    
+    this.nodeTooltip
+      .transition()
+      .duration(200)
+      .style("opacity", 0)
+      .on("end", () => {
+        this.nodeTooltip!.style("display", "none");
+      });
+  }
+
   public render(graph: Graph): void {
     console.log("Rendering graph:", graph);
     
