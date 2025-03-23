@@ -25,14 +25,34 @@ import {
 interface ApiLabProps {
   onSelectTemplate: (template: ApiTemplate) => void;
   onSelectApiCall: (apiCall: ApiCall) => void;
+  initialMode?: "browse" | "saveTemplate";
+  currentOptions?: {
+    systemPrompt?: string;
+    extractionPrompt?: string;
+    temperature?: string;
+    thinkingEnabled?: boolean;
+    thinkingBudget?: number;
+  };
 }
 
-export default function ApiLab({ onSelectTemplate, onSelectApiCall }: ApiLabProps) {
+export default function ApiLab({ 
+  onSelectTemplate, 
+  onSelectApiCall, 
+  initialMode = "browse",
+  currentOptions
+}: ApiLabProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('templates');
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(initialMode === "saveTemplate");
   const [editingTemplate, setEditingTemplate] = useState<ApiTemplate | undefined>(undefined);
+  
+  // If in save template mode, initialize with current options
+  useEffect(() => {
+    if (initialMode === "saveTemplate" && currentOptions) {
+      setShowForm(true);
+    }
+  }, [initialMode, currentOptions]);
 
   // Fetch API templates
   const {

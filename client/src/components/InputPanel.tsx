@@ -27,7 +27,8 @@ import {
   Code,
   Brain,
   Settings,
-  Info
+  Info,
+  Save
 } from "lucide-react";
 
 interface InputPanelProps {
@@ -48,6 +49,7 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
   const [expanded, setExpanded] = useState(false);
   const [showApiLab, setShowApiLab] = useState(false);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [apiLabMode, setApiLabMode] = useState<"browse" | "saveTemplate">("browse");
   const [options, setOptions] = useState<GraphGenerationOptions>({
     extractEntities: true,
     extractRelations: true,
@@ -398,11 +400,28 @@ export default function InputPanel({ onGenerateGraph, isLoading, hasExistingGrap
                         </p>
                       </div>
                       
-                      <div className="text-right pt-2">
+                      <div className="flex justify-between pt-2">
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={() => {
+                            // Set save template mode in API Lab
+                            setShowApiLab(true);
+                            // We'll immediately open the create template form with current values
+                            setApiLabMode("saveTemplate");
+                          }}
+                          className="text-xs gap-1"
+                        >
+                          <Save className="h-3 w-3" />
+                          Save as Template
+                        </Button>
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => setShowApiLab(true)}
+                          onClick={() => {
+                            setShowApiLab(true);
+                            setApiLabMode("browse");
+                          }}
                           className="text-xs gap-1"
                         >
                           <Beaker className="h-3 w-3" />
