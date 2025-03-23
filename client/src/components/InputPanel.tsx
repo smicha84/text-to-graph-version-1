@@ -48,9 +48,10 @@ export default function InputPanel({
     appendMode: false
   });
 
-  // State for prompt station (web search)
-  const [showPromptStation, setShowPromptStation] = useState(false);
+  // State for prompt station (web search) - always visible
   const [searchPrompt, setSearchPrompt] = useState("");
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
+  const [showPromptSection, setShowPromptSection] = useState(false);
 
   const handleOptionChange = (option: keyof GraphGenerationOptions, value: boolean | string) => {
     setOptions(prev => ({ ...prev, [option]: value }));
@@ -75,6 +76,49 @@ export default function InputPanel({
     setExpanded(!expanded);
   };
 
+  // Function to generate contextual search suggestions based on node type
+  const generateSuggestions = () => {
+    if (selectedNodeId && graph) {
+      const node = graph.nodes.find(n => n.id === selectedNodeId);
+      if (!node) return [];
+      
+      const suggestions: string[] = [];
+      
+      // Always suggest the node label with Wikipedia
+      suggestions.push(`${node.label} ${node.properties.name || ''} Wikipedia categories`);
+      
+      // Generate type-specific suggestions
+      if (node.type === 'Person') {
+        suggestions.push(`${node.properties.name || node.label} biography`);
+        suggestions.push(`${node.properties.name || node.label} career highlights`);
+      } else if (node.type === 'Organization' || node.type === 'Company') {
+        suggestions.push(`${node.properties.name || node.label} industry information`);
+        suggestions.push(`${node.properties.name || node.label} history and background`);
+      } else if (node.type === 'Event') {
+        suggestions.push(`${node.properties.name || node.label} details and significance`);
+        suggestions.push(`${node.properties.name || node.label} timeline`);
+      } else if (node.type === 'Concept' || node.type === 'Method') {
+        suggestions.push(`${node.properties.name || node.label} explanation and applications`);
+        suggestions.push(`${node.properties.name || node.label} related theories`);
+      } else {
+        // Generic suggestions for other node types
+        suggestions.push(`${node.properties.name || node.label} detailed information`);
+        suggestions.push(`${node.properties.name || node.label} related concepts`);
+      }
+      
+      // Try using webSearchUtils for a more comprehensive query
+      try {
+        const contextualQuery = generateWebSearchQuery(graph, selectedNodeId);
+        suggestions.push(contextualQuery);
+      } catch (error) {
+        // Skip if there's an error
+      }
+
+      return suggestions;
+    }
+    return [];
+  };
+
   // Function to prepare the web search prompt using webSearchUtils
   const prepareWebSearch = () => {
     if (selectedNodeId && graph) {
@@ -86,7 +130,10 @@ export default function InputPanel({
         // Fallback if there's an error with the utility
         setSearchPrompt(`Find more information about this entity and its relationships`);
       }
-      setShowPromptStation(true);
+      
+      // Generate contextual suggestions
+      setSuggestedQueries(generateSuggestions());
+      setShowPromptSection(true);
     }
   };
 
@@ -256,7 +303,7 @@ export default function InputPanel({
                   </Button>
                 </div>
                 
-                {showPromptStation && (
+                {showPromptSection && (
                   <div className="mt-2">
                     <Textarea
                       id="searchPrompt"
@@ -327,7 +374,7 @@ export default function InputPanel({
                 <span>Web Search</span>
               </Button>
               
-              {showPromptStation && (
+              {showPromptSection && (
                 <div className="mt-2">
                   <Textarea
                     id="searchPromptCompact"
