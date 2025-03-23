@@ -1,8 +1,9 @@
 import React from 'react';
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { GlobeIcon, RotateCwIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { GlobeIcon, SearchIcon, RotateCwIcon } from "lucide-react";
 
 interface PromptStationProps {
   searchPrompt: string;
@@ -13,6 +14,7 @@ interface PromptStationProps {
   isSearching: boolean;
 }
 
+// Full-sized Prompt Station for expanded view
 export function PromptStation({
   searchPrompt,
   onSearchPromptChange,
@@ -22,56 +24,64 @@ export function PromptStation({
   isSearching
 }: PromptStationProps) {
   return (
-    <div className="mt-2">
-      {/* Display list of suggested queries */}
-      {suggestedQueries.length > 0 && (
-        <div className="mb-3">
-          <Label className="text-xs text-gray-600 mb-1">Suggested searches:</Label>
-          <div className="flex flex-wrap gap-1 mb-2">
-            {suggestedQueries.map((query, index) => (
-              <button
-                key={index}
-                onClick={() => onSelectSuggestion(query)}
-                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded truncate max-w-full"
-                title={query}
-              >
-                {query.length > 30 ? query.substring(0, 27) + '...' : query}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      
+    <div className="w-full space-y-3">
       <Textarea
-        id="searchPrompt"
-        className="w-full p-2 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all min-h-[80px]"
-        placeholder="Edit search query..."
         value={searchPrompt}
         onChange={(e) => onSearchPromptChange(e.target.value)}
+        placeholder="Enter search query for web search..."
+        className="w-full h-24 resize-none text-sm"
       />
-      <Button
-        onClick={onSearch}
-        disabled={isSearching || !searchPrompt.trim()}
-        className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-1 rounded transition-colors flex items-center justify-center"
-        size="sm"
-      >
-        {isSearching ? (
-          <>
-            <RotateCwIcon size={12} className="mr-1 animate-spin" />
-            <span>Searching...</span>
-          </>
-        ) : (
-          <>
-            <GlobeIcon size={12} className="mr-1" />
-            <span>Execute Web Search</span>
-          </>
-        )}
-      </Button>
+      
+      <div className="flex justify-between">
+        <p className="text-xs text-gray-500">
+          {searchPrompt ? searchPrompt.length : 0} characters
+        </p>
+        <Button 
+          onClick={onSearch}
+          disabled={isSearching || !searchPrompt.trim()} 
+          className="bg-primary hover:bg-primary/90"
+          size="sm"
+        >
+          {isSearching ? (
+            <>
+              <RotateCwIcon size={14} className="mr-2 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <GlobeIcon size={14} className="mr-2" />
+              Search Web
+            </>
+          )}
+        </Button>
+      </div>
+      
+      {suggestedQueries.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-medium text-gray-700 mb-2">Suggested queries:</p>
+          <ScrollArea className="h-32 w-full rounded-md border">
+            <div className="p-2 space-y-2">
+              {suggestedQueries.map((query, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onSelectSuggestion(query)}
+                  className="w-full justify-start text-left text-xs font-normal truncate hover:bg-gray-100"
+                >
+                  <SearchIcon size={10} className="mr-2 flex-shrink-0" />
+                  <span className="truncate">{query}</span>
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
     </div>
   );
 }
 
-// Compact version for the sidebar
+// Compact version for collapsed sidebar view
 export function CompactPromptStation({
   searchPrompt,
   onSearchPromptChange,
@@ -81,41 +91,42 @@ export function CompactPromptStation({
   isSearching
 }: PromptStationProps) {
   return (
-    <div className="mt-2">
-      {/* Display list of suggested queries in compact view */}
+    <div className="w-full space-y-2">
+      <div className="flex space-x-1">
+        <Input
+          value={searchPrompt}
+          onChange={(e) => onSearchPromptChange(e.target.value)}
+          placeholder="Web search..."
+          className="h-7 text-xs"
+        />
+        <Button 
+          onClick={onSearch}
+          disabled={isSearching || !searchPrompt.trim()} 
+          size="icon"
+          className="h-7 w-7 p-0"
+        >
+          {isSearching ? 
+            <RotateCwIcon size={12} className="animate-spin" /> : 
+            <SearchIcon size={12} />
+          }
+        </Button>
+      </div>
+      
       {suggestedQueries.length > 0 && (
-        <div className="mb-2">
-          <Label className="text-xs text-gray-600">Suggestions:</Label>
-          <div className="flex flex-col gap-1 mb-2 mt-1">
+        <ScrollArea className="h-20 w-full rounded-md border text-xs">
+          <div className="p-1 space-y-1">
             {suggestedQueries.map((query, index) => (
               <button
                 key={index}
                 onClick={() => onSelectSuggestion(query)}
-                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded text-left truncate"
-                title={query}
+                className="w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded truncate block"
               >
-                {query.length > 25 ? query.substring(0, 22) + '...' : query}
+                {query.length > 25 ? query.substring(0, 25) + "..." : query}
               </button>
             ))}
           </div>
-        </div>
+        </ScrollArea>
       )}
-      
-      <Textarea
-        id="searchPromptCompact"
-        className="w-full p-2 text-xs border border-gray-300 rounded resize-none focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all min-h-[60px]"
-        placeholder="Edit search query..."
-        value={searchPrompt}
-        onChange={(e) => onSearchPromptChange(e.target.value)}
-      />
-      <Button
-        onClick={onSearch}
-        disabled={isSearching || !searchPrompt.trim()}
-        className="w-full mt-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-1 rounded transition-colors flex items-center justify-center"
-        size="sm"
-      >
-        {isSearching ? "Searching..." : "Execute Search"}
-      </Button>
     </div>
   );
 }
