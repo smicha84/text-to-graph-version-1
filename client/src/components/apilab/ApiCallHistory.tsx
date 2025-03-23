@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ApiCall, Graph } from '@shared/schema';
+import { ApiCall, Graph, Node as GraphNode, Edge as GraphEdge } from '@shared/schema';
 import { 
   History, 
   Clock, 
@@ -542,10 +542,10 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                           </div>
                         </div>
                         
-                        {isGraphLike(selectedCall.responseData) && (
+                        {isGraphLike(selectedCall.responseData as any) && (
                           <div className="grid grid-cols-2 gap-4">
                             <div className="bg-white border border-gray-200 rounded-md p-4">
-                              <h4 className="font-medium mb-2">Nodes ({selectedCall.responseData.nodes.length})</h4>
+                              <h4 className="font-medium mb-2">Nodes ({(selectedCall.responseData as Graph).nodes.length})</h4>
                               <div className="max-h-[400px] overflow-y-auto">
                                 <Table>
                                   <TableHeader>
@@ -556,7 +556,7 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {selectedCall.responseData.nodes.map((node: any) => (
+                                    {(selectedCall.responseData as Graph).nodes.map((node: GraphNode) => (
                                       <TableRow key={node.id}>
                                         <TableCell className="font-mono text-xs">{node.id}</TableCell>
                                         <TableCell>{node.label}</TableCell>
@@ -571,7 +571,7 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                             </div>
                             
                             <div className="bg-white border border-gray-200 rounded-md p-4">
-                              <h4 className="font-medium mb-2">Edges ({selectedCall.responseData.edges.length})</h4>
+                              <h4 className="font-medium mb-2">Edges ({(selectedCall.responseData as Graph).edges.length})</h4>
                               <div className="max-h-[400px] overflow-y-auto">
                                 <Table>
                                   <TableHeader>
@@ -582,10 +582,10 @@ export default function ApiCallHistory({ calls, onReuse, isLoading = false }: Ap
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {selectedCall.responseData.edges.map((edge: any) => {
+                                    {(selectedCall.responseData as Graph).edges.map((edge: GraphEdge) => {
                                       // Find source and target node labels
-                                      const sourceNode = selectedCall.responseData.nodes.find((n: any) => n.id === edge.source);
-                                      const targetNode = selectedCall.responseData.nodes.find((n: any) => n.id === edge.target);
+                                      const sourceNode = (selectedCall.responseData as Graph).nodes.find((n: GraphNode) => n.id === edge.source);
+                                      const targetNode = (selectedCall.responseData as Graph).nodes.find((n: GraphNode) => n.id === edge.target);
                                       
                                       return (
                                         <TableRow key={edge.id}>
