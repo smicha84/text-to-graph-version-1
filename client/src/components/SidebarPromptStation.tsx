@@ -98,7 +98,14 @@ export default function SidebarPromptStation({
 
   // Function to prepare the web search prompt using webSearchUtils
   const refreshSuggestions = () => {
-    if (!selectedNodeId || !graph) return;
+    if (!selectedNodeId || !graph) {
+      toast({
+        title: "No node selected",
+        description: "Please select a node to generate search suggestions",
+        variant: "default",
+      });
+      return;
+    }
     
     try {
       // Generate a better search query based on the node and its connections
@@ -128,6 +135,13 @@ export default function SidebarPromptStation({
   const executeSearch = () => {
     if (selectedNodeId && searchPrompt.trim()) {
       onWebSearch(selectedNodeId, searchPrompt);
+    } else if (!selectedNodeId && searchPrompt.trim()) {
+      // If no node is selected, show a message to select a node first
+      toast({
+        title: "No node selected",
+        description: "Please select a node to perform a web search",
+        variant: "destructive",
+      });
     }
   };
 

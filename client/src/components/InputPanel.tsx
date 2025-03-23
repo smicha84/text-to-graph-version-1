@@ -315,15 +315,13 @@ export default function InputPanel({
             </Button>
           </div>
           
-          {/* Persistent Sidebar Prompt Station for Web Search */}
-          {hasExistingGraph && (
-            <SidebarPromptStation
-              onWebSearch={onWebSearch!}
-              isSearching={isSearching}
-              selectedNodeId={selectedNodeId}
-              graph={graph}
-            />
-          )}
+          {/* Persistent Sidebar Prompt Station for Web Search - always visible */}
+          <SidebarPromptStation
+            onWebSearch={onWebSearch!}
+            isSearching={isSearching}
+            selectedNodeId={selectedNodeId}
+            graph={graph}
+          />
         </div>
       ) : (
         <div className="flex flex-col h-full">
@@ -351,17 +349,15 @@ export default function InputPanel({
             </Button>
           </div>
           
-          {/* Persistent Sidebar Prompt Station in collapsed view */}
-          {hasExistingGraph && (
-            <div className="mt-auto">
-              <SidebarPromptStation
-                onWebSearch={onWebSearch!}
-                isSearching={isSearching}
-                selectedNodeId={selectedNodeId}
-                graph={graph}
-              />
-            </div>
-          )}
+          {/* Persistent Sidebar Prompt Station in collapsed view - always visible */}
+          <div className="mt-auto">
+            <SidebarPromptStation
+              onWebSearch={onWebSearch!}
+              isSearching={isSearching}
+              selectedNodeId={selectedNodeId}
+              graph={graph}
+            />
+          </div>
         </div>
       )}
     </div>
