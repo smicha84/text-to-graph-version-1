@@ -42,34 +42,69 @@ export function getNodeConnections(graph: Graph, nodeId: string) {
 export function generateWebSearchQuery(graph: Graph, nodeId: string): string {
   const { node, connectedEdges, connectedNodes } = getNodeConnections(graph, nodeId);
   
-  // Extract primary node information
-  const nodeInfo = `${node.label}${node.type ? ` (${node.type})` : ''}: ${node.properties.name || 'Unknown'}`;
+  // Get the node name based on its properties
+  const nodeName = node.properties.name 
+    || node.properties.title 
+    || node.properties.identifier 
+    || 'Unknown';
   
-  // Extract connections information
-  const connections = connectedEdges.map(edge => {
+  // Collect important properties for context
+  const importantProps = [];
+  for (const [key, value] of Object.entries(node.properties)) {
+    // Skip unimportant or redundant properties
+    if (['id', 'type', 'subgraphIds', 'source', 'x', 'y'].includes(key)) continue;
+    if (key === 'name' && value === nodeName) continue;
+    
+    // Add the property if it has a value
+    if (value && String(value).trim()) {
+      importantProps.push(`${key}: ${value}`);
+    }
+  }
+  
+  // Include node type information
+  let typeInfo = node.label;
+  if (node.type && node.type !== node.label) {
+    typeInfo = `${node.label} (${node.type})`;
+  }
+  
+  // Build the base query focused on the node
+  let query = `${nodeName} ${typeInfo}`;
+  
+  // Add important related nodes and relationships for context
+  const relationshipTerms: string[] = [];
+  
+  connectedEdges.forEach(edge => {
     const isOutgoing = edge.source === nodeId;
     const connectedNodeId = isOutgoing ? edge.target : edge.source;
     const connectedNode = connectedNodes.find(n => n.id === connectedNodeId);
     
-    if (!connectedNode) return null;
+    if (!connectedNode) return;
     
-    const direction = isOutgoing ? '->' : '<-';
-    const relationship = edge.label;
-    const nodeName = connectedNode.properties.name || connectedNode.label;
-    const nodeType = connectedNode.type ? ` (${connectedNode.type})` : '';
+    const relationship = edge.label.toLowerCase().replace(/_/g, ' ');
+    const relatedNodeName = connectedNode.properties.name 
+      || connectedNode.properties.title
+      || connectedNode.label;
     
-    // Include edge properties if they exist
-    let propString = '';
-    if (Object.keys(edge.properties).length > 0) {
-      propString = Object.entries(edge.properties)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join(', ');
-      propString = ` [${propString}]`;
-    }
+    // Format: "related to Company X" or "works for Person Y"
+    const term = isOutgoing
+      ? `${relationship} ${relatedNodeName}`
+      : `${relatedNodeName} ${relationship}`;
     
-    return `${direction} ${relationship}${propString} ${nodeName}${nodeType}`;
-  }).filter(Boolean).join('\n');
+    relationshipTerms.push(term);
+  });
   
-  // Format the full query
-  return `Search for information about ${nodeInfo}\n\nRelationships:\n${connections}`;
+  // Add relationship context if available
+  if (relationshipTerms.length > 0) {
+    query += ` ${relationshipTerms.join(' AND ')}`;
+  }
+  
+  // Add property context if available
+  if (importantProps.length > 0) {
+    query += ` ${importantProps.join(' ')}`;
+  }
+  
+  // Add details about what we're looking for
+  query += ' details information facts';
+  
+  return query;
 }
