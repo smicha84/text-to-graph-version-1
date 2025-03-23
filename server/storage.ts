@@ -12,14 +12,14 @@ export interface IStorage {
   
   // API Template methods
   getApiTemplate(id: number): Promise<ApiTemplate | undefined>;
-  getApiTemplatesByUser(userId: number): Promise<ApiTemplate[]>;
+  getApiTemplatesByUser(userId: number | null): Promise<ApiTemplate[]>;
   createApiTemplate(template: InsertApiTemplate): Promise<ApiTemplate>;
   updateApiTemplate(id: number, template: Partial<ApiTemplate>): Promise<ApiTemplate | undefined>;
   deleteApiTemplate(id: number): Promise<boolean>;
   
   // API Call History methods
   getApiCall(id: number): Promise<ApiCall | undefined>;
-  getApiCallsByUser(userId: number, limit?: number): Promise<ApiCall[]>;
+  getApiCallsByUser(userId: number | null, limit?: number): Promise<ApiCall[]>;
   createApiCall(call: InsertApiCall): Promise<ApiCall>;
   updateApiCall(id: number, call: Partial<ApiCall>): Promise<ApiCall | undefined>;
 }
@@ -64,7 +64,7 @@ export class MemStorage implements IStorage {
     return this.apiTemplates.get(id);
   }
 
-  async getApiTemplatesByUser(userId: number): Promise<ApiTemplate[]> {
+  async getApiTemplatesByUser(userId: number | null): Promise<ApiTemplate[]> {
     return Array.from(this.apiTemplates.values()).filter(
       (template) => template.userId === userId
     );
@@ -103,7 +103,7 @@ export class MemStorage implements IStorage {
     return this.apiCalls.get(id);
   }
 
-  async getApiCallsByUser(userId: number, limit: number = 20): Promise<ApiCall[]> {
+  async getApiCallsByUser(userId: number | null, limit: number = 20): Promise<ApiCall[]> {
     return Array.from(this.apiCalls.values())
       .filter(call => call.userId === userId)
       .sort((a, b) => new Date(b.requestTime).getTime() - new Date(a.requestTime).getTime())
