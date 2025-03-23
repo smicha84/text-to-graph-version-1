@@ -24,28 +24,44 @@ interface Relationship {
   properties: Record<string, any>;
 }
 
-export async function generateGraphWithClaude(text: string, options: GraphOptions): Promise<Graph> {
+export async function generateGraphWithClaude(
+  text: string, 
+  options: GraphOptions
+): Promise<Graph> {
   // Construct a prompt for Claude to extract entities and relationships
-  const extractionPrompt = buildPrompt(text, options);
+  // If a custom extraction prompt is provided, use it; otherwise build the default one
+  const extractionPrompt = options.customExtractionPrompt || buildPrompt(text, options);
   
   try {
-    // Call Claude API with advanced system prompt and thinking enabled for deeper analysis
-    const response = await anthropic.messages.create({
+    // Default system prompt
+    const defaultSystemPrompt = "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.";
+    
+    // Setup the API call parameters
+    const apiParams: any = {
       model: CLAUDE_MODEL,
       max_tokens: 4000,
-      temperature: 1.0, // Must be exactly 1.0 when thinking is enabled
-      system: "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.",
+      temperature: options.temperature !== undefined ? options.temperature : 1.0,
+      system: options.customSystemPrompt || defaultSystemPrompt,
       messages: [
         {
           role: 'user',
           content: extractionPrompt
         }
-      ],
-      thinking: {
+      ]
+    };
+    
+    // Add thinking configuration if enabled
+    if (options.thinkingEnabled !== false) { // Default to enabled if not specified
+      // Thinking requires temperature to be exactly 1.0
+      apiParams.temperature = 1.0;
+      apiParams.thinking = {
         type: "enabled",
-        budget_tokens: 2000
-      }
-    });
+        budget_tokens: options.thinkingBudget || 2000
+      };
+    }
+    
+    // Call Claude API with the configured parameters
+    const response = await anthropic.messages.create(apiParams);
 
     // Extract the JSON response from Claude
     console.log('Claude API response:', JSON.stringify(response.content, null, 2));

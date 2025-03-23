@@ -2,7 +2,13 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { generateGraphInputSchema, exportGraphSchema } from "@shared/schema";
+import { 
+  generateGraphInputSchema, 
+  exportGraphSchema, 
+  apiTemplateSchema, 
+  InsertApiCall,
+  ApiTemplate
+} from "@shared/schema";
 import { storage } from "./storage";
 import { generateGraphWithClaude } from "./anthropic";
 

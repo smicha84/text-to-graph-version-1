@@ -82,9 +82,9 @@ export default function GraphPanel({
           visualizerInstance.updateDimensions(width, height);
           
           // If we have a graph, fit it to the new dimensions
-          if (graph) {
+          if (graph && visualizerInstance) {
             setTimeout(() => {
-              visualizerInstance.fitToView();
+              visualizerInstance?.fitToView();
             }, 100);
           }
         } else if (svgRef.current) {
@@ -107,8 +107,9 @@ export default function GraphPanel({
       };
       
       // Clear any existing timeout to prevent multiple executions
-      if (window.resizeTimer) clearTimeout(window.resizeTimer);
-      window.resizeTimer = setTimeout(debounceResize, 100); // 100ms debounce
+      const timerKey = 'graphResizeTimer';
+      if ((window as any)[timerKey]) clearTimeout((window as any)[timerKey]);
+      (window as any)[timerKey] = setTimeout(debounceResize, 100); // 100ms debounce
     });
     
     // Start observing the SVG container for size changes
