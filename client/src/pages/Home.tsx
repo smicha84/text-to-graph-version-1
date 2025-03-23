@@ -158,6 +158,7 @@ export default function Home() {
           isSearching={webSearchMutation.isPending}
           hasExistingGraph={!!graph && graph.nodes.length > 0}
           selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
+          graph={graph}
         />
         
         <div className="flex-1 flex flex-col h-full">

@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { GraphGenerationOptions, WebSearchOptions } from "@/types/graph";
+import { GraphGenerationOptions, WebSearchOptions, Graph } from "@/types/graph";
 import { 
   ChevronLeftIcon, ChevronRightIcon, Share2Icon, 
   XIcon, RotateCwIcon, GlobeIcon 
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { generateWebSearchQuery } from "@/lib/webSearchUtils";
 
 interface InputPanelProps {
   onGenerateGraph: (text: string, options: GraphGenerationOptions) => void;
@@ -17,6 +18,7 @@ interface InputPanelProps {
   isSearching?: boolean; // Added to show loading state for search
   hasExistingGraph: boolean; // Whether there's already a graph to append to
   selectedNodeId?: string; // ID of the selected node for web search
+  graph: Graph | null; // The current graph data
 }
 
 // Sample examples to populate the textarea
@@ -32,7 +34,8 @@ export default function InputPanel({
   isLoading, 
   isSearching = false, 
   hasExistingGraph, 
-  selectedNodeId 
+  selectedNodeId,
+  graph = null
 }: InputPanelProps) {
   const [text, setText] = useState(EXAMPLES[0]);
   const [expanded, setExpanded] = useState(false);
@@ -72,10 +75,17 @@ export default function InputPanel({
     setExpanded(!expanded);
   };
 
-  // Function to prepare the web search prompt
+  // Function to prepare the web search prompt using webSearchUtils
   const prepareWebSearch = () => {
-    if (selectedNodeId) {
-      setSearchPrompt(`Search for information about this ${selectedNodeId} node`);
+    if (selectedNodeId && graph) {
+      try {
+        // Generate a better search query based on the node and its connections
+        const searchQuery = generateWebSearchQuery(graph, selectedNodeId);
+        setSearchPrompt(searchQuery);
+      } catch (error) {
+        // Fallback if there's an error with the utility
+        setSearchPrompt(`Find more information about this entity and its relationships`);
+      }
       setShowPromptStation(true);
     }
   };
