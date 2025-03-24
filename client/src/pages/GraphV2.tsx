@@ -9,13 +9,18 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Graph, GraphGenerationOptions, Node, Edge, WebSearchOptions } from "@/types/graph";
+import { Graph, GraphGenerationOptions, Node, Edge, WebSearchOptions, ExportOptions } from "@/types/graph";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronRight, Loader2, PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import ExportModal from "@/components/ExportModal";
+
+// Helper function to determine if an element is a Node (not an Edge)
+function isNode(element: Node | Edge | null): element is Node {
+  return element !== null && !('source' in element);
+}
 
 export default function GraphV2() {
   const [text, setText] = useState("");
@@ -96,7 +101,7 @@ export default function GraphV2() {
   });
 
   // For graph export
-  const exportMutation = useMutation({
+  const exportMutation = useMutation<any, Error, ExportOptions>({
     mutationFn: async ({ format, includeProperties, includeStyles }: ExportOptions) => {
       const response = await apiRequest('POST', '/api/export-graph', {
         format,
@@ -132,7 +137,7 @@ export default function GraphV2() {
     generateMutation.mutate({ text, options });
   };
   
-  const handleExportGraph = (exportOptions: any) => {
+  const handleExportGraph = (exportOptions: ExportOptions) => {
     if (!graph) return;
     exportMutation.mutate(exportOptions);
   };
@@ -165,7 +170,7 @@ export default function GraphV2() {
               <SidebarPromptStation 
                 onWebSearch={handleWebSearch}
                 isSearching={webSearchMutation.isPending}
-                selectedNodeId={selectedElement && 'source' in selectedElement ? null : selectedElement?.id}
+                selectedNodeId={isNode(selectedElement) ? selectedElement.id : undefined}
                 graph={graph}
               />
             </div>
