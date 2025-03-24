@@ -1,7 +1,6 @@
 import { useState } from "react";
 import InputPanel from "@/components/InputPanel";
 import GraphPanel from "@/components/GraphPanel";
-import PropertyPanel from "@/components/PropertyPanel";
 import ExportModal from "@/components/ExportModal";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
 import NodeAnatomyChart from "@/components/NodeAnatomyChart";
@@ -14,7 +13,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 export default function Home() {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedElement, setSelectedElement] = useState<(Node | Edge) | null>(null);
-  const [showPropertyPanel, setShowPropertyPanel] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const { toast } = useToast();
 
@@ -103,7 +101,6 @@ export default function Home() {
 
   const handleElementSelect = (element: Node | Edge | null) => {
     setSelectedElement(element);
-    setShowPropertyPanel(!!element);
   };
 
   const handleExportGraph = (options: ExportOptions) => {
@@ -204,15 +201,7 @@ export default function Home() {
             onShowExportModal={() => setShowExportModal(true)}
           />
           
-          {/* Property panel appears over the graph as a floating panel */}
-          {showPropertyPanel && selectedElement && (
-            <div className="absolute top-4 right-4 bg-white shadow-lg border border-gray-200 rounded-lg w-72 z-10 max-h-[80%] overflow-auto">
-              <PropertyPanel 
-                element={selectedElement}
-                onClose={() => setShowPropertyPanel(false)}
-              />
-            </div>
-          )}
+          {/* Property panel removed - all information now shown in tooltips */}
         </div>
       </div>
       
