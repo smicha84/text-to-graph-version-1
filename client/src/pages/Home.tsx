@@ -153,23 +153,21 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar with always-visible prompt station - fixed width, non-resizable */}
         <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col">
-          <SidebarPromptStation 
-            onWebSearch={handleWebSearch}
-            isSearching={webSearchMutation.isPending}
-            selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
-            graph={graph}
-          />
+          {/* Sidebar content goes here - SidebarPromptStation removed */}
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="text-center text-gray-500">
+              <h3 className="text-lg font-medium mb-2">Web Search Disabled</h3>
+              <p className="text-sm">Web search functionality has been removed from this area.</p>
+            </div>
+          </div>
         </div>
         
         {/* Input panel with fixed width - no dynamic resizing for proper layout */}
         <div className="w-96 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
           <InputPanel 
             onGenerateGraph={handleGenerateGraph}
-            onWebSearch={handleWebSearch}
             isLoading={generateMutation.isPending}
-            isSearching={webSearchMutation.isPending}
             hasExistingGraph={!!graph && graph.nodes.length > 0}
-            selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
             graph={graph}
           />
         </div>
@@ -201,10 +199,9 @@ export default function Home() {
           
           <GraphPanel 
             graph={graph}
-            isLoading={generateMutation.isPending || webSearchMutation.isPending}
+            isLoading={generateMutation.isPending}
             onElementSelect={handleElementSelect}
             onShowExportModal={() => setShowExportModal(true)}
-            onWebSearch={handleWebSearch}
           />
           
           {/* Property panel appears over the graph as a floating panel */}
@@ -213,8 +210,6 @@ export default function Home() {
               <PropertyPanel 
                 element={selectedElement}
                 onClose={() => setShowPropertyPanel(false)}
-                onWebSearch={handleWebSearch}
-                graph={graph}
               />
             </div>
           )}
