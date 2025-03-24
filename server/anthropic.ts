@@ -25,7 +25,7 @@ export async function performWebSearch(query: string, graphContext?: any): Promi
     const requestData = {
       query,
       model: CLAUDE_MODEL,
-      max_tokens: 3000, // Increased for more comprehensive results
+      max_tokens: 8000, // Increased for more comprehensive results
       temperature: 0.5, // Lower temperature for more factual responses
       has_graph_context: hasContext,
       context_size: hasContext ? 
@@ -90,7 +90,7 @@ Relationships: ${JSON.stringify(graphContext.relationships.map((r: any) => ({
     // Here we're using Claude to generate information that simulates search results
     const response = await anthropic.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 3000,
+      max_tokens: 8000,
       temperature: 0.5,
       system: systemPrompt,
       messages: [
@@ -189,10 +189,10 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     text_excerpt: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
     options,
     model: CLAUDE_MODEL,
-    max_tokens: 4000,
+    max_tokens: 8000,
     temperature: 1.0,
     thinking_enabled: true,
-    thinking_budget: 2000
+    thinking_budget: 4000
   };
   
   // Log the request to the database
@@ -206,7 +206,7 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     // Call Claude API with advanced system prompt and thinking enabled for deeper analysis
     const response = await anthropic.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 4000,
+      max_tokens: 8000,
       temperature: 1.0, // Must be exactly 1.0 when thinking is enabled
       system: "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.",
       messages: [
@@ -217,7 +217,7 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
       ],
       thinking: {
         type: "enabled",
-        budget_tokens: 2000
+        budget_tokens: 4000
       }
     });
 
