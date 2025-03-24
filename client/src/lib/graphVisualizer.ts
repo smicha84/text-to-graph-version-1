@@ -555,6 +555,30 @@ export class GraphVisualizer {
     
     console.log(`Processed ${nodeData.length} simulation nodes and ${linkData.length} simulation links`);
     
+    // Check for multiple edges between the same nodes
+    // Create a map to track connections
+    const connectionCounts: Record<string, number> = {};
+    const edgeIndexes: Record<string, number> = {};
+    
+    // Count connections between each pair of nodes
+    linkData.forEach((link: SimulationLink) => {
+      const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+      const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+      
+      // Create a unique key for this pair of nodes (both directions)
+      const key = `${sourceId}-${targetId}`;
+      const reverseKey = `${targetId}-${sourceId}`;
+      
+      // Increment count for this connection
+      if (!connectionCounts[key]) {
+        connectionCounts[key] = 0;
+      }
+      connectionCounts[key]++;
+      
+      // Set the index for this edge
+      edgeIndexes[link.id] = connectionCounts[key];
+    });
+    
     // Draw edges first
     const links = this.container
       .selectAll<SVGGElement, SimulationLink>(".edge")
@@ -571,8 +595,9 @@ export class GraphVisualizer {
         this.onSelectElement(d as unknown as Edge);
       });
     
-    // Draw edge lines with directional arrows
-    const edgeLines = links.append("line")
+    // Draw edge paths instead of lines to support curves
+    const edgeLines = links.append("path")
+      .attr("fill", "none")
       .attr("stroke", "#9CA3AF") // gray-400
       .attr("stroke-width", 1.5)
       .attr("marker-end", "url(#arrowhead)");
@@ -749,61 +774,65 @@ export class GraphVisualizer {
       .force("collision", d3.forceCollide<SimulationNode>().radius(this.layoutSettings.collisionRadius)) // Prevent node overlap
       .alphaDecay(0.05) // Increase decay rate to stabilize simulation faster
       .on("tick", () => {
-        // Update link positions with adjustments for node radius
+        // Update link positions with adjustments for node radius and curve for multiple edges
         edgeLines
-          .attr("x1", (d: SimulationLink) => {
+          .attr("d", (d: SimulationLink) => {
             const sourceNode = d.source as SimulationNode;
             const targetNode = d.target as SimulationNode;
             const nodeRadius = 20; // Same as the circle radius
             
-            // No adjustment needed for source
-            return sourceNode.x || 0;
-          })
-          .attr("y1", (d: SimulationLink) => {
-            const sourceNode = d.source as SimulationNode;
-            return sourceNode.y || 0;
-          })
-          .attr("x2", (d: SimulationLink) => {
-            const sourceNode = d.source as SimulationNode;
-            const targetNode = d.target as SimulationNode;
+            // Get source and target positions
+            const sourceX = sourceNode.x || 0;
+            const sourceY = sourceNode.y || 0;
+            const targetX = targetNode.x || 0;
+            const targetY = targetNode.y || 0;
             
             // Calculate the direction vector
-            const dx = (targetNode.x || 0) - (sourceNode.x || 0);
-            const dy = (targetNode.y || 0) - (sourceNode.y || 0);
+            const dx = targetX - sourceX;
+            const dy = targetY - sourceY;
             
             // Calculate the length of the vector
             const length = Math.sqrt(dx * dx + dy * dy);
             
-            // If source and target are at the same position, return the target position
-            if (length === 0) return targetNode.x || 0;
+            // If source and target are at the same position, return a small self-loop
+            if (length === 0) {
+              // Create a self-loop
+              return `M ${sourceX},${sourceY} C ${sourceX+50},${sourceY-50} ${sourceX+50},${sourceY+50} ${sourceX},${sourceY}`;
+            }
             
             // Calculate the normalized direction vector
             const normX = dx / length;
-            
-            // Calculate the position with an offset from the target node's edge
-            const nodeRadius = 20; // Same as the circle radius
-            return (targetNode.x || 0) - normX * nodeRadius;
-          })
-          .attr("y2", (d: SimulationLink) => {
-            const sourceNode = d.source as SimulationNode;
-            const targetNode = d.target as SimulationNode;
-            
-            // Calculate the direction vector
-            const dx = (targetNode.x || 0) - (sourceNode.x || 0);
-            const dy = (targetNode.y || 0) - (sourceNode.y || 0);
-            
-            // Calculate the length of the vector
-            const length = Math.sqrt(dx * dx + dy * dy);
-            
-            // If source and target are at the same position, return the target position
-            if (length === 0) return targetNode.y || 0;
-            
-            // Calculate the normalized direction vector
             const normY = dy / length;
             
             // Calculate the position with an offset from the target node's edge
-            const nodeRadius = 20; // Same as the circle radius
-            return (targetNode.y || 0) - normY * nodeRadius;
+            const endX = targetX - normX * nodeRadius;
+            const endY = targetY - normY * nodeRadius;
+            
+            // Create a key to identify the edge pair
+            const sourceId = typeof d.source === 'string' ? d.source : d.source.id;
+            const targetId = typeof d.target === 'string' ? d.target : d.target.id;
+            const pairKey = `${sourceId}-${targetId}`;
+            const reversePairKey = `${targetId}-${sourceId}`;
+            
+            // Check if this is a multiple edge
+            const count = connectionCounts[pairKey] || connectionCounts[reversePairKey] || 1;
+            const index = edgeIndexes[d.id] || 1;
+            
+            if (count > 1) {
+              // For multiple edges, we'll create a curved path
+              // The curvature increases based on the index of the edge
+              const curveFactor = 20 * (index / count); // Scale the curve based on index
+              
+              // Calculate control point - perpendicular to the direction vector
+              const cpX = (sourceX + endX) / 2 + normY * curveFactor;
+              const cpY = (sourceY + endY) / 2 - normX * curveFactor;
+              
+              // Create a quadratic curve path
+              return `M ${sourceX},${sourceY} Q ${cpX},${cpY} ${endX},${endY}`;
+            } else {
+              // For single edges, create a straight line path
+              return `M ${sourceX},${sourceY} L ${endX},${endY}`;
+            }
           });
         
         // Update edge label positions
@@ -1141,8 +1170,8 @@ export class GraphVisualizer {
         const style = this.edgeStyles.get(d.id);
         
         if (style) {
-          // Apply line styles
-          edgeElement.select("line")
+          // Apply path styles - using path instead of line for curves
+          edgeElement.select("path")
             .transition().duration(300)
             .attr("stroke", style.color || "#9CA3AF")
             .attr("stroke-width", style.width || 1.5)
