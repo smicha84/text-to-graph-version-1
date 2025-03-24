@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
 import { Graph } from "@/types/graph";
 
-interface PropertyPanelProps {
+export interface PropertyPanelProps {
   element: Node | Edge | null;
   onClose: () => void;
   onWebSearch?: (nodeId: string, query: string) => void;

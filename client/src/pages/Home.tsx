@@ -2,7 +2,7 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import InputPanel from "@/components/InputPanel";
 import GraphPanel from "@/components/GraphPanel";
-import PropertyPanel from "@/components/PropertyPanel";
+import PropertyPanel, { PropertyPanelProps } from "@/components/PropertyPanel";
 import ExportModal from "@/components/ExportModal";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
 import NodeAnatomyChart from "@/components/NodeAnatomyChart";

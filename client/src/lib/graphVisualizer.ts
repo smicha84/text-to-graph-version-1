@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { Graph, Node, Edge } from "@/types/graph";
-
 import { NodeStyle, EdgeStyle } from "@/types/graph";
+import { generateWebSearchQuery } from "@/lib/webSearchUtils";
 
 // Define extension types for D3 force simulation
 interface SimulationNode extends d3.SimulationNodeDatum {
@@ -326,14 +326,12 @@ export class GraphVisualizer {
       .duration(200)
       .style("opacity", 1);
       
-    // Add event listeners to web search buttons
+    // Add event listeners to web search buttons using D3's on method
     if (this.onWebSearch) {
-      const autoSearchBtn = this.nodeTooltip.select('button[data-query-type="auto"]').node();
-      const simpleSearchBtn = this.nodeTooltip.select('button[data-query-type="simple"]').node();
-      
-      if (autoSearchBtn) {
-        autoSearchBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
+      // Use D3 event handlers instead of native DOM methods to avoid TypeScript errors
+      this.nodeTooltip.select('button[data-query-type="auto"]')
+        .on('click', (event: MouseEvent) => {
+          event.stopPropagation();
           try {
             // Use the graph context to generate a smart search query
             const autoQuery = this.graph 
@@ -348,15 +346,13 @@ export class GraphVisualizer {
             this.hideNodeTooltip();
           }
         });
-      }
       
-      if (simpleSearchBtn) {
-        simpleSearchBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
+      this.nodeTooltip.select('button[data-query-type="simple"]')
+        .on('click', (event: MouseEvent) => {
+          event.stopPropagation();
           this.onWebSearch!(d.id, d.label + " " + d.type);
           this.hideNodeTooltip(); // Hide tooltip after clicking
         });
-      }
     }
   }
   
@@ -364,8 +360,7 @@ export class GraphVisualizer {
   private generateSearchQuery(nodeId: string): string {
     if (!this.graph) return "";
     try {
-      // Import the utility function
-      const { generateWebSearchQuery } = require('./webSearchUtils');
+      // Use the imported utility function from webSearchUtils - imported at the top of file
       return generateWebSearchQuery(this.graph, nodeId);
     } catch (error) {
       console.error("Error generating search query:", error);
