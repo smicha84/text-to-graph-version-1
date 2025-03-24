@@ -360,6 +360,50 @@ export class GraphVisualizer {
         font-style: italic;
         color: #9ca3af;
       }
+      
+      /* Web search section styling */
+      .tooltip-websearch {
+        margin-top: 4px;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 8px;
+      }
+      .tooltip-websearch-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      .tooltip-auto-search,
+      .tooltip-custom-search {
+        background-color: #2563EB;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 11px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: background-color 0.2s;
+      }
+      .tooltip-auto-search:hover,
+      .tooltip-custom-search:hover {
+        background-color: #1D4ED8;
+      }
+      .tooltip-custom-search {
+        background-color: white;
+        color: #2563EB;
+        border: 1px solid #2563EB;
+      }
+      .tooltip-custom-search:hover {
+        background-color: #EFF6FF;
+      }
+      .tooltip-button-icon {
+        font-size: 10px;
+      }
+      .tooltip-button-text {
+        font-weight: 500;
+      }
     `;
     document.head.appendChild(styleSheet);
   }
@@ -397,7 +441,25 @@ export class GraphVisualizer {
       `
       : '<div class="tooltip-no-properties">No custom properties</div>';
     
-    // Create tooltip content with detailed information
+    // Create Web Search section if the web search callback is available
+    const webSearchHTML = this.onWebSearch 
+      ? `
+        <div class="tooltip-websearch">
+          <div class="tooltip-websearch-buttons">
+            <button class="tooltip-auto-search" data-node-id="${d.id}">
+              <span class="tooltip-button-icon">⚡</span>
+              <span class="tooltip-button-text">Auto Search</span>
+            </button>
+            <button class="tooltip-custom-search" data-node-id="${d.id}">
+              <span class="tooltip-button-icon">🔍</span>
+              <span class="tooltip-button-text">Custom Search</span>
+            </button>
+          </div>
+        </div>
+      `
+      : '';
+    
+    // Create tooltip content with detailed information and web search
     this.nodeTooltip
       .html(`
         <div class="node-tooltip-container">
@@ -407,16 +469,57 @@ export class GraphVisualizer {
           </div>
           <div class="tooltip-id">ID: ${d.id}</div>
           ${propertiesHTML}
+          ${webSearchHTML}
         </div>
       `)
       .style("left", `${x}px`)
       .style("top", `${y}px`)
       .style("display", "block")
       .style("opacity", 0)
-      .style("pointer-events", "none") // Allow mouse events to pass through
+      .style("pointer-events", "auto") // Enable pointer events for buttons
       .transition()
       .duration(200)
       .style("opacity", 1);
+    
+    // Attach event listeners to web search buttons if available
+    if (this.onWebSearch) {
+      this.nodeTooltip.select('.tooltip-auto-search')
+        .on('click', () => {
+          // Generate search query based on node properties
+          const searchQuery = this.generateSearchQuery(d);
+          // Call the web search callback
+          this.onWebSearch!(d.id, searchQuery);
+          // Hide tooltip after clicking
+          this.hideNodeTooltip();
+        });
+      
+      this.nodeTooltip.select('.tooltip-custom-search')
+        .on('click', () => {
+          // Prompt user for custom search query
+          const customQuery = prompt('Enter search query:', this.generateSearchQuery(d));
+          if (customQuery) {
+            // Call the web search callback with custom query
+            this.onWebSearch!(d.id, customQuery);
+            // Hide tooltip after clicking
+            this.hideNodeTooltip();
+          }
+        });
+    }
+  }
+  
+  // Helper method to generate a search query from node properties
+  private generateSearchQuery(node: SimulationNode): string {
+    // Start with the node name and type
+    const nodeName = node.properties.name || node.label;
+    const nodeType = node.type || '';
+    
+    // Add important properties to the query
+    const keyProperties = ['organization', 'role', 'industry', 'function', 'description']
+      .filter(key => node.properties[key])
+      .map(key => node.properties[key]);
+    
+    // Combine all parts into a search query
+    return `${nodeName} ${nodeType} ${keyProperties.join(' ')}`.trim();
   }
   
   // Hide node tooltip
