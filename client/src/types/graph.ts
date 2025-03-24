@@ -52,6 +52,15 @@ export interface GraphGenerationOptions {
   appendMode?: boolean; // Whether to append to existing graph instead of replacing it
   webSearchNode?: string; // ID of the node that triggered a web search
   webSearchQuery?: string; // The query used for web search
+  
+  // Processing mode toggles - these determine if LLM or algorithmic approaches are used
+  // Default is true (use LLM) for all these options
+  useEntityMergingLLM: boolean; // Whether to use LLM for entity deduplication/merging (true) or algorithm (false)
+  useEntityTypeLLM: boolean; // Whether to use LLM for entity type detection (true) or algorithm (false)
+  useRelationInferenceLLM: boolean; // Whether to use LLM for relationship inference (true) or algorithm (false)
+  
+  // Activity tracking
+  processingSteps?: string[]; // Array of processing steps completed
 }
 
 export interface ZoomPanInfo {
