@@ -285,7 +285,21 @@ export class GraphVisualizer {
       .append("div")
       .attr("class", "node-tooltip")
       .style("opacity", 0)
-      .style("display", "none");
+      .style("display", "none")
+      // Add mouseenter handler to prevent tooltip from disappearing when cursor moves to it
+      .on("mouseenter", () => {
+        // When mouse enters tooltip, keep it visible
+        if (this.nodeTooltip) {
+          this.nodeTooltip
+            .transition()
+            .duration(200)
+            .style("opacity", 1);
+        }
+      })
+      .on("mouseleave", () => {
+        // Only hide tooltip when mouse leaves the tooltip itself
+        this.hideNodeTooltip();
+      });
   }
   
   // Show tooltip for a node
@@ -694,8 +708,47 @@ export class GraphVisualizer {
         this.showNodeTooltip(event, d);
       })
       .on("mouseout", (event: MouseEvent) => {
-        // Hide tooltip
-        this.hideNodeTooltip();
+        // Check if mouse is moving to the tooltip
+        if (this.nodeTooltip) {
+          const tooltipElement = this.nodeTooltip.node();
+          if (tooltipElement) {
+            // Check where the mouse is going
+            const relatedTarget = event.relatedTarget;
+            
+            // Don't hide the tooltip if the mouse is moving to the tooltip
+            // Use a different approach to avoid TypeScript errors with Node type
+            let isMovingToTooltip = false;
+            
+            // Check if related target is a child of tooltip
+            if (relatedTarget instanceof Element) {
+              // Check if relatedTarget is the tooltip or contained by it
+              isMovingToTooltip = tooltipElement === relatedTarget || tooltipElement.contains(relatedTarget);
+            }
+            
+            if (!isMovingToTooltip) {
+              // Give a short delay to check if the mouse is actually over the tooltip
+              // This helps with cases where the relatedTarget isn't working correctly
+              setTimeout(() => {
+                // Check if mouse is over the tooltip now
+                const tooltipBounds = tooltipElement.getBoundingClientRect();
+                const mouseX = event.clientX;
+                const mouseY = event.clientY;
+                const isMouseOverTooltip = 
+                  mouseX >= tooltipBounds.left && mouseX <= tooltipBounds.right &&
+                  mouseY >= tooltipBounds.top && mouseY <= tooltipBounds.bottom;
+                
+                // Only hide if mouse is really not over tooltip
+                if (!isMouseOverTooltip) {
+                  this.hideNodeTooltip();
+                }
+              }, 50);
+            }
+          } else {
+            this.hideNodeTooltip();
+          }
+        } else {
+          this.hideNodeTooltip();
+        }
       })
       .on("click", (event: MouseEvent, d: SimulationNode) => {
         // Prevent the click from propagating to the background
