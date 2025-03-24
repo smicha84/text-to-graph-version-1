@@ -5,6 +5,7 @@ import { fromZodError } from "zod-validation-error";
 import { generateGraphInputSchema, exportGraphSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { generateGraphWithClaude, performWebSearch } from "./anthropic";
+import { getApiLogs } from "./database";
 
 // Function to merge two graphs with subgraph tracking
 function mergeGraphs(existingGraph: any, newGraph: any): any {
@@ -274,6 +275,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         message: 'Failed to perform web search',
         details: errorMessage
+      });
+    }
+  });
+  
+  // API endpoint to get API logs
+  app.get('/api/logs', async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const operation = req.query.operation as string;
+      
+      const result = await getApiLogs(page, limit, operation);
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching API logs:', error);
+      res.status(500).json({ 
+        message: 'Failed to fetch API logs',
+        details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
