@@ -97,7 +97,7 @@ export default function GraphV2() {
 
   // For graph export
   const exportMutation = useMutation({
-    mutationFn: async ({ format, includeProperties, includeStyles }) => {
+    mutationFn: async ({ format, includeProperties, includeStyles }: ExportOptions) => {
       const response = await apiRequest('POST', '/api/export-graph', {
         format,
         graph,

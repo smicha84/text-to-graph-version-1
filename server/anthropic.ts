@@ -10,20 +10,26 @@ const anthropic = new Anthropic({
 // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
 const CLAUDE_MODEL = 'claude-3-7-sonnet-20250219';
 
-// Web search simulation function (in a real app, this would call a real search API)
-export async function performWebSearch(query: string): Promise<string> {
-  console.log(`Performing web search for query: ${query}`);
+// Enhanced web search simulation function with improved structured response format
+export async function performWebSearch(query: string, graphContext?: any): Promise<string> {
+  console.log(`Performing enhanced web search for query: "${query}"`);
   
   const startTime = Date.now();
   let statusCode = 200;
   
   try {
-    // Log the request to the database
+    // Prepare the context and prompt based on graph information when available
+    const hasContext = graphContext && Object.keys(graphContext).length > 0;
+    
+    // Log the request to the database with enhanced metadata
     const requestData = {
       query,
       model: CLAUDE_MODEL,
-      max_tokens: 2000,
-      temperature: 0.7,
+      max_tokens: 3000, // Increased for more comprehensive results
+      temperature: 0.5, // Lower temperature for more factual responses
+      has_graph_context: hasContext,
+      context_size: hasContext ? 
+        JSON.stringify(graphContext).length : 0
     };
     
     await logApiInteraction(
@@ -32,17 +38,65 @@ export async function performWebSearch(query: string): Promise<string> {
       requestData
     );
     
+    // Construct a more sophisticated system prompt based on whether we have context
+    let systemPrompt = `You are a sophisticated web search engine with knowledge graph capabilities. Your task is to provide comprehensive search results for the given query that can be integrated into a knowledge graph.
+
+For each search result, provide:
+1. Title of the page or resource
+2. URL (make these realistic but they can be fictional)
+3. A detailed snippet with factual information
+4. Key entities mentioned (people, organizations, places, concepts)
+5. Key relationships between entities
+6. Citations or references where appropriate
+
+Structure your information to maximize usefulness for graph integration. Focus on authoritative sources. Make the information comprehensive and factual. Include different perspectives where appropriate.
+
+Format your results in a structured way that clearly separates each result. Each result should include all the above elements.
+`;
+
+    // Add context-specific instructions when we have graph context
+    if (hasContext) {
+      systemPrompt += `\nIMPORTANT: I'm providing you with context about the existing knowledge graph. Use this to make your search results MORE RELEVANT to the existing structure:
+- Focus on information that connects to the node "${graphContext.sourceNode.label}"
+- Look for connections to other important nodes in the graph including: ${graphContext.importantNodes.map((n: any) => n.label).join(', ')}
+- Emphasize relationships that extend or clarify existing connections
+- Prioritize information that fills gaps in the existing knowledge structure
+`;
+    }
+    
+    // Enhanced user message with more context when available
+    let userMessage = `Web search query: "${query}"`;
+    
+    // Add graph context when available
+    if (hasContext) {
+      userMessage += `\n\nCONTEXT:
+Source Node: ${JSON.stringify(graphContext.sourceNode, null, 2)}
+Direct Connections: ${JSON.stringify(graphContext.directConnections.map((n: any) => ({
+        id: n.id,
+        label: n.label,
+        type: n.type
+      })), null, 2)}
+Relationships: ${JSON.stringify(graphContext.relationships.map((r: any) => ({
+        source: r.source,
+        label: r.label,
+        target: r.target
+      })), null, 2)}
+`;
+    }
+    
+    userMessage += `\n\nPlease provide detailed search results that can be integrated into the knowledge graph.`;
+    
     // In a real application, this would use an actual web search API
     // Here we're using Claude to generate information that simulates search results
     const response = await anthropic.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 2000,
-      temperature: 0.7,
-      system: "You are a web search engine. Your task is to provide search results for the given query. Provide 3-5 detailed, information-rich results with factual information, focusing on authoritative sources. Each result should include the title, URL, and a detailed snippet. Make the information comprehensive and factual. Format your response like real search results. Include a mix of different perspectives and sources. Do not refer to yourself or your process. Don't admit you're an AI. Just provide the search results directly.",
+      max_tokens: 3000,
+      temperature: 0.5,
+      system: systemPrompt,
       messages: [
         {
           role: 'user',
-          content: `Web search query: "${query}". Please provide detailed search results.`
+          content: userMessage
         }
       ]
     });
@@ -58,12 +112,15 @@ export async function performWebSearch(query: string): Promise<string> {
     // Calculate processing time
     const processingTimeMs = Date.now() - startTime;
     
-    // Log the response to the database
+    // Log the response to the database with enhanced metadata
     const responseData = {
       search_results: searchResults,
       model: CLAUDE_MODEL,
       completion_tokens: response.usage?.output_tokens || 0,
-      prompt_tokens: response.usage?.input_tokens || 0
+      prompt_tokens: response.usage?.input_tokens || 0,
+      processing_time_ms: processingTimeMs,
+      result_length: searchResults.length,
+      has_structured_results: searchResults.includes('Title:') && searchResults.includes('URL:')
     };
     
     await logApiInteraction(
@@ -75,8 +132,10 @@ export async function performWebSearch(query: string): Promise<string> {
       processingTimeMs
     );
     
-    console.log('Received simulated web search results');
-    return searchResults;
+    console.log('Received enhanced web search results');
+    
+    // Format the results to add a header that helps Claude understand the context
+    return `# Web Search Results for: "${query}"\n\nThe following information was retrieved from a web search and should be used to expand the knowledge graph:\n\n${searchResults}`;
   } catch (error) {
     // Update status code for error
     statusCode = 500;
@@ -84,17 +143,20 @@ export async function performWebSearch(query: string): Promise<string> {
     // Calculate processing time even for errors
     const processingTimeMs = Date.now() - startTime;
     
-    // Log the error to the database
+    // Log the error to the database with enhanced context
     await logApiInteraction(
       'error',
       'web_search',
-      { query },
-      { error: error instanceof Error ? error.message : String(error) },
+      { query, has_context: !!graphContext },
+      { 
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      },
       statusCode,
       processingTimeMs
     );
     
-    console.error('Error performing web search:', error);
+    console.error('Error performing enhanced web search:', error);
     throw new Error(`Failed to perform web search: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

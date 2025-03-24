@@ -101,15 +101,29 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
 async function generateGraphFromText(text: string, options: any, existingGraph?: any, appendMode = false) {
   console.log("Using Claude API for graph generation");
   
-  // If we're doing a web search, update the context to inform Claude about the source
+  // If web search mode, we already have the context in the text format from the performWebSearch function
+  // This helps Claude understand the context of the web search better
   const webSearchMode = options.webSearchNode && options.webSearchQuery;
-  const textToProcess = webSearchMode 
-    ? `The following information was retrieved from a web search about "${options.webSearchQuery}":\n\n${text}`
-    : text;
-    
-  const newGraph = await generateGraphWithClaude(textToProcess, options);
   
-  // If append mode is true and we have an existing graph, merge them
+  // Pass additional context to Claude to help it understand the source and create better connections
+  let textToProcess = text;
+  
+  // Add appropriate context header based on the mode
+  if (webSearchMode) {
+    // The text from performWebSearch already includes the context header
+    textToProcess = text;
+  } else {
+    // For normal text processing, just use the text as is
+    textToProcess = text;
+  }
+  
+  // Include the graphContext in the options if it exists
+  const enhancedOptions = {...options};
+  
+  // Generate the graph with the contextualized text
+  const newGraph = await generateGraphWithClaude(textToProcess, enhancedOptions);
+  
+  // If append mode is true and we have an existing graph, merge them intelligently
   if (appendMode && existingGraph) {
     console.log("Merging with existing graph");
     return mergeGraphs(existingGraph, newGraph);
@@ -182,7 +196,10 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
     sourceNode.subgraphIds.push(subgraphId);
   }
   
-  // Set up options for graph generation
+  // Calculate the graph context for search with improved relevance
+  const searchContext = buildGraphContextForSearch(existingGraph, nodeId);
+  
+  // Set up options for graph generation with enhanced context
   const options = {
     extractEntities: true,
     extractRelations: true,
@@ -191,20 +208,21 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
     model: 'claude',
     appendMode: true,
     webSearchNode: nodeId,
-    webSearchQuery: query
+    webSearchQuery: query,
+    graphContext: searchContext // Pass the graph context to the model
   };
   
-  // Perform the web search to get search results
-  const searchResults = await performWebSearch(query);
+  // Perform the web search to get search results with context
+  const searchResults = await performWebSearch(query, searchContext);
   
-  // Use the search results to generate the graph
+  // Use the search results to generate the graph with the enhanced context
   const graphWithWebResults = await generateGraphFromText(searchResults, options, existingGraph, true);
   
   // Add metadata to all new nodes and edges
   const originalNodeIds = new Set(existingGraph.nodes.map((node: any) => node.id));
   const originalEdgeIds = new Set(existingGraph.edges.map((edge: any) => edge.id));
   
-  // Mark new nodes as part of the web search subgraph
+  // Mark new nodes as part of the web search subgraph with enhanced metadata
   graphWithWebResults.nodes.forEach((node: any) => {
     if (!originalNodeIds.has(node.id)) {
       if (!node.subgraphIds) {
@@ -214,15 +232,20 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
         node.subgraphIds.push(subgraphId);
       }
       
-      // Add metadata to indicate this is from web search
+      // Add enhanced metadata to indicate this is from web search
       if (!node.properties) {
         node.properties = {};
       }
+      
+      // Add the source and search-related metadata
       node.properties.source = "web search result";
+      node.properties.search_query = query;
+      node.properties.search_date = new Date().toISOString();
+      node.properties.source_node_id = nodeId;
     }
   });
   
-  // Mark new edges as part of the web search subgraph
+  // Mark new edges as part of the web search subgraph with enhanced metadata
   graphWithWebResults.edges.forEach((edge: any) => {
     if (!originalEdgeIds.has(edge.id)) {
       if (!edge.subgraphIds) {
@@ -232,15 +255,137 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
         edge.subgraphIds.push(subgraphId);
       }
       
-      // Add metadata to indicate this is from web search
+      // Add enhanced metadata to indicate this is from web search
       if (!edge.properties) {
         edge.properties = {};
       }
+      
+      // Add the source and search-related metadata
       edge.properties.source = "web search result";
+      edge.properties.search_query = query;
+      edge.properties.search_date = new Date().toISOString();
+      
+      // Calculate and set edge confidence if connecting to existing nodes
+      const isConnectingExisting = 
+        (originalNodeIds.has(edge.source) && !originalNodeIds.has(edge.target)) ||
+        (!originalNodeIds.has(edge.source) && originalNodeIds.has(edge.target));
+      
+      if (isConnectingExisting) {
+        edge.properties.confidence = 0.85; // Higher confidence for connections to existing nodes
+      } else {
+        edge.properties.confidence = 0.7; // Lower for new-to-new connections
+      }
     }
   });
   
+  // Add search metadata to the graph itself
+  if (!graphWithWebResults.metadata) {
+    graphWithWebResults.metadata = {};
+  }
+  
+  if (!graphWithWebResults.metadata.searches) {
+    graphWithWebResults.metadata.searches = [];
+  }
+  
+  // Record this search operation in graph metadata
+  graphWithWebResults.metadata.searches.push({
+    query,
+    nodeId,
+    timestamp: new Date().toISOString(),
+    newNodesAdded: graphWithWebResults.nodes.length - existingGraph.nodes.length,
+    newEdgesAdded: graphWithWebResults.edges.length - existingGraph.edges.length,
+    subgraphId
+  });
+  
   return graphWithWebResults;
+}
+
+/**
+ * Build a relevant context object to provide to Claude for the web search
+ * This helps the model understand the graph structure to make better connections
+ */
+function buildGraphContextForSearch(graph: any, nodeId: string) {
+  // Find the source node
+  const sourceNode = graph.nodes.find((node: any) => node.id === nodeId);
+  if (!sourceNode) {
+    throw new Error(`Source node ${nodeId} not found`);
+  }
+  
+  // Get all edges connected to this node
+  const connectedEdges = graph.edges.filter(
+    (edge: any) => edge.source === nodeId || edge.target === nodeId
+  );
+  
+  // Get IDs of all nodes directly connected to the source node
+  const connectedNodeIds = new Set<string>();
+  connectedEdges.forEach((edge: any) => {
+    if (edge.source === nodeId) connectedNodeIds.add(edge.target);
+    if (edge.target === nodeId) connectedNodeIds.add(edge.source);
+  });
+  
+  // Get the connected nodes
+  const connectedNodes = graph.nodes.filter(
+    (node: any) => connectedNodeIds.has(node.id)
+  );
+  
+  // Find highest centrality nodes in the graph (simplified)
+  // In a full implementation, we would calculate actual centrality metrics
+  const centralityNodes = findImportantNodes(graph, 3);
+  
+  // Build the context object
+  return {
+    sourceNode,
+    directConnections: connectedNodes.map((node: any) => ({
+      id: node.id,
+      label: node.label,
+      type: node.type,
+      properties: node.properties
+    })),
+    relationships: connectedEdges.map((edge: any) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      label: edge.label,
+      properties: edge.properties
+    })),
+    importantNodes: centralityNodes.map((node: any) => ({
+      id: node.id,
+      label: node.label,
+      type: node.type,
+      properties: node.properties
+    }))
+  };
+}
+
+/**
+ * Find the most important nodes in the graph based on a simplified centrality measure
+ * In a real implementation, this would use proper graph algorithms
+ */
+function findImportantNodes(graph: any, count: number = 5) {
+  // Create a simple map of connection counts to simulate centrality
+  const connectionCounts = new Map<string, number>();
+  
+  // Count the number of connections for each node
+  graph.edges.forEach((edge: any) => {
+    connectionCounts.set(
+      edge.source, 
+      (connectionCounts.get(edge.source) || 0) + 1
+    );
+    connectionCounts.set(
+      edge.target, 
+      (connectionCounts.get(edge.target) || 0) + 1
+    );
+  });
+  
+  // Sort nodes by connection count
+  const nodesByImportance = [...graph.nodes].sort((a, b) => {
+    const aCount = connectionCounts.get(a.id) || 0;
+    const bCount = connectionCounts.get(b.id) || 0;
+    return bCount - aCount; // Descending order
+  });
+  
+  // Return the top N nodes or all if fewer
+  return nodesByImportance.slice(0, Math.min(count, nodesByImportance.length));
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {

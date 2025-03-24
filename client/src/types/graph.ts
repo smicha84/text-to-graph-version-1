@@ -40,6 +40,7 @@ export interface Graph {
   nodes: Node[];
   edges: Edge[];
   subgraphCounter?: number; // Keeps track of the highest subgraph ID used
+  metadata?: Record<string, any>; // Metadata for the graph including search history, generation info, etc.
 }
 
 export interface GraphGenerationOptions {
