@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -92,3 +92,25 @@ export interface Graph {
   edges: Edge[];
   subgraphCounter?: number;
 }
+
+// API Logs for tracking all LLM interactions
+export const apiLogs = pgTable("api_logs", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  type: text("type").notNull(), // "request" or "response"
+  operation: text("operation").notNull(), // "generate_graph", "web_search", etc.
+  requestData: jsonb("request_data"), // The data sent to the LLM
+  responseData: jsonb("response_data"), // The data received from the LLM
+  statusCode: integer("status_code"), // HTTP status code
+  processingTimeMs: integer("processing_time_ms"), // Time it took to process
+  sourceIp: text("source_ip"), // IP address of the client
+  userAgent: text("user_agent"), // User agent of the client
+  userId: integer("user_id").references(() => users.id), // Optional user ID if authenticated
+});
+
+export const insertApiLogSchema = createInsertSchema(apiLogs).omit({
+  id: true,
+});
+
+export type InsertApiLog = z.infer<typeof insertApiLogSchema>;
+export type ApiLog = typeof apiLogs.$inferSelect;
