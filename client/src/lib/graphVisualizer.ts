@@ -295,6 +295,47 @@ export class GraphVisualizer {
     const nodeName = getNodeDisplayLabel(d);
     const nodeType = d.type || '';
     
+    // Generate property list HTML
+    let propertiesList = '';
+    if (d.properties && Object.keys(d.properties).length > 0) {
+      propertiesList = '<div class="properties-container" style="margin-top: 8px; max-height: 200px; overflow-y: auto;">';
+      propertiesList += '<h5 style="margin: 5px 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 3px;">Properties</h5>';
+      
+      // Generate table-like view of properties
+      propertiesList += '<table style="width: 100%; border-collapse: collapse; font-size: 12px;">';
+      
+      // Sort properties alphabetically for consistent display
+      const sortedKeys = Object.keys(d.properties).sort();
+      
+      for (const key of sortedKeys) {
+        // Skip special properties that might be used for internal purposes
+        if (key === 'x' || key === 'y' || key === 'fx' || key === 'fy') continue;
+        
+        const value = d.properties[key];
+        let displayValue = value;
+        
+        // Format value based on type
+        if (value === null || value === undefined) {
+          displayValue = '<em style="color: #888;">undefined</em>';
+        } else if (typeof value === 'object') {
+          try {
+            displayValue = JSON.stringify(value);
+          } catch (e) {
+            displayValue = `[Object]`;
+          }
+        }
+        
+        propertiesList += `
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 3px; font-weight: 600; color: #555;">${key}</td>
+            <td style="padding: 3px; word-break: break-word;">${displayValue}</td>
+          </tr>
+        `;
+      }
+      
+      propertiesList += '</table></div>';
+    }
+    
     // Only add web search buttons for nodes, not edges
     const webSearchButtons = this.onWebSearch ? `
       <div style="margin-top: 10px;">
@@ -309,12 +350,19 @@ export class GraphVisualizer {
       </div>
     ` : '';
     
-    // Create tooltip content with web search buttons
+    // Add node ID info
+    const nodeIdSection = `<div style="font-size: 12px; color: #666; margin-top: 4px;">ID: ${d.id}</div>`;
+    
+    // Create tooltip content with web search buttons and properties
     this.nodeTooltip
       .html(`
-        <h4>${nodeName}</h4>
+        <div class="tooltip-header" style="border-bottom: 1px solid #ddd; margin-bottom: 6px; padding-bottom: 4px;">
+          <h4 style="margin: 0; font-size: 16px;">${nodeName}</h4>
+          ${nodeType ? `<div style="font-size: 13px;"><strong>Type:</strong> ${nodeType}</div>` : ''}
+          ${nodeIdSection}
+        </div>
         <div class="node-tooltip-content">
-          ${nodeType ? `<div><strong>Type:</strong> ${nodeType}</div>` : ''}
+          ${propertiesList}
           ${webSearchButtons}
         </div>
       `)
