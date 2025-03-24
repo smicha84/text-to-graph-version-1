@@ -757,7 +757,7 @@ export class GraphVisualizer {
       .attr("fill", "black")
       .attr("font-weight", "bold")
       .attr("font-size", "12px")
-      .text((d: SimulationNode) => d.properties.name || d.label);
+      .text((d: SimulationNode) => getNodeDisplayLabel(d));
     
     // Create force simulation with layout settings
     this.simulation = d3.forceSimulation<SimulationNode, SimulationLink>(nodeData)

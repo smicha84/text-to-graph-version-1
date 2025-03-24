@@ -1,4 +1,5 @@
 import { Graph, Node, Edge } from "@/types/graph";
+import { getNodeDisplayLabel } from "@/lib/displayUtils";
 
 /**
  * Get all direct connections (nodes and edges) for a specific node
@@ -62,9 +63,9 @@ export function generateWebSearchQuery(graph: Graph, nodeId: string): string {
   }
   
   // Include node type information
-  let typeInfo = node.label;
-  if (node.type && node.type !== node.label) {
-    typeInfo = `${node.label} (${node.type})`;
+  let typeInfo = getNodeDisplayLabel(node);
+  if (node.type && node.type !== getNodeDisplayLabel(node)) {
+    typeInfo = `${getNodeDisplayLabel(node)} (${node.type})`;
   }
   
   // Build the base query focused on the node
@@ -81,9 +82,7 @@ export function generateWebSearchQuery(graph: Graph, nodeId: string): string {
     if (!connectedNode) return;
     
     const relationship = edge.label.toLowerCase().replace(/_/g, ' ');
-    const relatedNodeName = connectedNode.properties.name 
-      || connectedNode.properties.title
-      || connectedNode.label;
+    const relatedNodeName = getNodeDisplayLabel(connectedNode);
     
     // Format: "related to Company X" or "works for Person Y"
     const term = isOutgoing
