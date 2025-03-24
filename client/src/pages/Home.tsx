@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Header from "@/components/Header";
 import InputPanel from "@/components/InputPanel";
 import GraphPanel from "@/components/GraphPanel";
 import PropertyPanel from "@/components/PropertyPanel";
