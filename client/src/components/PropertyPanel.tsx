@@ -90,28 +90,39 @@ export default function PropertyPanel({ element, onClose, onWebSearch, graph }: 
           
           {/* Web Search Buttons - only for nodes, not edges */}
           {isNode && onWebSearch && (
-            <div className="mt-3 space-y-2">
-              {/* Auto Web Search Button */}
-              <Button 
-                size="sm" 
-                variant="default" 
-                className="w-full flex items-center justify-center gap-2 text-sm"
-                onClick={handleAutoWebSearch}
-              >
-                <ZapIcon size={14} />
-                Auto Web Search
-              </Button>
-              
-              {/* Custom Web Search Button */}
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="w-full flex items-center justify-center gap-2 text-sm"
-                onClick={handleCustomWebSearch}
-              >
-                <SearchIcon size={14} />
-                Custom Web Search
-              </Button>
+            <div className="mt-3">
+              <div className="bg-blue-50 border border-blue-100 rounded-md p-2 mb-2">
+                <h4 className="text-xs font-semibold text-blue-700 mb-1.5 flex items-center">
+                  <GlobeIcon size={12} className="mr-1" />
+                  Web Search
+                </h4>
+                <div className="space-y-2">
+                  {/* Auto Web Search Button */}
+                  <Button 
+                    size="sm" 
+                    variant="default" 
+                    className="w-full flex items-center justify-center gap-1.5 text-xs bg-blue-600 hover:bg-blue-700"
+                    onClick={handleAutoWebSearch}
+                  >
+                    <ZapIcon size={12} />
+                    Intelligent Search
+                  </Button>
+                  
+                  {/* Custom Web Search Button */}
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-1.5 text-xs border-blue-300 text-blue-700 hover:bg-blue-100"
+                    onClick={handleCustomWebSearch}
+                  >
+                    <SearchIcon size={12} />
+                    Custom Search
+                  </Button>
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  Search the web for more information about this entity and expand your knowledge graph.
+                </p>
+              </div>
             </div>
           )}
         </div>
