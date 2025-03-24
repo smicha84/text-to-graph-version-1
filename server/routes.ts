@@ -520,6 +520,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Test endpoint to create a sample web search log - for testing only
+  app.get('/api/create-test-log', async (req, res) => {
+    try {
+      // Create a request log
+      await logApiInteraction(
+        'request',
+        'web_search',
+        {
+          query: 'Test web search query',
+          model: 'claude-3-7-sonnet-20250219',
+          max_tokens: 3000,
+          temperature: 0.5,
+          has_graph_context: true,
+          context_size: 500
+        }
+      );
+      
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create a response log
+      await logApiInteraction(
+        'response',
+        'web_search',
+        {
+          query: 'Test web search query'
+        },
+        {
+          model: 'claude-3-7-sonnet-20250219',
+          prompt_tokens: 1250,
+          completion_tokens: 950,
+          total_tokens: 2200,
+          search_results: [
+            { title: 'Test Result 1', url: 'https://example.com/1' },
+            { title: 'Test Result 2', url: 'https://example.com/2' }
+          ]
+        },
+        200,
+        1050
+      );
+      
+      res.json({ message: 'Test logs created successfully' });
+    } catch (error) {
+      console.error('Error creating test logs:', error);
+      res.status(500).json({ message: 'Failed to create test logs' });
+    }
+  });
+  
   // API endpoint to export a graph
   app.post('/api/export-graph', async (req, res) => {
     try {
