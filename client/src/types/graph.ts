@@ -48,6 +48,7 @@ export interface GraphGenerationOptions {
   extractRelations: boolean;
   inferProperties: boolean;
   mergeEntities: boolean;
+  generateOntology: boolean; // Whether to generate domain ontology before extraction
   model: 'claude'; // Only Claude model is supported
   appendMode?: boolean; // Whether to append to existing graph instead of replacing it
   webSearchNode?: string; // ID of the node that triggered a web search

@@ -57,6 +57,7 @@ export default function InputPanel({
     extractRelations: true,
     inferProperties: true,
     mergeEntities: true,
+    generateOntology: true, // Enable ontology generation by default
     model: "claude",
     appendMode: false,
     useEntityMergingLLM: true,

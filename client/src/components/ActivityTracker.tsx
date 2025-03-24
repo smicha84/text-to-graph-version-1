@@ -54,14 +54,25 @@ export default function ActivityTracker({
   // Simulate step completion (in a real implementation, these would come from the backend)
   useEffect(() => {
     if (isProcessing) {
-      const steps = [
-        "Analyzing text content",
-        "Extracting entities and relationships",
-        "Processing entity types",
-        "Inferring relationships",
-        "Merging similar entities",
-        "Creating graph structure"
-      ];
+      // Define steps based on whether ontology generation is enabled
+      const steps = options.generateOntology 
+        ? [
+            "Analyzing text content",
+            "Creating domain ontology",
+            "Extracting entities using ontology",
+            "Processing entity types",
+            "Inferring relationships",
+            "Merging similar entities",
+            "Creating graph structure"
+          ]
+        : [
+            "Analyzing text content",
+            "Extracting entities and relationships",
+            "Processing entity types",
+            "Inferring relationships",
+            "Merging similar entities",
+            "Creating graph structure"
+          ];
       
       let index = 0;
       const interval = setInterval(() => {
@@ -171,10 +182,34 @@ export default function ActivityTracker({
                     </Badge>
                   </div>
                 </div>
+                
+                <div className="p-3 bg-purple-50 border border-purple-100 rounded-md">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1">
+                      <Checkbox
+                        id="generateOntology"
+                        checked={options.generateOntology}
+                        onCheckedChange={(checked) => 
+                          handleOptionChange("generateOntology", checked === true)
+                        }
+                        className="h-4 w-4 text-purple-600 border-purple-300 rounded flex-shrink-0"
+                      />
+                      <Label htmlFor="generateOntology" className="text-sm font-medium text-purple-800 cursor-pointer">
+                        Generate Domain Ontology
+                      </Label>
+                    </div>
+                    <Badge 
+                      variant={options.generateOntology ? "default" : "outline"} 
+                      className={`text-xs px-2 ${options.generateOntology ? "bg-purple-600" : "border-purple-300 text-purple-600"}`}
+                    >
+                      {options.generateOntology ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                </div>
               </div>
               
               <div className="mt-3 text-xs text-gray-600 px-1 bg-gray-50 p-2 rounded border border-gray-100">
-                <span className="font-medium">Note:</span> By default, all processing uses Claude AI for best results. Toggle off to use algorithmic approaches.
+                <span className="font-medium">Note:</span> By default, all processing uses Claude AI for best results. Generating an ontology first creates a more coherent graph structure but takes slightly longer.
               </div>
             </div>
           </div>
