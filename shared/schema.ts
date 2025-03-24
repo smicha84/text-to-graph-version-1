@@ -91,6 +91,7 @@ export interface Graph {
   nodes: Node[];
   edges: Edge[];
   subgraphCounter?: number;
+  metadata?: Record<string, any>; // Added for GraphV2 metadata
 }
 
 // API Logs for tracking all LLM interactions

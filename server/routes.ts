@@ -118,6 +118,46 @@ async function generateGraphFromText(text: string, options: any, existingGraph?:
   return newGraph;
 }
 
+// Version 2 of graph generation function with enhanced capabilities
+async function generateGraphV2FromText(text: string, options: any) {
+  console.log("Using Claude API for graph generation V2");
+  
+  // In V2, we're using a more sophisticated prompt structure and processing approach
+  const enhancedOptions = {
+    ...options,
+    version: 'v2',
+    enhancedProcessing: true
+  };
+  
+  // Use the same core API but with enhanced processing
+  const newGraph = await generateGraphWithClaude(text, enhancedOptions);
+  
+  // Apply additional post-processing specific to V2
+  // This is where we would add any V2-specific enhancements
+  
+  // For example, we might want to automatically apply a hierarchical layout
+  if (newGraph && Array.isArray(newGraph.nodes) && Array.isArray(newGraph.edges)) {
+    // Add metadata to mark this as a V2 graph
+    newGraph.nodes.forEach(node => {
+      if (!node.properties) {
+        node.properties = {};
+      }
+      node.properties.generatedBy = 'GraphV2';
+    });
+    
+    // Add generation metadata
+    newGraph.metadata = {
+      version: 'v2',
+      generatedAt: new Date().toISOString(),
+      nodeCount: newGraph.nodes.length,
+      edgeCount: newGraph.edges.length,
+      textLength: text.length
+    };
+  }
+  
+  return newGraph;
+}
+
 async function webSearchAndExpandGraph(query: string, nodeId: string, existingGraph: any) {
   if (!existingGraph || !existingGraph.nodes || existingGraph.nodes.length === 0) {
     throw new Error("Cannot perform web search with an empty graph.");
@@ -276,6 +316,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Failed to perform web search',
         details: errorMessage
       });
+    }
+  });
+  
+  // API endpoint for GraphV2 generation
+  app.post('/api/generate-graph-v2', async (req, res) => {
+    try {
+      // Validate request body using the same schema for now
+      const { text, options } = generateGraphInputSchema.parse(req.body);
+      
+      // Generate graph using Claude API with V2 enhancements
+      const result = await generateGraphV2FromText(text, options);
+      
+      // Verify that we have nodes and edges arrays in the result
+      if (!result || !Array.isArray(result.nodes) || !Array.isArray(result.edges)) {
+        console.error('Invalid graph structure returned from V2:', result);
+        return res.status(500).json({ 
+          message: 'Generated graph has an invalid structure',
+          details: 'The API generated a graph without valid nodes and edges arrays'
+        });
+      }
+      
+      // Return the generated graph
+      res.json(result);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error('Error generating graph V2:', error);
+        let errorMessage = 'Failed to generate graph';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        res.status(500).json({ 
+          message: 'Failed to generate graph V2',
+          details: errorMessage
+        });
+      }
     }
   });
   
