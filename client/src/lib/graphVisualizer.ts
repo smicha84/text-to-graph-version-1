@@ -464,20 +464,7 @@ export class GraphVisualizer {
     // Web search functionality has been removed
   }
   
-  // Helper method to generate a search query from node properties
-  private generateSearchQuery(node: SimulationNode): string {
-    // Start with the node name and type
-    const nodeName = node.properties.name || node.label;
-    const nodeType = node.type || '';
-    
-    // Add important properties to the query
-    const keyProperties = ['organization', 'role', 'industry', 'function', 'description']
-      .filter(key => node.properties[key])
-      .map(key => node.properties[key]);
-    
-    // Combine all parts into a search query
-    return `${nodeName} ${nodeType} ${keyProperties.join(' ')}`.trim();
-  }
+  // Web search functionality has been removed
   
   // Hide node tooltip
   private hideNodeTooltip(): void {
@@ -775,30 +762,17 @@ export class GraphVisualizer {
         return this.customNodeColors[d.type] || NODE_COLORS[d.type] || NODE_COLORS.default;
       })
       .attr("stroke", (d: SimulationNode) => {
-        // If the node has a web search source, add a distinctive border
-        if (d.properties.source === "web search result") {
-          return "#2563EB"; // Blue border for web search results
-        }
-        
-        // Otherwise, add a border to the first node to indicate it's anchored
+        // Add a border to the first node to indicate it's anchored
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "#000" : null;
       })
       .attr("stroke-width", (d: SimulationNode) => {
-        // Web search results and the anchor node get borders
-        if (d.properties.source === "web search result") {
-          return 3;
-        }
-        
+        // Only the anchor node gets borders
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? 2 : 0;
       })
       .attr("stroke-dasharray", (d: SimulationNode) => {
         // Different dash patterns for different node types
-        if (d.properties.source === "web search result") {
-          return "5,2"; // Distinctive dash pattern for web search results
-        }
-        
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "3,3" : null;
       })
@@ -1386,43 +1360,7 @@ export class GraphVisualizer {
       .transition().duration(300)
       .attr("opacity", 0.2);
     
-    // Check if this is a web search subgraph by looking at the ID
-    const isWebSearchSubgraph = subgraphId.startsWith('webSearch_');
-    
-    // For web search subgraphs, find and highlight the source node
-    // (typically the node that initiated the web search)
-    if (isWebSearchSubgraph) {
-      // First, find nodes that have a property indicating they were the source of this web search
-      // This is more reliable than trying to guess based on graph structure
-      this.container.selectAll(".node")
-        .filter((d: any) => {
-          // Check for web search specific properties that would indicate this is a source node
-          if (d.properties && d.properties.source_node_id) {
-            return true;
-          }
-          
-          // Also check for position in the graph (root nodes are typically first)
-          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-          return nodeIndex === 0; // First node is often the root/source
-        })
-        .selectAll("circle")
-        .transition().duration(300)
-        .attr("opacity", 1.0)
-        .attr("stroke", "#EF4444") // red-500 for the source node
-        .attr("stroke-width", 4);
-        
-      this.container.selectAll(".node")
-        .filter((d: any) => {
-          if (d.properties && d.properties.source_node_id) {
-            return true;
-          }
-          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-          return nodeIndex === 0;
-        })
-        .selectAll("text")
-        .transition().duration(300)
-        .attr("opacity", 1.0);
-    }
+    // Web search subgraph functionality has been removed
     
     // Then highlight all elements that belong to the selected subgraph
     this.container.selectAll(".node")
