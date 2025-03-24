@@ -153,7 +153,7 @@ export default function Home() {
       
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar with always-visible prompt station */}
-        <div className="w-64 bg-white border-r border-gray-200 flex-shrink-0">
+        <div className="w-72 bg-white border-r border-gray-200 flex-shrink-0">
           <SidebarPromptStation 
             onWebSearch={handleWebSearch}
             isSearching={webSearchMutation.isPending}
@@ -162,15 +162,18 @@ export default function Home() {
           />
         </div>
         
-        <InputPanel 
-          onGenerateGraph={handleGenerateGraph}
-          onWebSearch={handleWebSearch}
-          isLoading={generateMutation.isPending}
-          isSearching={webSearchMutation.isPending}
-          hasExistingGraph={!!graph && graph.nodes.length > 0}
-          selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
-          graph={graph}
-        />
+        {/* Input panel in the center with more width */}
+        <div className="w-96 flex-shrink-0 overflow-auto bg-white border-r border-gray-200">
+          <InputPanel 
+            onGenerateGraph={handleGenerateGraph}
+            onWebSearch={handleWebSearch}
+            isLoading={generateMutation.isPending}
+            isSearching={webSearchMutation.isPending}
+            hasExistingGraph={!!graph && graph.nodes.length > 0}
+            selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
+            graph={graph}
+          />
+        </div>
         
         <div className="flex-1 flex flex-col h-full">
           <GraphPanel 

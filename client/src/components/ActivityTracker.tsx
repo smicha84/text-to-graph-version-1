@@ -92,70 +92,76 @@ export default function ActivityTracker({
           <div>
             <h3 className="text-sm font-medium text-blue-600 mb-2">Entity Processing Mode Selection</h3>
             <div className="grid grid-cols-1 gap-2">
-              <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                <div className="flex items-center flex-1 mr-2">
-                  <Checkbox
-                    id="useEntityMergingLLM"
-                    checked={options.useEntityMergingLLM}
-                    onCheckedChange={(checked) => 
-                      handleOptionChange("useEntityMergingLLM", checked === true)
-                    }
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded flex-shrink-0"
-                  />
-                  <Label htmlFor="useEntityMergingLLM" className="ml-2 text-sm truncate">
-                    Entity Deduplication/Merging
-                  </Label>
+              <div className="mb-2 p-2.5 bg-blue-50 border border-blue-100 rounded-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1 mr-3">
+                    <Checkbox
+                      id="useEntityMergingLLM"
+                      checked={options.useEntityMergingLLM}
+                      onCheckedChange={(checked) => 
+                        handleOptionChange("useEntityMergingLLM", checked === true)
+                      }
+                      className="h-4 w-4 text-blue-600 border-blue-300 rounded flex-shrink-0"
+                    />
+                    <Label htmlFor="useEntityMergingLLM" className="ml-2 text-sm font-medium text-blue-800">
+                      Entity Deduplication/Merging
+                    </Label>
+                  </div>
+                  <Badge 
+                    variant={options.useEntityMergingLLM ? "default" : "outline"} 
+                    className={`text-xs px-2 ${options.useEntityMergingLLM ? "bg-blue-600" : "border-blue-300 text-blue-600"}`}
+                  >
+                    {options.useEntityMergingLLM ? "Using Claude AI" : "Using Algorithm"}
+                  </Badge>
                 </div>
-                <Badge 
-                  variant={options.useEntityMergingLLM ? "default" : "outline"} 
-                  className="whitespace-nowrap text-xs px-2"
-                >
-                  {options.useEntityMergingLLM ? "Using Claude AI" : "Using Algorithm"}
-                </Badge>
               </div>
               
-              <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                <div className="flex items-center flex-1 mr-2">
-                  <Checkbox
-                    id="useEntityTypeLLM"
-                    checked={options.useEntityTypeLLM}
-                    onCheckedChange={(checked) => 
-                      handleOptionChange("useEntityTypeLLM", checked === true)
-                    }
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded flex-shrink-0"
-                  />
-                  <Label htmlFor="useEntityTypeLLM" className="ml-2 text-sm truncate">
-                    Entity Type Detection
-                  </Label>
+              <div className="mb-2 p-2.5 bg-blue-50 border border-blue-100 rounded-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1 mr-3">
+                    <Checkbox
+                      id="useEntityTypeLLM"
+                      checked={options.useEntityTypeLLM}
+                      onCheckedChange={(checked) => 
+                        handleOptionChange("useEntityTypeLLM", checked === true)
+                      }
+                      className="h-4 w-4 text-blue-600 border-blue-300 rounded flex-shrink-0"
+                    />
+                    <Label htmlFor="useEntityTypeLLM" className="ml-2 text-sm font-medium text-blue-800">
+                      Entity Type Detection
+                    </Label>
+                  </div>
+                  <Badge 
+                    variant={options.useEntityTypeLLM ? "default" : "outline"} 
+                    className={`text-xs px-2 ${options.useEntityTypeLLM ? "bg-blue-600" : "border-blue-300 text-blue-600"}`}
+                  >
+                    {options.useEntityTypeLLM ? "Using Claude AI" : "Using Algorithm"}
+                  </Badge>
                 </div>
-                <Badge 
-                  variant={options.useEntityTypeLLM ? "default" : "outline"} 
-                  className="whitespace-nowrap text-xs px-2"
-                >
-                  {options.useEntityTypeLLM ? "Using Claude AI" : "Using Algorithm"}
-                </Badge>
               </div>
               
-              <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                <div className="flex items-center flex-1 mr-2">
-                  <Checkbox
-                    id="useRelationInferenceLLM"
-                    checked={options.useRelationInferenceLLM}
-                    onCheckedChange={(checked) => 
-                      handleOptionChange("useRelationInferenceLLM", checked === true)
-                    }
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded flex-shrink-0"
-                  />
-                  <Label htmlFor="useRelationInferenceLLM" className="ml-2 text-sm truncate">
-                    Relationship Inference
-                  </Label>
+              <div className="mb-2 p-2.5 bg-blue-50 border border-blue-100 rounded-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1 mr-3">
+                    <Checkbox
+                      id="useRelationInferenceLLM"
+                      checked={options.useRelationInferenceLLM}
+                      onCheckedChange={(checked) => 
+                        handleOptionChange("useRelationInferenceLLM", checked === true)
+                      }
+                      className="h-4 w-4 text-blue-600 border-blue-300 rounded flex-shrink-0"
+                    />
+                    <Label htmlFor="useRelationInferenceLLM" className="ml-2 text-sm font-medium text-blue-800">
+                      Relationship Inference
+                    </Label>
+                  </div>
+                  <Badge 
+                    variant={options.useRelationInferenceLLM ? "default" : "outline"} 
+                    className={`text-xs px-2 ${options.useRelationInferenceLLM ? "bg-blue-600" : "border-blue-300 text-blue-600"}`}
+                  >
+                    {options.useRelationInferenceLLM ? "Using Claude AI" : "Using Algorithm"}
+                  </Badge>
                 </div>
-                <Badge 
-                  variant={options.useRelationInferenceLLM ? "default" : "outline"} 
-                  className="whitespace-nowrap text-xs px-2"
-                >
-                  {options.useRelationInferenceLLM ? "Using Claude AI" : "Using Algorithm"}
-                </Badge>
               </div>
             </div>
             
@@ -174,23 +180,26 @@ export default function ActivityTracker({
               {isProcessing && <RotateCw className="h-4 w-4 ml-2 animate-spin" />}
             </h3>
             
-            <div className="bg-gray-50 p-2 rounded">
+            <div className="bg-green-50 border border-green-100 p-3 rounded-md">
               {completedSteps.map((step, index) => (
                 <div key={index} className="flex justify-between items-center mb-2 last:mb-0">
                   <span className="flex items-center text-sm overflow-hidden mr-2">
-                    <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-green-50 text-green-600 border border-green-200 mr-2 flex-shrink-0">
+                    <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-white text-green-600 border border-green-200 mr-2 flex-shrink-0 shadow-sm">
                       ✓
                     </span>
-                    <span className="truncate">{step}</span>
+                    <span className="truncate text-green-800 font-medium">{step}</span>
                   </span>
-                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                  <span className="text-xs text-green-700 whitespace-nowrap">
                     {new Date().toLocaleTimeString()}
                   </span>
                 </div>
               ))}
               
               {!isProcessing && completedSteps.length === 0 && (
-                <div className="text-gray-500 italic p-2 text-sm">
+                <div className="text-green-700 p-2 text-sm flex items-center">
+                  <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-white text-gray-400 border border-green-200 mr-2 flex-shrink-0">
+                    -
+                  </span>
                   No recent activity. Generate a graph to see the process.
                 </div>
               )}
@@ -208,37 +217,37 @@ export default function ActivityTracker({
                   Claude API Stats
                 </h3>
                 
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 bg-gray-50 p-2 rounded">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-700">Model:</span>
-                    <span className="text-sm font-medium truncate ml-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-2 bg-gray-50 p-3 rounded">
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-700 w-24 flex-shrink-0">Model:</span>
+                    <span className="text-sm font-medium text-gray-900 truncate">
                       {metrics.model || "claude-3-sonnet"}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-700">Status:</span>
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-700 w-24 flex-shrink-0">Status:</span>
                     <Badge 
                       variant={
                         status === 'idle' ? 'outline' :
                         status === 'loading' ? 'default' :
                         status === 'complete' ? 'secondary' : 'destructive'
                       }
-                      className="whitespace-nowrap ml-2"
+                      className="text-xs px-2"
                     >
                       {status === 'idle' ? 'Idle' :
                        status === 'loading' ? 'Processing' :
                        status === 'complete' ? 'Complete' : 'Error'}
                     </Badge>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-700">Tokens:</span>
-                    <span className="text-sm font-medium ml-2">
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-700 w-24 flex-shrink-0">Tokens:</span>
+                    <span className="text-sm font-medium text-gray-900">
                       {metrics.totalTokens || 0} total
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-700">Processing:</span>
-                    <span className="text-sm font-medium ml-2">
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-700 w-24 flex-shrink-0">Processing:</span>
+                    <span className="text-sm font-medium text-gray-900">
                       {metrics.processingTimeMs || 0}ms
                     </span>
                   </div>
