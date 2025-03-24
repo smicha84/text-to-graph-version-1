@@ -208,7 +208,7 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
       model: CLAUDE_MODEL,
       max_tokens: 8000,
       temperature: 1.0, // Must be exactly 1.0 when thinking is enabled
-      system: "You are an expert in natural language processing and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.",
+      system: "You are an expert in natural language processing, ontology engineering, and knowledge graph creation. Your task is to analyze text and extract entities and relationships to form a property graph. First, create a comprehensive domain ontology that defines entity types, relationship types, and hierarchies. Then use this ontology to guide extraction of entities and relationships. Finally, verify that all nodes and edges conform to the ontology and are supported by the text. Use deep thinking to ensure comprehensive analysis, including implicit relationships and accurate hierarchical representation of concepts. Consider not just explicitly stated relationships but also those that can be inferred from context.",
       messages: [
         {
           role: 'user',
@@ -421,14 +421,49 @@ ${options.inferProperties ? '- Infer additional properties for entities and rela
 ${options.mergeEntities ? '- Merge similar or duplicate entities into single nodes' : '- Keep entities separate even if they might be the same'}
 
 TASK BREAKDOWN:
-1. First, identify all the key entities in the text.
-2. For each entity, determine its:
-   - High-level category (Person, Organization, Location, etc.) - This will be the "label"
-   - Specific subtype - This will be stored in the "type" field
+1. FIRST STEP - ONTOLOGY CREATION: Create an ontology based on the text that defines:
+   - The main entity types that exist in this domain
+   - The possible relationship types between these entities
+   - The hierarchical organization of entity types (parent-child relationships)
+   - Key properties that typically belong to each entity type
+
+2. SECOND STEP - ENTITY EXTRACTION: Using the ontology created in step 1, identify all key entities in the text.
+   For each entity, determine:
+   - High-level category from the ontology (Person, Organization, Location, etc.) - This will be the "label"
+   - Specific subtype within that category - This will be stored in the "type" field
    - Unique properties (name, age, date, description, etc.)
    - Any identifiers that would help distinguish it
-3. Map the relationships between these entities.
-4. Ensure each relationship has a clear direction and descriptive label.
+
+3. THIRD STEP - RELATIONSHIP MAPPING: Looking at both the ontology, the list of extracted entities, and the original text,
+   map the relationships between the entities.
+   - Ensure each relationship has a clear direction and descriptive label.
+   - Use relationship types defined in your ontology
+   - Verify that relationships are supported by the text
+
+STEP 1: ONTOLOGY CREATION
+-------------------------
+First, create a domain ontology by analyzing the text and identifying:
+- Main entity types (classes)
+- Relationship types between entities
+- Properties associated with each entity type
+- Hierarchical organization
+
+Your ontology should use these high-level categories:
+- Person
+- Organization
+- Location
+- Event
+- Document
+- Project
+- Technology
+- Concept
+
+For each category, identify specific subtypes and typical properties.
+
+STEP 2 & 3: ENTITY & RELATIONSHIP EXTRACTION
+--------------------------------------------
+After creating the ontology, use it to guide your entity extraction and relationship mapping.
+Ensure all entities and relationships conform to your ontology.
 
 RESPONSE FORMAT:
 Respond with a JSON object that has the following structure:
@@ -453,7 +488,7 @@ Respond with a JSON object that has the following structure:
       "id": "e1",  // A unique string identifier starting with 'e' followed by a number
       "source": "n1",  // The id of the source node
       "target": "n2",  // The id of the target node
-      "label": "WORKS_FOR",  // The relationship type in uppercase
+      "label": "WORKS_FOR",  // The relationship type in uppercase, should be from your ontology
       "properties": {
         // Include any properties of the relationship
         "since": 2020,
@@ -466,16 +501,18 @@ Respond with a JSON object that has the following structure:
 }
 
 QUALITY REQUIREMENTS:
+- Begin by creating a comprehensive ontology to guide your extraction process
 - Use STRICT label categories from the list above - never combine label and type in the label field
 - Be consistent: the same entity type should always have the same label (e.g., all companies should have label "Organization" and type "Company")
 - Store hierarchical or classification information as a property, not in the label or type fields
-- Use ALL_CAPS for relationship labels
+- Use ALL_CAPS for relationship labels, derived from your ontology
 - Don't invent entities or relationships that aren't supported by the text
 - Include sufficient properties to make each entity informative and distinctive
 - Create relationship labels that clearly describe the nature of the connection
 - Ensure each relationship flows in the logical direction (e.g., PERSON WORKS_FOR COMPANY, not the reverse)
+- Verify that all entities and relationships reflect information from the original text
 
-Only respond with the JSON object, no explanations or other text.`;
+Only respond with the JSON object for the final graph, no explanations or other text.`;
 }
 
 function applyLayout(graph: Graph): void {

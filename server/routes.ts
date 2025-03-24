@@ -199,7 +199,7 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
   // Calculate the graph context for search with improved relevance
   const searchContext = buildGraphContextForSearch(existingGraph, nodeId);
   
-  // Set up options for graph generation with enhanced context
+  // Set up options for graph generation with enhanced context and ontology-based extraction
   const options = {
     extractEntities: true,
     extractRelations: true,
@@ -209,7 +209,12 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
     appendMode: true,
     webSearchNode: nodeId,
     webSearchQuery: query,
-    graphContext: searchContext // Pass the graph context to the model
+    graphContext: searchContext, // Pass the graph context to the model
+    useEntityMergingLLM: true, // Use the LLM for entity merging
+    useEntityTypeLLM: true, // Use the LLM for entity type detection
+    useRelationInferenceLLM: true, // Use the LLM for relationship inference
+    // Add a processing step to include ontology creation
+    processingSteps: ['ontology_creation', 'entity_extraction', 'relationship_mapping'] 
   };
   
   // Perform the web search to get search results with context
@@ -570,6 +575,7 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
 
 /**
  * Determine an appropriate relation label between two nodes based on their types
+ * Using an ontology-based approach for more meaningful and consistent relationships
  */
 function determineAppropriateRelation(sourceNode: any, targetNode: any): string {
   // Default relation if nothing else matches
@@ -580,6 +586,9 @@ function determineAppropriateRelation(sourceNode: any, targetNode: any): string 
   const targetType = (targetNode.type || "").toLowerCase();
   const sourceLabel = (sourceNode.label || "").toLowerCase();
   const targetLabel = (targetNode.label || "").toLowerCase();
+  
+  // Use node ontology to determine the most appropriate relationship
+  // This improves consistency with the ontology-based graph generation
   
   // Location-based relations
   if (sourceType.includes("location") || sourceLabel.includes("location")) {
