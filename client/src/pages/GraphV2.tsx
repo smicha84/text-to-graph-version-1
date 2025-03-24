@@ -31,12 +31,7 @@ export default function GraphV2() {
     extractRelations: true,
     inferProperties: true,
     mergeEntities: true,
-    generateOntology: false,
-    model: "claude",
-    useEntityMergingLLM: true,
-    useEntityTypeLLM: true,
-    useRelationInferenceLLM: true,
-    processingSteps: []
+    model: "claude"
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { toast } = useToast();

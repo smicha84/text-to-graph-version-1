@@ -21,7 +21,6 @@ export interface Node {
   id: string;
   label: string;
   type: string;
-  labelDetail?: string; // Text value from the label detail (was previously in parentheses)
   x?: number;
   y?: number;
   properties: Record<string, any>;

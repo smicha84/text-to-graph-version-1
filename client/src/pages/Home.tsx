@@ -1,6 +1,8 @@
 import { useState } from "react";
+import Header from "@/components/Header";
 import InputPanel from "@/components/InputPanel";
 import GraphPanel from "@/components/GraphPanel";
+import PropertyPanel from "@/components/PropertyPanel";
 import ExportModal from "@/components/ExportModal";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
 import NodeAnatomyChart from "@/components/NodeAnatomyChart";
@@ -13,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 export default function Home() {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedElement, setSelectedElement] = useState<(Node | Edge) | null>(null);
+  const [showPropertyPanel, setShowPropertyPanel] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const { toast } = useToast();
 
@@ -101,6 +104,7 @@ export default function Home() {
 
   const handleElementSelect = (element: Node | Edge | null) => {
     setSelectedElement(element);
+    setShowPropertyPanel(!!element);
   };
 
   const handleExportGraph = (options: ExportOptions) => {
@@ -150,11 +154,10 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar with always-visible prompt station - fixed width, non-resizable */}
         <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col">
-          {/* SidebarPromptStation for web search */}
-          <SidebarPromptStation
+          <SidebarPromptStation 
             onWebSearch={handleWebSearch}
             isSearching={webSearchMutation.isPending}
-            selectedNodeId={selectedElement?.id}
+            selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
             graph={graph}
           />
         </div>
@@ -163,8 +166,11 @@ export default function Home() {
         <div className="w-96 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
           <InputPanel 
             onGenerateGraph={handleGenerateGraph}
+            onWebSearch={handleWebSearch}
             isLoading={generateMutation.isPending}
+            isSearching={webSearchMutation.isPending}
             hasExistingGraph={!!graph && graph.nodes.length > 0}
+            selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
             graph={graph}
           />
         </div>
@@ -196,12 +202,23 @@ export default function Home() {
           
           <GraphPanel 
             graph={graph}
-            isLoading={generateMutation.isPending}
+            isLoading={generateMutation.isPending || webSearchMutation.isPending}
             onElementSelect={handleElementSelect}
             onShowExportModal={() => setShowExportModal(true)}
+            onWebSearch={handleWebSearch}
           />
           
-          {/* Property panel removed - all information now shown in tooltips */}
+          {/* Property panel appears over the graph as a floating panel */}
+          {showPropertyPanel && selectedElement && (
+            <div className="absolute top-4 right-4 bg-white shadow-lg border border-gray-200 rounded-lg w-72 z-10 max-h-[80%] overflow-auto">
+              <PropertyPanel 
+                element={selectedElement}
+                onClose={() => setShowPropertyPanel(false)}
+                onWebSearch={handleWebSearch}
+                graph={graph}
+              />
+            </div>
+          )}
         </div>
       </div>
       

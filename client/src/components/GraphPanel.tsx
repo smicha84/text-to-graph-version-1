@@ -25,13 +25,15 @@ interface GraphPanelProps {
   isLoading: boolean;
   onElementSelect: (element: Node | Edge | null) => void;
   onShowExportModal: () => void;
+  onWebSearch?: (nodeId: string, query: string) => void;
 }
 
 export default function GraphPanel({ 
   graph, 
   isLoading, 
   onElementSelect,
-  onShowExportModal
+  onShowExportModal,
+  onWebSearch
 }: GraphPanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [visualizer, setVisualizer] = useState<GraphVisualizer | null>(null);
@@ -98,7 +100,8 @@ export default function GraphPanel({
             svgRef.current, 
             width, 
             height,
-            handleElementSelect
+            handleElementSelect,
+            onWebSearch
           );
           
           // Store the natural center point for reference

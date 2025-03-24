@@ -72,10 +72,24 @@ export default function InputPanel({
     }
   }, [isLoading]);
   
-  // Web search functionality has been removed
+  // Auto-generate search prompt and suggestions when a node is selected
   useEffect(() => {
-    setSearchPrompt("");
-    setSuggestedQueries([]);
+    if (selectedNodeId && graph) {
+      try {
+        const searchQuery = generateWebSearchQuery(graph, selectedNodeId);
+        setSearchPrompt(searchQuery);
+      } catch (error) {
+        const node = graph.nodes.find(n => n.id === selectedNodeId);
+        const nodeName = node ? (node.properties.name || node.label) : "this entity";
+        setSearchPrompt(`Find more information about ${nodeName} and its relationships`);
+      }
+      
+      // Generate contextual suggestions
+      setSuggestedQueries(generateSuggestions());
+    } else {
+      setSearchPrompt("");
+      setSuggestedQueries([]);
+    }
   }, [selectedNodeId, graph]);
 
   const handleOptionChange = (option: keyof GraphGenerationOptions, value: boolean | string) => {
@@ -97,7 +111,47 @@ export default function InputPanel({
     setText(randomExample);
   };
 
-  // Web search functionality has been removed
+  // Function to generate contextual search suggestions based on node type
+  const generateSuggestions = () => {
+    if (selectedNodeId && graph) {
+      const node = graph.nodes.find(n => n.id === selectedNodeId);
+      if (!node) return [];
+      
+      const suggestions: string[] = [];
+      
+      // Always suggest the node label with Wikipedia
+      suggestions.push(`${node.label} ${node.properties.name || ''} Wikipedia categories`);
+      
+      // Generate type-specific suggestions
+      if (node.type === 'Person') {
+        suggestions.push(`${node.properties.name || node.label} biography`);
+        suggestions.push(`${node.properties.name || node.label} career highlights`);
+      } else if (node.type === 'Organization' || node.type === 'Company') {
+        suggestions.push(`${node.properties.name || node.label} industry information`);
+        suggestions.push(`${node.properties.name || node.label} history and background`);
+      } else if (node.type === 'Event') {
+        suggestions.push(`${node.properties.name || node.label} details and significance`);
+        suggestions.push(`${node.properties.name || node.label} timeline`);
+      } else if (node.type === 'Concept' || node.type === 'Method') {
+        suggestions.push(`${node.properties.name || node.label} explanation and applications`);
+        suggestions.push(`${node.properties.name || node.label} related theories`);
+      } else {
+        // Generic suggestions for other node types
+        suggestions.push(`${node.properties.name || node.label} detailed information`);
+        suggestions.push(`${node.properties.name || node.label} related concepts`);
+      }
+      
+      return suggestions;
+    }
+    return [];
+  };
+
+  // Function to execute the web search
+  const executeSearch = () => {
+    if (selectedNodeId && onWebSearch && searchPrompt) {
+      onWebSearch(selectedNodeId, searchPrompt);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full w-full bg-white border-gray-200 overflow-hidden">
@@ -277,7 +331,27 @@ export default function InputPanel({
                 </div>
               )}
               
-              {/* Web search section removed */}
+              {/* Smart web search section - only shown when a node is selected */}
+              {selectedNodeId && graph && (
+                <div>
+                  <Card className="border-green-200">
+                    <CardHeader className="py-2.5">
+                      <CardTitle className="text-sm flex items-center">
+                        <InfoIcon className="h-4 w-4 mr-2 text-green-600" />
+                        Web Search Available
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="py-2 pb-3">
+                      <p className="text-xs text-gray-600 mb-2">
+                        You can search the web for more information about the selected node. Use the sidebar to run a search and expand your graph.
+                      </p>
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-300">
+                        Node Selected: {graph.nodes.find(n => n.id === selectedNodeId)?.label}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
               
               {/* Generate button at the bottom */}
               <div className="mt-auto pt-2">

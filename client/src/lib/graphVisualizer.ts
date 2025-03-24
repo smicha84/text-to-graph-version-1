@@ -8,7 +8,6 @@ interface SimulationNode extends d3.SimulationNodeDatum {
   id: string;
   label: string;
   type: string;
-  labelDetail?: string; // Label detail information (typically entity type)
   properties: Record<string, any>;
   subgraphIds?: string[]; // Array of subgraph IDs this node belongs to
   x?: number;
@@ -90,6 +89,7 @@ export class GraphVisualizer {
   private graph: Graph | null = null;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private onSelectElement: (element: Node | Edge | null) => void;
+  private onWebSearch?: (nodeId: string, query: string) => void;
   private activeSubgraphId: string | null = null;
   private customNodeColors: Record<string, string> = {};
   private customCenterPoint: CenterPoint | null = null;
@@ -108,8 +108,10 @@ export class GraphVisualizer {
     svgElement: SVGSVGElement,
     width: number,
     height: number,
-    onSelectElement: (element: Node | Edge | null) => void
+    onSelectElement: (element: Node | Edge | null) => void,
+    onWebSearch?: (nodeId: string, query: string) => void
   ) {
+    this.onWebSearch = onWebSearch;
     this.svg = d3.select(svgElement);
     this.width = width;
     this.height = height;
@@ -273,137 +275,12 @@ export class GraphVisualizer {
       this.nodeTooltip.remove();
     }
     
-    // Create tooltip div with styles
+    // Create tooltip div
     this.nodeTooltip = d3.select(document.body)
       .append("div")
       .attr("class", "node-tooltip")
       .style("opacity", 0)
-      .style("display", "none")
-      .style("position", "absolute")
-      .style("max-width", "300px")
-      .style("max-height", "400px")
-      .style("overflow-y", "auto")
-      .style("background-color", "white")
-      .style("border", "1px solid #ccc")
-      .style("border-radius", "4px")
-      .style("padding", "12px")
-      .style("box-shadow", "0 2px 8px rgba(0,0,0,0.15)")
-      .style("z-index", "1000")
-      .style("font-family", "system-ui, sans-serif")
-      .style("font-size", "12px");
-      
-    // Add CSS styles for tooltip components
-    const styleSheet = document.createElement("style");
-    styleSheet.textContent = `
-      .node-tooltip-container {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .tooltip-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .tooltip-header h4 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-        color: #111827;
-      }
-      .tooltip-type {
-        font-size: 11px;
-        font-weight: 500;
-        background-color: #e5e7eb;
-        color: #374151;
-        padding: 2px 6px;
-        border-radius: 4px;
-      }
-      .tooltip-id {
-        font-size: 11px;
-        color: #6b7280;
-      }
-      .tooltip-properties {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin-top: 4px;
-      }
-      .tooltip-properties h5 {
-        margin: 0;
-        font-size: 12px;
-        font-weight: 600;
-        color: #374151;
-        border-bottom: 1px solid #e5e7eb;
-        padding-bottom: 4px;
-      }
-      .tooltip-property-list {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-      .tooltip-property {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-      }
-      .tooltip-property-key {
-        font-weight: 500;
-        color: #4b5563;
-      }
-      .tooltip-property-value {
-        color: #1f2937;
-      }
-      .tooltip-no-properties {
-        font-style: italic;
-        color: #9ca3af;
-      }
-      
-      /* Web search section styling */
-      .tooltip-websearch {
-        margin-top: 4px;
-        border-top: 1px solid #e5e7eb;
-        padding-top: 8px;
-      }
-      .tooltip-websearch-buttons {
-        display: flex;
-        gap: 8px;
-        margin-top: 4px;
-      }
-      .tooltip-auto-search,
-      .tooltip-custom-search {
-        background-color: #2563EB;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 4px 8px;
-        font-size: 11px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        transition: background-color 0.2s;
-      }
-      .tooltip-auto-search:hover,
-      .tooltip-custom-search:hover {
-        background-color: #1D4ED8;
-      }
-      .tooltip-custom-search {
-        background-color: white;
-        color: #2563EB;
-        border: 1px solid #2563EB;
-      }
-      .tooltip-custom-search:hover {
-        background-color: #EFF6FF;
-      }
-      .tooltip-button-icon {
-        font-size: 10px;
-      }
-      .tooltip-button-text {
-        font-weight: 500;
-      }
-    `;
-    document.head.appendChild(styleSheet);
+      .style("display", "none");
   }
   
   // Show tooltip for a node
@@ -416,56 +293,24 @@ export class GraphVisualizer {
     
     // Get node name or label
     const nodeName = d.properties.name || d.label;
-    const nodeType = d.labelDetail || d.type || '';
+    const nodeType = d.type || '';
     
-    // Create HTML for properties - show all properties including custom ones
-    const propertyEntries = Object.entries(d.properties || {});
-    
-    const propertiesHTML = propertyEntries.length > 0 
-      ? `
-        <div class="tooltip-properties">
-          <h5>Properties</h5>
-          <div class="tooltip-property-list">
-            ${propertyEntries.map(([key, value]) => `
-              <div class="tooltip-property">
-                <span class="tooltip-property-key">${key}:</span>
-                <span class="tooltip-property-value">${typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `
-      : '<div class="tooltip-no-properties">No custom properties</div>';
-    
-    // Web search functionality has been removed
-    const webSearchHTML = '';
-    
-    // Create tooltip content with detailed information and web search
+    // Create tooltip content - simplified without web search button
     this.nodeTooltip
       .html(`
-        <div class="node-tooltip-container">
-          <div class="tooltip-header">
-            <h4>${nodeName}</h4>
-            <div class="tooltip-type">${nodeType}</div>
-          </div>
-          <div class="tooltip-id">ID: ${d.id}</div>
-          ${propertiesHTML}
-          ${webSearchHTML}
+        <h4>${nodeName}</h4>
+        <div class="node-tooltip-content">
+          ${nodeType ? `<div><strong>Type:</strong> ${nodeType}</div>` : ''}
         </div>
       `)
       .style("left", `${x}px`)
       .style("top", `${y}px`)
       .style("display", "block")
       .style("opacity", 0)
-      .style("pointer-events", "auto") // Enable pointer events for buttons
       .transition()
       .duration(200)
       .style("opacity", 1);
-    
-    // Web search functionality has been removed
   }
-  
-  // Web search functionality has been removed
   
   // Hide node tooltip
   private hideNodeTooltip(): void {
@@ -763,17 +608,30 @@ export class GraphVisualizer {
         return this.customNodeColors[d.type] || NODE_COLORS[d.type] || NODE_COLORS.default;
       })
       .attr("stroke", (d: SimulationNode) => {
-        // Add a border to the first node to indicate it's anchored
+        // If the node has a web search source, add a distinctive border
+        if (d.properties.source === "web search result") {
+          return "#2563EB"; // Blue border for web search results
+        }
+        
+        // Otherwise, add a border to the first node to indicate it's anchored
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "#000" : null;
       })
       .attr("stroke-width", (d: SimulationNode) => {
-        // Only the anchor node gets borders
+        // Web search results and the anchor node get borders
+        if (d.properties.source === "web search result") {
+          return 3;
+        }
+        
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? 2 : 0;
       })
       .attr("stroke-dasharray", (d: SimulationNode) => {
         // Different dash patterns for different node types
+        if (d.properties.source === "web search result") {
+          return "5,2"; // Distinctive dash pattern for web search results
+        }
+        
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "3,3" : null;
       })
@@ -783,7 +641,31 @@ export class GraphVisualizer {
         return nodeIndex === 0 ? "default" : "grab";
       })
     
-    // Web search badges have been removed
+    // Add web search indicator badge for search results
+    nodes.append("circle")
+      .attr("r", 6)
+      .attr("cx", 18)
+      .attr("cy", -18)
+      .attr("fill", "#2563EB") // Blue badge for web search results
+      .attr("stroke", "#FFF")
+      .attr("stroke-width", 1.5)
+      .style("display", (d: SimulationNode) => 
+        d.properties.source === "web search result" ? "block" : "none"
+      );
+      
+    // Add globe icon in the badge for web search results
+    nodes.append("text")
+      .attr("x", 18)
+      .attr("y", -18)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central")
+      .attr("fill", "white")
+      .attr("font-size", "6px")
+      .attr("font-weight", "bold")
+      .text((d: SimulationNode) => d.properties.source === "web search result" ? "W" : "")
+      .style("display", (d: SimulationNode) => 
+        d.properties.source === "web search result" ? "block" : "none"
+      );
     
     // Node labels (name property inside circle)
     nodes.append("text")
@@ -1337,7 +1219,43 @@ export class GraphVisualizer {
       .transition().duration(300)
       .attr("opacity", 0.2);
     
-    // Web search subgraph functionality has been removed
+    // Check if this is a web search subgraph by looking at the ID
+    const isWebSearchSubgraph = subgraphId.startsWith('webSearch_');
+    
+    // For web search subgraphs, find and highlight the source node
+    // (typically the node that initiated the web search)
+    if (isWebSearchSubgraph) {
+      // First, find nodes that have a property indicating they were the source of this web search
+      // This is more reliable than trying to guess based on graph structure
+      this.container.selectAll(".node")
+        .filter((d: any) => {
+          // Check for web search specific properties that would indicate this is a source node
+          if (d.properties && d.properties.source_node_id) {
+            return true;
+          }
+          
+          // Also check for position in the graph (root nodes are typically first)
+          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+          return nodeIndex === 0; // First node is often the root/source
+        })
+        .selectAll("circle")
+        .transition().duration(300)
+        .attr("opacity", 1.0)
+        .attr("stroke", "#EF4444") // red-500 for the source node
+        .attr("stroke-width", 4);
+        
+      this.container.selectAll(".node")
+        .filter((d: any) => {
+          if (d.properties && d.properties.source_node_id) {
+            return true;
+          }
+          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+          return nodeIndex === 0;
+        })
+        .selectAll("text")
+        .transition().duration(300)
+        .attr("opacity", 1.0);
+    }
     
     // Then highlight all elements that belong to the selected subgraph
     this.container.selectAll(".node")
