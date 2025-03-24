@@ -1263,7 +1263,7 @@ export class GraphVisualizer {
           return nodeIndex === 0 ? "#000" : null;
         });
         
-      this.container.selectAll(".edge line")
+      this.container.selectAll(".edge path")
         .transition().duration(300)
         .attr("opacity", 1.0)
         .attr("stroke-width", 1.5)
@@ -1296,7 +1296,7 @@ export class GraphVisualizer {
         return nodeIndex === 0 ? "#000" : null;
       });
       
-    this.container.selectAll(".edge line")
+    this.container.selectAll(".edge path")
       .transition().duration(300)
       .attr("opacity", 0.2)
       .attr("stroke-width", 1)
@@ -1361,7 +1361,7 @@ export class GraphVisualizer {
       
     this.container.selectAll(".edge")
       .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
-      .selectAll("line")
+      .selectAll("path")
       .transition().duration(300)
       .attr("opacity", 1.0)
       .attr("stroke-width", 2.5)
