@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Activity } from "lucide-react";
 
 interface ApiLog {
   id: number;
@@ -34,6 +36,11 @@ interface LogsResponse {
 export default function LogsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [operation, setOperation] = useState<string | undefined>(undefined);
+  const [liveMode, setLiveMode] = useState(false);
+  const [newLogIds, setNewLogIds] = useState<number[]>([]);
+  const [sessionLogCount, setSessionLogCount] = useState(0);
+  const previousLogsRef = useRef<number[]>([]);
+  const refreshIntervalRef = useRef<number | null>(null);
   const { toast } = useToast();
   
   // Query to fetch API logs
@@ -52,8 +59,71 @@ export default function LogsPage() {
         throw new Error('Failed to fetch API logs');
       }
       return response.json();
-    }
+    },
+    refetchInterval: liveMode ? 2000 : false, // Refetch every 2 seconds in live mode
   });
+  
+  // Handle live mode toggle
+  useEffect(() => {
+    if (liveMode) {
+      // Always show the first page in live mode to see the newest logs
+      setCurrentPage(1);
+      
+      // Reset the new logs tracking
+      setNewLogIds([]);
+      previousLogsRef.current = [];
+      
+      // Show a toast notification when live mode is activated
+      toast({
+        title: "Live Mode Activated",
+        description: "Automatically refreshing logs every 2 seconds",
+      });
+    }
+  }, [liveMode, toast]);
+  
+  // Track new logs in live mode
+  useEffect(() => {
+    if (!data || !liveMode) return;
+    
+    const currentLogIds = data.data.map(log => log.id);
+    
+    // If this is our first load in live mode, just record the IDs
+    if (previousLogsRef.current.length === 0) {
+      previousLogsRef.current = currentLogIds;
+      return;
+    }
+    
+    // Find logs that are new since the last update
+    const newIds = currentLogIds.filter(id => !previousLogsRef.current.includes(id));
+    
+    if (newIds.length > 0) {
+      // Play a subtle sound when new logs are received
+      if (newIds.length === 1) {
+        toast({
+          title: "New Log Received",
+          description: `${newIds.length} new log entry detected`,
+          variant: "default",
+        });
+      } else if (newIds.length > 1) {
+        toast({
+          title: "New Logs Received",
+          description: `${newIds.length} new log entries detected`,
+          variant: "default",
+        });
+      }
+      
+      // Update the new logs array - keep existing new logs highlighted for a while
+      setNewLogIds(prev => [...prev, ...newIds]);
+      
+      // Remove the highlight after 5 seconds
+      setTimeout(() => {
+        setNewLogIds(prev => prev.filter(id => !newIds.includes(id)));
+      }, 5000);
+    }
+    
+    // Update the previous logs for the next comparison
+    previousLogsRef.current = currentLogIds;
+  }, [data, liveMode, toast]);
   
   // Effect to reset to page 1 when operation filter changes
   useEffect(() => {
@@ -93,9 +163,25 @@ export default function LogsPage() {
           <h1 className="text-3xl font-bold">API Logs</h1>
           
           <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="live-mode" 
+                checked={liveMode}
+                onCheckedChange={setLiveMode}
+              />
+              <label
+                htmlFor="live-mode"
+                className="flex items-center text-sm font-medium gap-1 cursor-pointer"
+              >
+                <Activity size={16} className={liveMode ? "text-green-500 animate-pulse" : "text-gray-500"} />
+                Live Mode
+              </label>
+            </div>
+            
             <Select 
               value={operation || "all"} 
               onValueChange={(value) => setOperation(value === "all" ? undefined : value)}
+              disabled={liveMode}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by operation" />
@@ -107,7 +193,12 @@ export default function LogsPage() {
               </SelectContent>
             </Select>
             
-            <Button onClick={() => refetch()}>Refresh</Button>
+            <Button 
+              onClick={() => refetch()}
+              disabled={liveMode}
+            >
+              Refresh
+            </Button>
           </div>
         </div>
         
@@ -126,12 +217,24 @@ export default function LogsPage() {
         ) : (
           <>
             {data?.data.map((log) => (
-              <Card key={log.id} className="mb-6">
+              <Card 
+                key={log.id} 
+                className={`mb-6 transition-all duration-300 ${
+                  newLogIds.includes(log.id) 
+                    ? 'border-green-500 shadow-lg shadow-green-100 animate-pulse' 
+                    : ''
+                }`}
+              >
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>
+                      <CardTitle className="flex items-center gap-2">
                         {log.operation} - {log.type}
+                        {newLogIds.includes(log.id) && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            NEW
+                          </span>
+                        )}
                       </CardTitle>
                       <CardDescription>
                         {formatTimestamp(log.timestamp)} • 
@@ -175,8 +278,8 @@ export default function LogsPage() {
               </Card>
             ))}
             
-            {/* Pagination */}
-            {data && data.pagination.totalPages > 1 && (
+            {/* Pagination - hidden in live mode */}
+            {data && data.pagination.totalPages > 1 && !liveMode && (
               <div className="flex justify-center items-center gap-2 mt-6">
                 <Button 
                   variant="outline" 
@@ -197,6 +300,16 @@ export default function LogsPage() {
                 >
                   Next
                 </Button>
+              </div>
+            )}
+            
+            {/* Live mode indicator */}
+            {liveMode && (
+              <div className="flex justify-center items-center mt-6">
+                <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-md">
+                  <Activity size={16} className="animate-pulse" />
+                  <span>Live Mode Active - Automatically refreshing every 2 seconds</span>
+                </div>
               </div>
             )}
           </>
