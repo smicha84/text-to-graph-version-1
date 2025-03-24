@@ -52,11 +52,14 @@ export default function NodeAnatomyChart() {
                   W
                 </text>
                 
-                {/* Node label (name property as white text) */}
+                {/* Node label (name property as white text with black outline) */}
                 <text
                   textAnchor="middle"
                   dy=".3em"
                   fill="white"
+                  stroke="black"
+                  strokeWidth="0.5px"
+                  paintOrder="stroke"
                   fontWeight="bold"
                   fontSize="14px"
                 >
@@ -215,11 +218,11 @@ export default function NodeAnatomyChart() {
               
               <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
                 <h4 className="font-medium flex items-center text-sm mb-1">
-                  <span className="mr-2 text-white font-bold">Aa</span>
+                  <span className="mr-2 text-white font-bold" style={{ textShadow: '0px 0px 1px black' }}>Aa</span>
                   Node Label
                 </h4>
                 <p className="text-xs text-gray-600">
-                  White bold text inside the node shows the entity name from its properties.
+                  White bold text with black outline centered on the node shows the entity name.
                 </p>
               </div>
               

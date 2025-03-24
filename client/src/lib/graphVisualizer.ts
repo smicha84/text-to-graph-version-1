@@ -672,6 +672,9 @@ export class GraphVisualizer {
       .attr("text-anchor", "middle")
       .attr("dy", ".3em")
       .attr("fill", "white")
+      .attr("stroke", "black")
+      .attr("stroke-width", "0.5px")
+      .attr("paint-order", "stroke")
       .attr("font-weight", "bold")
       .attr("font-size", "12px")
       .text((d: SimulationNode) => d.properties.name || d.label);
