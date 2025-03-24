@@ -237,7 +237,7 @@ export default function ActivityTracker({
               </div>
               
               <div className="p-3 bg-white">
-                <div className="flex flex-col gap-3 bg-gray-50 p-3 rounded border border-gray-100">
+                <div className="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded border border-gray-100">
                   <div className="flex items-center">
                     <span className="text-sm text-gray-700 w-24 flex-shrink-0">Model:</span>
                     <span className="text-sm font-medium text-gray-900 truncate">
