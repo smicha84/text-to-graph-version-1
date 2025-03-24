@@ -300,13 +300,6 @@ export default function InputPanel({
               </div>
             </div>
             
-            {/* Activity Tracker - shows text-to-graph process and LLM vs Algo toggles */}
-            <ActivityTracker 
-              options={options} 
-              onOptionsChange={setOptions} 
-              isProcessing={isLoading}
-            />
-            
             <Button
               onClick={handleGenerateClick}
               disabled={isLoading || !text.trim()}
@@ -324,10 +317,17 @@ export default function InputPanel({
                 </>
               )}
             </Button>
+            
+            {/* Activity Tracker - shows text-to-graph process and LLM vs Algo toggles */}
+            <ActivityTracker 
+              options={options} 
+              onOptionsChange={setOptions} 
+              isProcessing={isLoading}
+            />
           </div>
         </div>
       ) : (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-auto">
           <div className="p-3 flex flex-col space-y-3">
             <div className="text-xs text-gray-500 truncate max-w-full">
               {text ? text.substring(0, 80) + (text.length > 80 ? "..." : "") : "Enter text to generate a graph..."}
@@ -350,6 +350,15 @@ export default function InputPanel({
                 </>
               )}
             </Button>
+            
+            {/* Activity Tracker visible in compact view too */}
+            <div className="mt-2">
+              <ActivityTracker 
+                options={options} 
+                onOptionsChange={setOptions} 
+                isProcessing={isLoading}
+              />
+            </div>
           </div>
         </div>
       )}
