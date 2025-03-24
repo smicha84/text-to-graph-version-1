@@ -275,12 +275,93 @@ export class GraphVisualizer {
       this.nodeTooltip.remove();
     }
     
-    // Create tooltip div
+    // Create tooltip div with styles
     this.nodeTooltip = d3.select(document.body)
       .append("div")
       .attr("class", "node-tooltip")
       .style("opacity", 0)
-      .style("display", "none");
+      .style("display", "none")
+      .style("position", "absolute")
+      .style("max-width", "300px")
+      .style("max-height", "400px")
+      .style("overflow-y", "auto")
+      .style("background-color", "white")
+      .style("border", "1px solid #ccc")
+      .style("border-radius", "4px")
+      .style("padding", "12px")
+      .style("box-shadow", "0 2px 8px rgba(0,0,0,0.15)")
+      .style("z-index", "1000")
+      .style("font-family", "system-ui, sans-serif")
+      .style("font-size", "12px");
+      
+    // Add CSS styles for tooltip components
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = `
+      .node-tooltip-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .tooltip-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .tooltip-header h4 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+      }
+      .tooltip-type {
+        font-size: 11px;
+        font-weight: 500;
+        background-color: #e5e7eb;
+        color: #374151;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .tooltip-id {
+        font-size: 11px;
+        color: #6b7280;
+      }
+      .tooltip-properties {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .tooltip-properties h5 {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 4px;
+      }
+      .tooltip-property-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .tooltip-property {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .tooltip-property-key {
+        font-weight: 500;
+        color: #4b5563;
+      }
+      .tooltip-property-value {
+        color: #1f2937;
+      }
+      .tooltip-no-properties {
+        font-style: italic;
+        color: #9ca3af;
+      }
+    `;
+    document.head.appendChild(styleSheet);
   }
   
   // Show tooltip for a node
@@ -295,18 +376,44 @@ export class GraphVisualizer {
     const nodeName = d.properties.name || d.label;
     const nodeType = d.type || '';
     
-    // Create tooltip content - simplified without web search button
+    // Create HTML for properties
+    const propertyEntries = Object.entries(d.properties).filter(([key]) => 
+      key !== 'name' && key !== 'id'
+    );
+    
+    const propertiesHTML = propertyEntries.length > 0 
+      ? `
+        <div class="tooltip-properties">
+          <h5>Properties</h5>
+          <div class="tooltip-property-list">
+            ${propertyEntries.map(([key, value]) => `
+              <div class="tooltip-property">
+                <span class="tooltip-property-key">${key}:</span>
+                <span class="tooltip-property-value">${typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `
+      : '<div class="tooltip-no-properties">No custom properties</div>';
+    
+    // Create tooltip content with detailed information
     this.nodeTooltip
       .html(`
-        <h4>${nodeName}</h4>
-        <div class="node-tooltip-content">
-          ${nodeType ? `<div><strong>Type:</strong> ${nodeType}</div>` : ''}
+        <div class="node-tooltip-container">
+          <div class="tooltip-header">
+            <h4>${nodeName}</h4>
+            <div class="tooltip-type">${nodeType}</div>
+          </div>
+          <div class="tooltip-id">ID: ${d.id}</div>
+          ${propertiesHTML}
         </div>
       `)
       .style("left", `${x}px`)
       .style("top", `${y}px`)
       .style("display", "block")
       .style("opacity", 0)
+      .style("pointer-events", "none") // Allow mouse events to pass through
       .transition()
       .duration(200)
       .style("opacity", 1);
