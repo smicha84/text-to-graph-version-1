@@ -295,12 +295,27 @@ export class GraphVisualizer {
     const nodeName = d.properties.name || d.label;
     const nodeType = d.type || '';
     
-    // Create tooltip content - simplified without web search button
+    // Only add web search buttons for nodes, not edges
+    const webSearchButtons = this.onWebSearch ? `
+      <div style="margin-top: 10px;">
+        <button class="web-search-btn" data-node-id="${d.id}" data-query-type="auto">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          Smart Search
+        </button>
+        <button class="web-search-btn" style="margin-top: 4px;" data-node-id="${d.id}" data-query-type="simple">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          Basic Search
+        </button>
+      </div>
+    ` : '';
+    
+    // Create tooltip content with web search buttons
     this.nodeTooltip
       .html(`
         <h4>${nodeName}</h4>
         <div class="node-tooltip-content">
           ${nodeType ? `<div><strong>Type:</strong> ${nodeType}</div>` : ''}
+          ${webSearchButtons}
         </div>
       `)
       .style("left", `${x}px`)
@@ -310,6 +325,54 @@ export class GraphVisualizer {
       .transition()
       .duration(200)
       .style("opacity", 1);
+      
+    // Add event listeners to web search buttons
+    if (this.onWebSearch) {
+      const autoSearchBtn = this.nodeTooltip.select('button[data-query-type="auto"]').node();
+      const simpleSearchBtn = this.nodeTooltip.select('button[data-query-type="simple"]').node();
+      
+      if (autoSearchBtn) {
+        autoSearchBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          try {
+            // Use the graph context to generate a smart search query
+            const autoQuery = this.graph 
+              ? this.generateSearchQuery(d.id)
+              : d.label + " " + d.type;
+            this.onWebSearch!(d.id, autoQuery);
+            this.hideNodeTooltip(); // Hide tooltip after clicking
+          } catch (error) {
+            console.error("Error in auto web search:", error);
+            // Fallback to simple search
+            this.onWebSearch!(d.id, d.label + " " + d.type);
+            this.hideNodeTooltip();
+          }
+        });
+      }
+      
+      if (simpleSearchBtn) {
+        simpleSearchBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.onWebSearch!(d.id, d.label + " " + d.type);
+          this.hideNodeTooltip(); // Hide tooltip after clicking
+        });
+      }
+    }
+  }
+  
+  // Helper method to generate search query
+  private generateSearchQuery(nodeId: string): string {
+    if (!this.graph) return "";
+    try {
+      // Import the utility function
+      const { generateWebSearchQuery } = require('./webSearchUtils');
+      return generateWebSearchQuery(this.graph, nodeId);
+    } catch (error) {
+      console.error("Error generating search query:", error);
+      // Get the node from the graph
+      const node = this.graph.nodes.find(n => n.id === nodeId);
+      return node ? `${node.label} ${node.type}` : "";
+    }
   }
   
   // Hide node tooltip
