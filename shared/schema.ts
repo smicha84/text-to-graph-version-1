@@ -40,7 +40,6 @@ export const graphOptionsSchema = z.object({
   mergeEntities: z.boolean().default(true),
   model: z.literal("claude").default("claude"),
   appendMode: z.boolean().optional().default(false), // Whether to append to existing graph
-  useFallbackExtraction: z.boolean().optional().default(true), // Whether to use fallback extraction methods or fail with error
 });
 
 // API Input Schema

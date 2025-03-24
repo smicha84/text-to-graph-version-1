@@ -207,104 +207,24 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     if (!match) {
       console.error('Could not find valid graph JSON in Claude response');
       
-      // Check if we should use fallback extraction or just fail immediately
-      if (!options.useFallbackExtraction) {
-        // User has opted not to use fallback extraction
-        statusCode = 422; // Unprocessable Entity
-        const processingTimeMs = Date.now() - startTime;
-        
-        // Log the error
-        await logApiInteraction(
-          'error',
-          'generate_graph',
-          requestData,
-          { 
-            error: 'Could not find valid graph JSON in Claude response',
-            method: 'primary_extraction_failed_no_fallback'
-          },
-          statusCode,
-          processingTimeMs
-        );
-        
-        throw new Error('Could not find valid graph JSON in Claude response. Fallback extraction is disabled.');
-      }
+      // No fallback - fail immediately
+      statusCode = 422; // Unprocessable Entity
+      const processingTimeMs = Date.now() - startTime;
       
-      // Fallback to simple extraction
-      const jsonStart = contentText.indexOf('{');
-      const jsonEnd = contentText.lastIndexOf('}') + 1;
+      // Log the error
+      await logApiInteraction(
+        'error',
+        'generate_graph',
+        requestData,
+        { 
+          error: 'Could not find valid graph JSON in Claude response',
+          method: 'json_extraction_failed'
+        },
+        statusCode,
+        processingTimeMs
+      );
       
-      if (jsonStart === -1 || jsonEnd === -1) {
-        throw new Error('Could not extract any JSON object from Claude response');
-      }
-      
-      const jsonResponse = contentText.substring(jsonStart, jsonEnd);
-      console.log('Attempting to parse extracted JSON with traditional method');
-      
-      try {
-        // Create a default structure in case parsing fails
-        const graphData: Graph = {
-          nodes: [],
-          edges: [],
-          subgraphCounter: 1
-        };
-        
-        // Try to parse, but continue with empty graph if it fails
-        try {
-          Object.assign(graphData, JSON.parse(jsonResponse));
-        } catch (parseError) {
-          console.error('Error with fallback JSON parsing, using empty graph:', parseError);
-        }
-        
-        // Process the graph data
-        processGraphData(graphData, text);
-        
-        // Calculate processing time
-        const processingTimeMs = Date.now() - startTime;
-        
-        // Log the fallback success response
-        const responseData = {
-          nodeCount: graphData.nodes.length,
-          edgeCount: graphData.edges.length,
-          method: 'fallback_extraction',
-          completion_tokens: response.usage?.output_tokens || 0,
-          prompt_tokens: response.usage?.input_tokens || 0,
-          model: CLAUDE_MODEL
-        };
-        
-        await logApiInteraction(
-          'response',
-          'generate_graph',
-          requestData,
-          responseData,
-          statusCode,
-          processingTimeMs
-        );
-        
-        return graphData;
-      } catch (finalError) {
-        console.error('All JSON extraction methods failed:', finalError);
-        
-        // Update status code for extraction error
-        statusCode = 422; // Unprocessable Entity
-        
-        // Calculate processing time
-        const processingTimeMs = Date.now() - startTime;
-        
-        // Log the extraction error
-        await logApiInteraction(
-          'error',
-          'generate_graph',
-          requestData,
-          { 
-            error: finalError instanceof Error ? finalError.message : String(finalError),
-            method: 'fallback_extraction_failed'
-          },
-          statusCode,
-          processingTimeMs
-        );
-        
-        throw new Error('Failed to extract any usable graph data from Claude response');
-      }
+      throw new Error('Could not find valid graph JSON in Claude response. Please try with a different text or prompt.');
     }
     
     // We found a match with the regex
