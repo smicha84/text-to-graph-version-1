@@ -4,6 +4,7 @@ import InputPanel from "@/components/InputPanel";
 import GraphPanel from "@/components/GraphPanel";
 import PropertyPanel from "@/components/PropertyPanel";
 import ExportModal from "@/components/ExportModal";
+import SidebarPromptStation from "@/components/SidebarPromptStation";
 import { Graph, Node, Edge, GraphGenerationOptions, ExportOptions, WebSearchOptions } from "@/types/graph";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -151,6 +152,16 @@ export default function Home() {
       <Header />
       
       <div className="flex flex-1 overflow-hidden">
+        {/* Left sidebar with always-visible prompt station */}
+        <div className="w-64 bg-white border-r border-gray-200 flex-shrink-0">
+          <SidebarPromptStation 
+            onWebSearch={handleWebSearch}
+            isSearching={webSearchMutation.isPending}
+            selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
+            graph={graph}
+          />
+        </div>
+        
         <InputPanel 
           onGenerateGraph={handleGenerateGraph}
           onWebSearch={handleWebSearch}
