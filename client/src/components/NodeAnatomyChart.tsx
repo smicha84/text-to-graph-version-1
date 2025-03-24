@@ -52,23 +52,13 @@ export default function NodeAnatomyChart() {
                   W
                 </text>
                 
-                {/* Internal label (white text) */}
+                {/* Node label (name property as white text) */}
                 <text
                   textAnchor="middle"
                   dy=".3em"
                   fill="white"
                   fontWeight="bold"
                   fontSize="14px"
-                >
-                  Person
-                </text>
-                
-                {/* External label (below node) */}
-                <text
-                  textAnchor="middle"
-                  dy="70px"
-                  fill="#1F2937"
-                  fontSize="12px"
                 >
                   John Smith
                 </text>
@@ -226,20 +216,10 @@ export default function NodeAnatomyChart() {
               <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
                 <h4 className="font-medium flex items-center text-sm mb-1">
                   <span className="mr-2 text-white font-bold">Aa</span>
-                  Internal Label
+                  Node Label
                 </h4>
                 <p className="text-xs text-gray-600">
-                  White text inside the node shows the entity type (Person, Location, etc.).
-                </p>
-              </div>
-              
-              <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
-                <h4 className="font-medium flex items-center text-sm mb-1">
-                  <span className="mr-2 text-black">Aa</span>
-                  External Label
-                </h4>
-                <p className="text-xs text-gray-600">
-                  Black text below the node shows the entity name from its properties.
+                  White bold text inside the node shows the entity name from its properties.
                 </p>
               </div>
               

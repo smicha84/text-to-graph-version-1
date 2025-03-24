@@ -667,22 +667,14 @@ export class GraphVisualizer {
         d.properties.source === "web search result" ? "block" : "none"
       );
     
-    // Node labels (inside circle)
+    // Node labels (name property inside circle)
     nodes.append("text")
       .attr("text-anchor", "middle")
       .attr("dy", ".3em")
       .attr("fill", "white")
       .attr("font-weight", "bold")
       .attr("font-size", "12px")
-      .text((d: SimulationNode) => d.label);
-    
-    // Node names (below circle)
-    nodes.append("text")
-      .attr("text-anchor", "middle")
-      .attr("dy", "35px")
-      .attr("fill", "#1F2937") // gray-800
-      .attr("font-size", "11px")
-      .text((d: SimulationNode) => d.properties.name || "");
+      .text((d: SimulationNode) => d.properties.name || d.label);
     
     // Create force simulation with layout settings
     this.simulation = d3.forceSimulation<SimulationNode, SimulationLink>(nodeData)
