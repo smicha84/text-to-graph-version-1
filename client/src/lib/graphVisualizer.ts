@@ -89,7 +89,6 @@ export class GraphVisualizer {
   private graph: Graph | null = null;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private onSelectElement: (element: Node | Edge | null) => void;
-  private onWebSearch?: (nodeId: string, query: string) => void;
   private activeSubgraphId: string | null = null;
   private customNodeColors: Record<string, string> = {};
   private customCenterPoint: CenterPoint | null = null;
