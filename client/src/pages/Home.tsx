@@ -151,7 +151,7 @@ export default function Home() {
         {/* Left sidebar with always-visible prompt station - fixed width, non-resizable */}
         <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col">
           {/* Sidebar content goes here - SidebarPromptStation removed */}
-          <div className="flex-1 flex items-center justify-center p-6">
+          <div className="p-6 h-40 flex items-center justify-center">
             <div className="text-center text-gray-500">
               <h3 className="text-lg font-medium mb-2">Web Search Disabled</h3>
               <p className="text-sm">Web search functionality has been removed from this area.</p>
