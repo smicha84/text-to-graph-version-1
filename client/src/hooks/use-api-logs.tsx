@@ -52,7 +52,7 @@ export function useRecentApiLogs(operation: string, limit: number = 5, enabled: 
  * Hook to track API operation status
  */
 export function useApiOperationStatus(operation: string) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'complete' | 'error'>('idle');
+  const [status, setStatus] = useState<string>('idle');
   const [metrics, setMetrics] = useState({
     promptTokens: 0,
     completionTokens: 0,
