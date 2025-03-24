@@ -1,16 +1,19 @@
 import { Node, Edge } from "@/types/graph";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { XIcon, GlobeIcon } from "lucide-react";
+import { XIcon, GlobeIcon, SearchIcon, ZapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { generateWebSearchQuery } from "@/lib/webSearchUtils";
+import { Graph } from "@/types/graph";
 
 interface PropertyPanelProps {
   element: Node | Edge | null;
   onClose: () => void;
   onWebSearch?: (nodeId: string, query: string) => void;
+  graph?: Graph | null; // Added graph prop to generate smart queries
 }
 
-export default function PropertyPanel({ element, onClose, onWebSearch }: PropertyPanelProps) {
+export default function PropertyPanel({ element, onClose, onWebSearch, graph }: PropertyPanelProps) {
   if (!element) return null;
   
   const isNode = 'type' in element;
@@ -22,11 +25,27 @@ export default function PropertyPanel({ element, onClose, onWebSearch }: Propert
   const properties = element.properties || {};
   const propertyEntries = Object.entries(properties);
   
-  // Function to handle web search button click
-  const handleWebSearch = () => {
+  // Function to handle custom web search button click
+  const handleCustomWebSearch = () => {
     if (isNode && onWebSearch) {
-      // This will trigger the prompt station in the sidebar
+      // This will trigger the prompt station in the sidebar with a simple query
       onWebSearch(element.id, element.label + " " + element.type);
+    }
+  };
+  
+  // Function to handle auto-generated web search button click
+  const handleAutoWebSearch = () => {
+    if (isNode && onWebSearch && graph) {
+      try {
+        // Generate a sophisticated search query using node context
+        const autoQuery = generateWebSearchQuery(graph, element.id);
+        // Execute the search immediately
+        onWebSearch(element.id, autoQuery);
+      } catch (error) {
+        console.error("Error generating auto search query:", error);
+        // Fall back to simple search if generation fails
+        onWebSearch(element.id, element.label + " " + element.type);
+      }
     }
   };
   
@@ -69,17 +88,29 @@ export default function PropertyPanel({ element, onClose, onWebSearch }: Propert
             </>
           )}
           
-          {/* Web Search Button - only for nodes, not edges */}
+          {/* Web Search Buttons - only for nodes, not edges */}
           {isNode && onWebSearch && (
-            <div className="mt-3">
+            <div className="mt-3 space-y-2">
+              {/* Auto Web Search Button */}
+              <Button 
+                size="sm" 
+                variant="default" 
+                className="w-full flex items-center justify-center gap-2 text-sm"
+                onClick={handleAutoWebSearch}
+              >
+                <ZapIcon size={14} />
+                Auto Web Search
+              </Button>
+              
+              {/* Custom Web Search Button */}
               <Button 
                 size="sm" 
                 variant="outline" 
                 className="w-full flex items-center justify-center gap-2 text-sm"
-                onClick={handleWebSearch}
+                onClick={handleCustomWebSearch}
               >
-                <GlobeIcon size={14} />
-                Web Search
+                <SearchIcon size={14} />
+                Custom Web Search
               </Button>
             </div>
           )}

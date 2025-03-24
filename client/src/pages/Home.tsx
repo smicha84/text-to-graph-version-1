@@ -187,6 +187,7 @@ export default function Home() {
                 element={selectedElement}
                 onClose={() => setShowPropertyPanel(false)}
                 onWebSearch={handleWebSearch}
+                graph={graph}
               />
             </div>
           )}
