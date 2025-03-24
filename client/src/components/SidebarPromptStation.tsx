@@ -23,106 +23,13 @@ export default function SidebarPromptStation({
   selectedNodeId,
   graph
 }: SidebarPromptStationProps) {
-  const [searchPrompt, setSearchPrompt] = useState("");
-  const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
+  // Web search functionality has been removed
   const [activeTab, setActiveTab] = useState("search");
   
-  // Search history to show recently used prompts
-  const [searchHistory, setSearchHistory] = useState<{nodeId: string, query: string, timestamp: Date}[]>([]);
-  
-  // Use the API logs hook to track web search operations
-  const { 
-    status, 
-    metrics, 
-    lastActivity 
-  } = useApiOperationStatus('web_search');
-
-  // Update suggestions when selected node changes
-  useEffect(() => {
-    if (selectedNodeId && graph) {
-      // Generate a default search query based on the selected node
-      const defaultQuery = generateWebSearchQuery(graph, selectedNodeId);
-      setSearchPrompt(defaultQuery);
-      
-      // Generate suggested queries based on node type and connections
-      const selectedNode = graph.nodes.find(node => node.id === selectedNodeId);
-      if (selectedNode) {
-        const nodeType = selectedNode.type.toLowerCase();
-        const nodeLabel = selectedNode.label;
-        
-        // Create contextual suggestions based on node type
-        const suggestions: string[] = [];
-        
-        if (nodeType.includes('person')) {
-          suggestions.push(`${nodeLabel} biography`);
-          suggestions.push(`${nodeLabel} career achievements`);
-          suggestions.push(`${nodeLabel} relationships`);
-        } else if (nodeType.includes('organization') || nodeType.includes('company')) {
-          suggestions.push(`${nodeLabel} history`);
-          suggestions.push(`${nodeLabel} products or services`);
-          suggestions.push(`${nodeLabel} key people`);
-        } else if (nodeType.includes('location') || nodeType.includes('place')) {
-          suggestions.push(`${nodeLabel} geography`);
-          suggestions.push(`Important landmarks in ${nodeLabel}`);
-          suggestions.push(`${nodeLabel} historical significance`);
-        } else if (nodeType.includes('event')) {
-          suggestions.push(`${nodeLabel} timeline`);
-          suggestions.push(`Key participants in ${nodeLabel}`);
-          suggestions.push(`Impact of ${nodeLabel}`);
-        } else if (nodeType.includes('concept') || nodeType.includes('idea')) {
-          suggestions.push(`${nodeLabel} definition`);
-          suggestions.push(`${nodeLabel} applications`);
-          suggestions.push(`History of ${nodeLabel}`);
-        } else {
-          // Generic suggestions
-          suggestions.push(`${nodeLabel} detailed information`);
-          suggestions.push(`${nodeLabel} key characteristics`);
-          suggestions.push(`${nodeLabel} related topics`);
-        }
-        
-        // Always add Wikipedia category search as a suggestion
-        suggestions.push(`Wikipedia categories for ${nodeLabel}`);
-        
-        setSuggestedQueries(suggestions);
-      } else {
-        setSuggestedQueries([]);
-      }
-    } else {
-      // Don't clear the search prompt if no node is selected - allow free-form search
-      // setSearchPrompt("");
-      setSuggestedQueries([]);
-    }
-  }, [selectedNodeId, graph]);
-
-  const handleSearch = () => {
-    if (selectedNodeId && searchPrompt.trim()) {
-      // Add to search history
-      setSearchHistory(prev => [
-        { nodeId: selectedNodeId, query: searchPrompt.trim(), timestamp: new Date() },
-        ...prev.slice(0, 9) // Keep only the 10 most recent searches
-      ]);
-      
-      // Switch to live view tab to show progress
-      setActiveTab("live");
-      
-      // Execute the search
-      onWebSearch(selectedNodeId, searchPrompt.trim());
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSearch();
-    }
-  };
-  
-  // Format timestamp for display
-  const formatTimestamp = (timestamp: string) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString();
-  };
+  // Basic placeholder states to maintain component structure
+  const status = 'idle';
+  const metrics = { model: '', promptTokens: 0, completionTokens: 0, totalTokens: 0, processingTimeMs: 0 };
+  const lastActivity = null;
 
   return (
     <div className="h-full flex flex-col">

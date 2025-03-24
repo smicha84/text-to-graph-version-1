@@ -782,31 +782,7 @@ export class GraphVisualizer {
         return nodeIndex === 0 ? "default" : "grab";
       })
     
-    // Add web search indicator badge for search results
-    nodes.append("circle")
-      .attr("r", 6)
-      .attr("cx", 18)
-      .attr("cy", -18)
-      .attr("fill", "#2563EB") // Blue badge for web search results
-      .attr("stroke", "#FFF")
-      .attr("stroke-width", 1.5)
-      .style("display", (d: SimulationNode) => 
-        d.properties.source === "web search result" ? "block" : "none"
-      );
-      
-    // Add globe icon in the badge for web search results
-    nodes.append("text")
-      .attr("x", 18)
-      .attr("y", -18)
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "central")
-      .attr("fill", "white")
-      .attr("font-size", "6px")
-      .attr("font-weight", "bold")
-      .text((d: SimulationNode) => d.properties.source === "web search result" ? "W" : "")
-      .style("display", (d: SimulationNode) => 
-        d.properties.source === "web search result" ? "block" : "none"
-      );
+    // Web search badges have been removed
     
     // Node labels (name property inside circle)
     nodes.append("text")
