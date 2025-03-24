@@ -15,7 +15,7 @@ export default function Header() {
         </Link>
       </div>
       
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-3">
         <Link href="/graph-v2">
           <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
             location === "/graph-v2" 
@@ -24,6 +24,28 @@ export default function Header() {
           } transition-colors`}>
             <i className="fas fa-flask mr-2"></i>
             <span>Graph V2</span>
+          </div>
+        </Link>
+        
+        <Link href="/text-to-graph-anatomy">
+          <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
+            location === "/text-to-graph-anatomy" 
+              ? "bg-primary/10 text-primary" 
+              : "text-gray-600 hover:text-primary"
+          } transition-colors`}>
+            <i className="fas fa-project-diagram mr-2"></i>
+            <span>T2G Anatomy</span>
+          </div>
+        </Link>
+        
+        <Link href="/web-search-anatomy">
+          <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
+            location === "/web-search-anatomy" 
+              ? "bg-primary/10 text-primary" 
+              : "text-gray-600 hover:text-primary"
+          } transition-colors`}>
+            <i className="fas fa-globe mr-2"></i>
+            <span>Web Search</span>
           </div>
         </Link>
         

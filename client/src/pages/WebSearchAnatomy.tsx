@@ -1781,7 +1781,7 @@ public render(graph: Graph): void {
             <div>
               <p className="text-sm mb-2">Recent web search logs from your application:</p>
               <div className="overflow-auto">
-                {recentApiLogs && recentApiLogs.length > 0 ? (
+                {Array.isArray(recentApiLogs) && recentApiLogs.length > 0 ? (
                   <table className="min-w-full text-xs">
                     <thead className="bg-gray-100">
                       <tr>
