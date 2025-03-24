@@ -67,11 +67,6 @@ export default function Header() {
         <button className="text-gray-600 hover:text-primary transition-colors">
           <i className="fas fa-cog"></i>
         </button>
-        
-        <Button className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors flex items-center">
-          <i className="fas fa-star mr-2"></i>
-          <span>Pro Mode</span>
-        </Button>
       </div>
     </header>
   );

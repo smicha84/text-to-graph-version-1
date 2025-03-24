@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import { Graph, Node, Edge } from "@/types/graph";
 import { NodeStyle, EdgeStyle } from "@/types/graph";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
+import { getNodeDisplayLabel, getEdgeDisplayLabel } from "@/lib/displayUtils";
 
 // Define extension types for D3 force simulation
 interface SimulationNode extends d3.SimulationNodeDatum {
@@ -290,8 +291,8 @@ export class GraphVisualizer {
     const x = event.pageX + 10;
     const y = event.pageY - 10;
     
-    // Get node name or label
-    const nodeName = d.properties.name || d.label;
+    // Get node display label using our utility function
+    const nodeName = getNodeDisplayLabel(d);
     const nodeType = d.type || '';
     
     // Only add web search buttons for nodes, not edges
@@ -335,13 +336,13 @@ export class GraphVisualizer {
             // Use the graph context to generate a smart search query
             const autoQuery = this.graph 
               ? this.generateSearchQuery(d.id)
-              : d.label + " " + d.type;
+              : getNodeDisplayLabel(d) + " " + d.type;
             this.onWebSearch!(d.id, autoQuery);
             this.hideNodeTooltip(); // Hide tooltip after clicking
           } catch (error) {
             console.error("Error in auto web search:", error);
             // Fallback to simple search
-            this.onWebSearch!(d.id, d.label + " " + d.type);
+            this.onWebSearch!(d.id, getNodeDisplayLabel(d) + " " + d.type);
             this.hideNodeTooltip();
           }
         });
@@ -349,7 +350,7 @@ export class GraphVisualizer {
       this.nodeTooltip.select('button[data-query-type="simple"]')
         .on('click', (event: MouseEvent) => {
           event.stopPropagation();
-          this.onWebSearch!(d.id, d.label + " " + d.type);
+          this.onWebSearch!(d.id, getNodeDisplayLabel(d) + " " + d.type);
           this.hideNodeTooltip(); // Hide tooltip after clicking
         });
     }
@@ -365,7 +366,7 @@ export class GraphVisualizer {
       console.error("Error generating search query:", error);
       // Get the node from the graph
       const node = this.graph.nodes.find(n => n.id === nodeId);
-      return node ? `${node.label} ${node.type}` : "";
+      return node ? `${getNodeDisplayLabel(node)} ${node.type}` : "";
     }
   }
   
