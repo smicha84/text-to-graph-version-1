@@ -1,15 +1,13 @@
-import { Pool } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { sql } from 'drizzle-orm';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { sql, eq } from 'drizzle-orm';
 import * as schema from '../shared/schema';
 
-// Connect to the database using environment variables
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+// Create a SQL client connection
+const sql_client = neon(process.env.DATABASE_URL!);
 
 // Create a Drizzle database instance
-export const db = drizzle(pool, { schema });
+export const db = drizzle(sql_client, { schema });
 
 // Log database operations
 export async function logApiInteraction(
@@ -52,35 +50,31 @@ export async function getApiLogs(
     // Calculate offset for pagination
     const offset = (page - 1) * limit;
     
-    // Base query
-    let query = db.select().from(schema.apiLogs);
-    
-    // Apply filters if provided
+    // Get logs with pagination and ordering
+    let logs;
     if (operationFilter) {
-      query = query.where(({ operation }) => sql`${operation} = ${operationFilter}`);
+      logs = await db.query.apiLogs.findMany({
+        where: eq(schema.apiLogs.operation, operationFilter),
+        orderBy: (apiLogs, { desc }) => [desc(apiLogs.timestamp)],
+        limit: limit,
+        offset: offset
+      });
+    } else {
+      logs = await db.query.apiLogs.findMany({
+        orderBy: (apiLogs, { desc }) => [desc(apiLogs.timestamp)],
+        limit: limit,
+        offset: offset
+      });
     }
-    
-    // Apply pagination and ordering
-    const logs = await query
-      .orderBy(({ timestamp }) => sql`${timestamp} DESC`)
-      .limit(limit)
-      .offset(offset);
     
     // Get total count for pagination
-    let totalCount = 0;
+    const countQuery = operationFilter
+      ? sql`SELECT COUNT(*) as count FROM api_logs WHERE operation = ${operationFilter}`
+      : sql`SELECT COUNT(*) as count FROM api_logs`;
     
-    if (operationFilter) {
-      const countResult = await db
-        .select({ count: sql`count(*)` })
-        .from(schema.apiLogs)
-        .where(({ operation }) => sql`${operation} = ${operationFilter}`);
-      totalCount = Number(countResult[0]?.count || 0);
-    } else {
-      const countResult = await db
-        .select({ count: sql`count(*)` })
-        .from(schema.apiLogs);
-      totalCount = Number(countResult[0]?.count || 0);
-    }
+    const countResult = await db.execute(countQuery);
+    const totalCount = Number(countResult.rows[0]?.count || 0);
+    
     return {
       data: logs,
       pagination: {
