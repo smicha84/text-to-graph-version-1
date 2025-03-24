@@ -860,7 +860,7 @@ export class GraphVisualizer {
             
             if (count > 1) {
               // For curved edges, we need to position the label along the curve
-              const curveFactor = 50 * (index / count);
+              const curveFactor = 150 * (index / count); // Tripled from 50 to 150 to match path curvature
               
               // Calculate the direction vector
               const dx = targetX - sourceX;
@@ -905,7 +905,7 @@ export class GraphVisualizer {
             
             if (count > 1) {
               // For curved edges, we need to position the label along the curve
-              const curveFactor = 50 * (index / count);
+              const curveFactor = 150 * (index / count); // Tripled from 50 to 150 to match path curvature
               
               // Calculate the direction vector
               const dx = targetX - sourceX;
