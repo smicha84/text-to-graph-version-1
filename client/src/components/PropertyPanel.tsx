@@ -12,10 +12,10 @@ export default function PropertyPanel({ element, onClose }: PropertyPanelProps) 
   if (!element) return null;
   
   const isNode = 'type' in element;
-  const elementType = isNode ? 'Node' : 'Edge';
+  const elementType = isNode ? (element.labelDetail || element.type) : 'Edge';
   const label = isNode 
-    ? `${element.label} (${element.type})` 
-    : `${element.label}`;
+    ? element.label 
+    : element.label;
   
   const properties = element.properties || {};
   const propertyEntries = Object.entries(properties);

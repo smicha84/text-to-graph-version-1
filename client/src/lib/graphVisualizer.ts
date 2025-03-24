@@ -8,6 +8,7 @@ interface SimulationNode extends d3.SimulationNodeDatum {
   id: string;
   label: string;
   type: string;
+  labelDetail?: string; // Label detail information (typically entity type)
   properties: Record<string, any>;
   subgraphIds?: string[]; // Array of subgraph IDs this node belongs to
   x?: number;
@@ -415,9 +416,9 @@ export class GraphVisualizer {
     
     // Get node name or label
     const nodeName = d.properties.name || d.label;
-    const nodeType = d.type || '';
+    const nodeType = d.labelDetail || d.type || '';
     
-    // Create HTML for properties - show all properties
+    // Create HTML for properties - show all properties including custom ones
     const propertyEntries = Object.entries(d.properties || {});
     
     const propertiesHTML = propertyEntries.length > 0 
