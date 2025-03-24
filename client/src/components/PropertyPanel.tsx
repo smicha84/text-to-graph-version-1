@@ -4,6 +4,8 @@ import { Separator } from "@/components/ui/separator";
 import { XIcon, GlobeIcon, SearchIcon, ZapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
+import { getNodeDisplayLabel } from "@/lib/displayUtils";
+import { getEdgeDisplayLabel } from "@/lib/displayUtils";
 import { Graph } from "@/types/graph";
 
 export interface PropertyPanelProps {
@@ -19,8 +21,8 @@ export default function PropertyPanel({ element, onClose, onWebSearch, graph }: 
   const isNode = 'type' in element;
   const elementType = isNode ? 'Node' : 'Edge';
   const label = isNode 
-    ? `${element.label} (${element.type})` 
-    : `${element.label}`;
+    ? `${getNodeDisplayLabel(element as Node)} (${element.type})` 
+    : `${getEdgeDisplayLabel(element as Edge)}`;
   
   const properties = element.properties || {};
   const propertyEntries = Object.entries(properties);
@@ -28,8 +30,9 @@ export default function PropertyPanel({ element, onClose, onWebSearch, graph }: 
   // Function to handle custom web search button click
   const handleCustomWebSearch = () => {
     if (isNode && onWebSearch) {
+      const nodeElement = element as Node;
       // This will trigger the prompt station in the sidebar with a simple query
-      onWebSearch(element.id, element.label + " " + element.type);
+      onWebSearch(nodeElement.id, getNodeDisplayLabel(nodeElement) + " " + nodeElement.type);
     }
   };
   
@@ -44,7 +47,8 @@ export default function PropertyPanel({ element, onClose, onWebSearch, graph }: 
       } catch (error) {
         console.error("Error generating auto search query:", error);
         // Fall back to simple search if generation fails
-        onWebSearch(element.id, element.label + " " + element.type);
+        const nodeElement = element as Node;
+        onWebSearch(nodeElement.id, getNodeDisplayLabel(nodeElement) + " " + nodeElement.type);
       }
     }
   };

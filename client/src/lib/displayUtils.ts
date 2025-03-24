@@ -47,5 +47,25 @@ export function getNodeDisplayLabel(node: Node): string {
  * @returns A string to use as the edge's display label
  */
 export function getEdgeDisplayLabel(edge: Edge): string {
-  return edge.label || 'related to';
+  // Check if the edge has a 'type' or 'relationship' property that describes the connection
+  if (edge.properties.relationship) {
+    return edge.properties.relationship as string;
+  }
+  
+  if (edge.properties.type) {
+    return edge.properties.type as string;
+  }
+  
+  // Use the predicate property if available (common in knowledge graphs)
+  if (edge.properties.predicate) {
+    return edge.properties.predicate as string;
+  }
+  
+  // Fall back to the most descriptive property available
+  if (edge.properties.description) {
+    return edge.properties.description as string;
+  }
+  
+  // Default fallback
+  return 'related to';
 }
