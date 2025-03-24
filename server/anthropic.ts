@@ -206,6 +206,29 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     
     if (!match) {
       console.error('Could not find valid graph JSON in Claude response');
+      
+      // Check if we should use fallback extraction or just fail immediately
+      if (!options.useFallbackExtraction) {
+        // User has opted not to use fallback extraction
+        statusCode = 422; // Unprocessable Entity
+        const processingTimeMs = Date.now() - startTime;
+        
+        // Log the error
+        await logApiInteraction(
+          'error',
+          'generate_graph',
+          requestData,
+          { 
+            error: 'Could not find valid graph JSON in Claude response',
+            method: 'primary_extraction_failed_no_fallback'
+          },
+          statusCode,
+          processingTimeMs
+        );
+        
+        throw new Error('Could not find valid graph JSON in Claude response. Fallback extraction is disabled.');
+      }
+      
       // Fallback to simple extraction
       const jsonStart = contentText.indexOf('{');
       const jsonEnd = contentText.lastIndexOf('}') + 1;

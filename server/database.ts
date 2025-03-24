@@ -81,16 +81,13 @@ export async function getApiLogs(
         .from(schema.apiLogs);
       totalCount = Number(countResult[0]?.count || 0);
     }
-    const totalResult = await totalQuery;
-    const total = Number(totalResult[0]?.count || 0);
-    
     return {
       data: logs,
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit)
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
       }
     };
   } catch (error) {
