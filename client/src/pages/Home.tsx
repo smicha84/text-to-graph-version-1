@@ -5,10 +5,12 @@ import GraphPanel from "@/components/GraphPanel";
 import PropertyPanel from "@/components/PropertyPanel";
 import ExportModal from "@/components/ExportModal";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
+import NodeAnatomyChart from "@/components/NodeAnatomyChart";
 import { Graph, Node, Edge, GraphGenerationOptions, ExportOptions, WebSearchOptions } from "@/types/graph";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Home() {
   const [graph, setGraph] = useState<Graph | null>(null);
@@ -177,6 +179,29 @@ export default function Home() {
         
         {/* Graph visualization area - flexible width */}
         <div className="flex-1 flex flex-col h-full relative">
+          {/* Help button for Node Anatomy Chart */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="absolute top-4 left-4 z-10 bg-white text-blue-600 hover:bg-blue-50 p-2 rounded-lg shadow-md border border-gray-200 flex items-center space-x-1 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>Node Anatomy Guide</span>
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Understanding Node Visualization</DialogTitle>
+                <DialogDescription>
+                  This guide explains all the visual elements of nodes in the graph and what data they represent.
+                </DialogDescription>
+              </DialogHeader>
+              <NodeAnatomyChart />
+            </DialogContent>
+          </Dialog>
+          
           <GraphPanel 
             graph={graph}
             isLoading={generateMutation.isPending || webSearchMutation.isPending}
