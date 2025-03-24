@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Graph } from "@/types/graph";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
+import { getNodeDisplayLabel } from "@/lib/displayUtils";
 import { Globe, Search, ArrowRight, History, InfoIcon, BrainCircuit, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -48,7 +49,7 @@ export default function SidebarPromptStation({
       const selectedNode = graph.nodes.find(node => node.id === selectedNodeId);
       if (selectedNode) {
         const nodeType = selectedNode.type.toLowerCase();
-        const nodeLabel = selectedNode.label;
+        const nodeLabel = getNodeDisplayLabel(selectedNode);
         
         // Create contextual suggestions based on node type
         const suggestions: string[] = [];

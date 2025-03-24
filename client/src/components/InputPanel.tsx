@@ -14,6 +14,7 @@ import {
   RefreshCwIcon
 } from "lucide-react";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
+import { getNodeDisplayLabel } from "@/lib/displayUtils";
 import ActivityTracker from "@/components/ActivityTracker";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -80,7 +81,7 @@ export default function InputPanel({
         setSearchPrompt(searchQuery);
       } catch (error) {
         const node = graph.nodes.find(n => n.id === selectedNodeId);
-        const nodeName = node ? (node.properties.name || node.label) : "this entity";
+        const nodeName = node ? getNodeDisplayLabel(node) : "this entity";
         setSearchPrompt(`Find more information about ${nodeName} and its relationships`);
       }
       
@@ -118,27 +119,28 @@ export default function InputPanel({
       if (!node) return [];
       
       const suggestions: string[] = [];
+      const displayLabel = getNodeDisplayLabel(node);
       
       // Always suggest the node label with Wikipedia
-      suggestions.push(`${node.label} ${node.properties.name || ''} Wikipedia categories`);
+      suggestions.push(`${displayLabel} Wikipedia categories`);
       
       // Generate type-specific suggestions
       if (node.type === 'Person') {
-        suggestions.push(`${node.properties.name || node.label} biography`);
-        suggestions.push(`${node.properties.name || node.label} career highlights`);
+        suggestions.push(`${displayLabel} biography`);
+        suggestions.push(`${displayLabel} career highlights`);
       } else if (node.type === 'Organization' || node.type === 'Company') {
-        suggestions.push(`${node.properties.name || node.label} industry information`);
-        suggestions.push(`${node.properties.name || node.label} history and background`);
+        suggestions.push(`${displayLabel} industry information`);
+        suggestions.push(`${displayLabel} history and background`);
       } else if (node.type === 'Event') {
-        suggestions.push(`${node.properties.name || node.label} details and significance`);
-        suggestions.push(`${node.properties.name || node.label} timeline`);
+        suggestions.push(`${displayLabel} details and significance`);
+        suggestions.push(`${displayLabel} timeline`);
       } else if (node.type === 'Concept' || node.type === 'Method') {
-        suggestions.push(`${node.properties.name || node.label} explanation and applications`);
-        suggestions.push(`${node.properties.name || node.label} related theories`);
+        suggestions.push(`${displayLabel} explanation and applications`);
+        suggestions.push(`${displayLabel} related theories`);
       } else {
         // Generic suggestions for other node types
-        suggestions.push(`${node.properties.name || node.label} detailed information`);
-        suggestions.push(`${node.properties.name || node.label} related concepts`);
+        suggestions.push(`${displayLabel} detailed information`);
+        suggestions.push(`${displayLabel} related concepts`);
       }
       
       return suggestions;
@@ -346,7 +348,10 @@ export default function InputPanel({
                         You can search the web for more information about the selected node. Use the sidebar to run a search and expand your graph.
                       </p>
                       <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-300">
-                        Node Selected: {graph.nodes.find(n => n.id === selectedNodeId)?.label}
+                        {(() => {
+                          const selectedNode = graph.nodes.find(n => n.id === selectedNodeId);
+                          return `Node Selected: ${selectedNode ? getNodeDisplayLabel(selectedNode) : ""}`;
+                        })()}
                       </Badge>
                     </CardContent>
                   </Card>
