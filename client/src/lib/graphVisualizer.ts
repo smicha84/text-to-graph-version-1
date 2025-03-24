@@ -671,10 +671,7 @@ export class GraphVisualizer {
     nodes.append("text")
       .attr("text-anchor", "middle")
       .attr("dy", ".3em")
-      .attr("fill", "white")
-      .attr("stroke", "black")
-      .attr("stroke-width", "0.5px")
-      .attr("paint-order", "stroke")
+      .attr("fill", "black")
       .attr("font-weight", "bold")
       .attr("font-size", "12px")
       .text((d: SimulationNode) => d.properties.name || d.label);
@@ -1074,7 +1071,7 @@ export class GraphVisualizer {
           // Apply label styles
           nodeElement.select("text")
             .transition().duration(300)
-            .attr("fill", style.labelColor || "white")
+            .attr("fill", style.labelColor || "black")
             .attr("font-size", `${style.labelSize || 12}px`);
         }
       });
