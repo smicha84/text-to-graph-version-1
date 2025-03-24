@@ -205,25 +205,33 @@ export default function SidebarPromptStation({
                 </CardContent>
               </Card>
             ) : !selectedNodeId ? (
-              <div className="flex flex-col items-center justify-center h-48 text-center">
+              <div className="flex flex-col items-center justify-center h-80 text-center">
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-5 w-full max-w-xs">
                   <div className="flex flex-col items-center">
                     <Search className="h-8 w-8 mb-3 text-blue-500" />
-                    <h3 className="font-medium text-blue-800 mb-1">How to use Web Search</h3>
-                    <p className="text-blue-700 text-sm text-center mb-3">
+                    <h3 className="font-medium text-blue-800 mb-2">How to use Web Search</h3>
+                    <p className="text-blue-700 text-sm text-center mb-4">
                       Click on any node in your graph to start a web search and expand your graph with new connections.
                     </p>
-                    <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded-md w-full">
-                      <p className="mb-1"><strong>Tip:</strong> Search results will appear as connected nodes in your graph.</p>
-                      <p><strong>Tip:</strong> You can search for any topic related to a node in your graph.</p>
+                    <div className="text-xs text-blue-600 bg-blue-100 p-3 rounded-md w-full mb-3">
+                      <p className="mb-2"><strong>Tip:</strong> Search results will appear as connected nodes in your graph.</p>
+                      <p className="mb-2"><strong>Tip:</strong> You can search for any topic related to a node in your graph.</p>
+                      <p><strong>Tip:</strong> The ontology-based generation creates more coherent relationships between search results.</p>
+                    </div>
+                    <div className="text-xs text-purple-600 bg-purple-50 p-3 rounded-md w-full border border-purple-100">
+                      <p className="mb-1"><strong>New Feature:</strong> Ontology Generation</p>
+                      <p>Enable the <span className="text-purple-800 font-medium">Generate Ontology</span> option in settings for more coherent and consistent search results.</p>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-48 text-center text-gray-400">
+              <div className="flex flex-col items-center justify-center h-80 text-center text-gray-400">
                 <InfoIcon className="h-8 w-8 mb-2 opacity-50" />
                 <p>No suggested queries available</p>
+                <p className="text-xs mt-2 max-w-xs opacity-80">
+                  Select a node in your graph to generate queries based on that node's content and relationships.
+                </p>
               </div>
             )}
           </div>
@@ -259,9 +267,16 @@ export default function SidebarPromptStation({
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-48 text-center text-gray-400">
+            <div className="flex flex-col items-center justify-center h-80 text-center text-gray-400">
               <History className="h-8 w-8 mb-2 opacity-50" />
               <p>No search history yet</p>
+              <p className="text-xs mt-2 max-w-xs opacity-80">
+                Your search history will be displayed here once you perform web searches on nodes in your graph.
+              </p>
+              <div className="text-xs text-purple-500 bg-purple-50 p-3 rounded-md mt-4 border border-purple-100 max-w-xs">
+                <p className="font-medium mb-1">Ontology-based Search</p>
+                <p>With ontology generation enabled, your search results will be more coherent and have better semantic connections to existing nodes.</p>
+              </div>
             </div>
           )}
         </TabsContent>
@@ -356,21 +371,56 @@ export default function SidebarPromptStation({
                 <div className="flex flex-col items-center">
                   <Clock className="h-6 w-6 mb-2 text-gray-400" />
                   <p className="text-sm text-gray-500 mb-2">No recent search activity</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 mb-3">
                     This panel will display real-time updates when you perform a web search
                   </p>
+                  <div className="text-xs px-3 py-2 bg-purple-50 border border-purple-100 rounded-md text-purple-600 max-w-xs">
+                    <p className="mb-1"><span className="text-purple-700 font-medium">New:</span> Enable ontology generation in settings for enhanced search results</p>
+                  </div>
                 </div>
               </div>
             )}
             
             <div className="text-center p-3 bg-blue-50 border border-blue-100 rounded-md mt-4">
-              <h4 className="text-xs font-medium text-blue-700 mb-1">How the Web Search Works</h4>
-              <p className="text-xs text-blue-600 mb-2">
-                The web search uses Claude to analyze search results and extract entities and relationships.
-                Each search is saved with a timestamp and can be viewed in the logs.
-              </p>
-              <p className="text-center text-xs text-blue-500">
-                <a href="/logs" className="hover:underline">View complete logs →</a>
+              <h4 className="text-xs font-medium text-blue-700 mb-2">How the Web Search Works</h4>
+              <div className="text-xs text-blue-600 mb-3 text-left space-y-2">
+                <p>
+                  <strong>1.</strong> Select a node in your graph to begin a web search.
+                </p>
+                <p>
+                  <strong>2.</strong> Claude analyzes search results and extracts relevant entities and relationships.
+                </p>
+                <p>
+                  <strong>3.</strong> When ontology generation is enabled, Claude creates a domain-specific knowledge framework first.
+                </p>
+                <p>
+                  <strong>4.</strong> Search results are added to your graph as connected nodes with source metadata.
+                </p>
+                <p>
+                  <strong>5.</strong> All searches are saved with timestamps and can be viewed in the logs.
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <span className="flex items-center text-purple-600 bg-purple-50 px-2 py-1 rounded text-xs border border-purple-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M12 2a10 10 0 1 0 10 10H12V2Z"/><path d="M12 2v10h10c0-5.523-4.477-10-10-10Z"/><path d="M12 2a10 10 0 0 0-9.53 13.05L12 2Z"/></svg>
+                  Ontology
+                </span>
+                <span className="px-1">+</span>
+                <span className="flex items-center text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs border border-blue-100">
+                  <Globe className="h-3 w-3 mr-1" />
+                  Web Search
+                </span>
+                <span className="px-1">=</span>
+                <span className="flex items-center text-green-600 bg-green-50 px-2 py-1 rounded text-xs border border-green-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                  Better Results
+                </span>
+              </div>
+              <p className="text-center text-xs text-blue-500 mt-3">
+                <a href="/logs" className="hover:underline flex justify-center items-center">
+                  <Clock className="h-3 w-3 mr-1" />
+                  View complete logs →
+                </a>
               </p>
             </div>
           </div>
