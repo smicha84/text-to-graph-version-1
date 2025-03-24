@@ -107,10 +107,8 @@ export class GraphVisualizer {
     svgElement: SVGSVGElement,
     width: number,
     height: number,
-    onSelectElement: (element: Node | Edge | null) => void,
-    onWebSearch?: (nodeId: string, query: string) => void
+    onSelectElement: (element: Node | Edge | null) => void
   ) {
-    this.onWebSearch = onWebSearch;
     this.svg = d3.select(svgElement);
     this.width = width;
     this.height = height;
@@ -438,23 +436,8 @@ export class GraphVisualizer {
       `
       : '<div class="tooltip-no-properties">No custom properties</div>';
     
-    // Create Web Search section if the web search callback is available
-    const webSearchHTML = this.onWebSearch 
-      ? `
-        <div class="tooltip-websearch">
-          <div class="tooltip-websearch-buttons">
-            <button class="tooltip-auto-search" data-node-id="${d.id}">
-              <span class="tooltip-button-icon">⚡</span>
-              <span class="tooltip-button-text">Auto Search</span>
-            </button>
-            <button class="tooltip-custom-search" data-node-id="${d.id}">
-              <span class="tooltip-button-icon">🔍</span>
-              <span class="tooltip-button-text">Custom Search</span>
-            </button>
-          </div>
-        </div>
-      `
-      : '';
+    // Web search functionality has been removed
+    const webSearchHTML = '';
     
     // Create tooltip content with detailed information and web search
     this.nodeTooltip
@@ -478,30 +461,7 @@ export class GraphVisualizer {
       .duration(200)
       .style("opacity", 1);
     
-    // Attach event listeners to web search buttons if available
-    if (this.onWebSearch) {
-      this.nodeTooltip.select('.tooltip-auto-search')
-        .on('click', () => {
-          // Generate search query based on node properties
-          const searchQuery = this.generateSearchQuery(d);
-          // Call the web search callback
-          this.onWebSearch!(d.id, searchQuery);
-          // Hide tooltip after clicking
-          this.hideNodeTooltip();
-        });
-      
-      this.nodeTooltip.select('.tooltip-custom-search')
-        .on('click', () => {
-          // Prompt user for custom search query
-          const customQuery = prompt('Enter search query:', this.generateSearchQuery(d));
-          if (customQuery) {
-            // Call the web search callback with custom query
-            this.onWebSearch!(d.id, customQuery);
-            // Hide tooltip after clicking
-            this.hideNodeTooltip();
-          }
-        });
-    }
+    // Web search functionality has been removed
   }
   
   // Helper method to generate a search query from node properties
