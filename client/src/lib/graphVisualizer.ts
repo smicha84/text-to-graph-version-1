@@ -821,7 +821,8 @@ export class GraphVisualizer {
             if (count > 1) {
               // For multiple edges, we'll create a curved path
               // The curvature increases based on the index of the edge
-              const curveFactor = 20 * (index / count); // Scale the curve based on index
+              // Increased base curveFactor for more pronounced curves
+              const curveFactor = 50 * (index / count); // Scale the curve based on index (increased from 20 to 50)
               
               // Calculate control point - perpendicular to the direction vector
               const cpX = (sourceX + endX) / 2 + normY * curveFactor;
@@ -840,13 +841,95 @@ export class GraphVisualizer {
           .attr("x", (d: SimulationLink) => {
             const sourceNode = d.source as SimulationNode;
             const targetNode = d.target as SimulationNode;
-            return ((sourceNode.x || 0) + (targetNode.x || 0)) / 2;
+            
+            // Get source and target positions
+            const sourceX = sourceNode.x || 0;
+            const sourceY = sourceNode.y || 0;
+            const targetX = targetNode.x || 0;
+            const targetY = targetNode.y || 0;
+            
+            // Create a key to identify the edge pair
+            const sourceId = typeof d.source === 'string' ? d.source : d.source.id;
+            const targetId = typeof d.target === 'string' ? d.target : d.target.id;
+            const pairKey = `${sourceId}-${targetId}`;
+            const reversePairKey = `${targetId}-${sourceId}`;
+            
+            // Check if this is a multiple edge
+            const count = connectionCounts[pairKey] || connectionCounts[reversePairKey] || 1;
+            const index = edgeIndexes[d.id] || 1;
+            
+            if (count > 1) {
+              // For curved edges, we need to position the label along the curve
+              const curveFactor = 50 * (index / count);
+              
+              // Calculate the direction vector
+              const dx = targetX - sourceX;
+              const dy = targetY - sourceY;
+              const length = Math.sqrt(dx * dx + dy * dy);
+              
+              // Calculate normalized direction
+              const normX = dx / length;
+              const normY = dy / length;
+              
+              // Position label at the midpoint of the curve
+              // Adjust the label position to be along the curve
+              const midX = (sourceX + targetX) / 2;
+              const midY = (sourceY + targetY) / 2;
+              
+              // Add perpendicular offset for the label (similar to curve offset)
+              return midX + normY * (curveFactor * 0.6); // Scale down the offset for label
+            } else {
+              // For straight edges, just use the middle
+              return ((sourceX + targetX) / 2);
+            }
           })
           .attr("y", (d: SimulationLink) => {
             const sourceNode = d.source as SimulationNode;
             const targetNode = d.target as SimulationNode;
-            return ((sourceNode.y || 0) + (targetNode.y || 0)) / 2 - 6;
-          });
+            
+            // Get source and target positions
+            const sourceX = sourceNode.x || 0;
+            const sourceY = sourceNode.y || 0;
+            const targetX = targetNode.x || 0;
+            const targetY = targetNode.y || 0;
+            
+            // Create a key to identify the edge pair
+            const sourceId = typeof d.source === 'string' ? d.source : d.source.id;
+            const targetId = typeof d.target === 'string' ? d.target : d.target.id;
+            const pairKey = `${sourceId}-${targetId}`;
+            const reversePairKey = `${targetId}-${sourceId}`;
+            
+            // Check if this is a multiple edge
+            const count = connectionCounts[pairKey] || connectionCounts[reversePairKey] || 1;
+            const index = edgeIndexes[d.id] || 1;
+            
+            if (count > 1) {
+              // For curved edges, we need to position the label along the curve
+              const curveFactor = 50 * (index / count);
+              
+              // Calculate the direction vector
+              const dx = targetX - sourceX;
+              const dy = targetY - sourceY;
+              const length = Math.sqrt(dx * dx + dy * dy);
+              
+              // Calculate normalized direction
+              const normX = dx / length;
+              const normY = dy / length;
+              
+              // Position label at the midpoint of the curve
+              // Adjust the label position to be along the curve
+              const midX = (sourceX + targetX) / 2;
+              const midY = (sourceY + targetY) / 2;
+              
+              // Add perpendicular offset for the label (similar to curve offset)
+              return midY - normX * (curveFactor * 0.6) - 3; // Scale down the offset for label, slight up adjustment
+            } else {
+              // For straight edges, just use the middle with slight up adjustment
+              return ((sourceY + targetY) / 2) - 6;
+            }
+          })
+          // Set text-anchor to middle for all labels
+          .attr("text-anchor", "middle");
         
         // Update node positions
         nodes
