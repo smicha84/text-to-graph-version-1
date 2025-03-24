@@ -151,7 +151,8 @@ export default function SidebarPromptStation({
         </TabsList>
         
         <TabsContent value="search" className="flex-1 overflow-hidden flex flex-col p-4 pt-2">
-          <div className="mb-4">
+          {/* Search input fixed at the top */}
+          <div className="mb-6 sticky top-0 z-10 bg-white pt-1 pb-3">
             <div className="relative">
               <Input
                 value={searchPrompt}
@@ -177,7 +178,8 @@ export default function SidebarPromptStation({
             </div>
           </div>
           
-          <div className="flex-1 overflow-auto">
+          {/* Content area with plenty of margin to avoid overlap */}
+          <div className="flex-1 overflow-auto mt-2">
             {suggestedQueries.length > 0 ? (
               <Card>
                 <CardHeader className="py-2">
@@ -205,7 +207,7 @@ export default function SidebarPromptStation({
                 </CardContent>
               </Card>
             ) : !selectedNodeId ? (
-              <div className="flex flex-col items-center justify-center h-80 text-center">
+              <div className="flex flex-col items-center mt-6 text-center">
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-5 w-full max-w-xs">
                   <div className="flex flex-col items-center">
                     <Search className="h-8 w-8 mb-3 text-blue-500" />
