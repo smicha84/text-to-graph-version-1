@@ -1188,7 +1188,45 @@ export class GraphVisualizer {
       .transition().duration(300)
       .attr("opacity", 0.2);
     
-    // Then highlight the elements that belong to the selected subgraph
+    // Check if this is a web search subgraph by looking at the ID
+    const isWebSearchSubgraph = subgraphId.startsWith('webSearch_');
+    
+    // For web search subgraphs, find and highlight the source node
+    // (typically the node that initiated the web search)
+    if (isWebSearchSubgraph) {
+      // First, find nodes that have a property indicating they were the source of this web search
+      // This is more reliable than trying to guess based on graph structure
+      this.container.selectAll(".node")
+        .filter((d: any) => {
+          // Check for web search specific properties that would indicate this is a source node
+          if (d.properties && d.properties.source_node_id) {
+            return true;
+          }
+          
+          // Also check for position in the graph (root nodes are typically first)
+          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+          return nodeIndex === 0; // First node is often the root/source
+        })
+        .selectAll("circle")
+        .transition().duration(300)
+        .attr("opacity", 1.0)
+        .attr("stroke", "#EF4444") // red-500 for the source node
+        .attr("stroke-width", 4);
+        
+      this.container.selectAll(".node")
+        .filter((d: any) => {
+          if (d.properties && d.properties.source_node_id) {
+            return true;
+          }
+          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
+          return nodeIndex === 0;
+        })
+        .selectAll("text")
+        .transition().duration(300)
+        .attr("opacity", 1.0);
+    }
+    
+    // Then highlight all elements that belong to the selected subgraph
     this.container.selectAll(".node")
       .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
       .selectAll("circle")

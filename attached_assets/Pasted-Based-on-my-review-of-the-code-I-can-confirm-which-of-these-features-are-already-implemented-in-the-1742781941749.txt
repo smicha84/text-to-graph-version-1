@@ -1,0 +1,40 @@
+Based on my review of the code, I can confirm which of these features are already implemented in the current app:
+
+Features Currently Available:
+✓ Graph Data Format: The app uses a JSON format with separate nodes and edges arrays, which is appropriate for LLM consumption.
+
+✓ Basic Search Connectivity: When a user selects a node and performs a web search, the search results are used to generate new nodes and edges connected to the original node.
+
+✓ Visual Differentiation: Nodes and edges derived from web search are marked with "web search result" property and visually distinguished in the UI.
+
+✓ Subgraph Tracking: The app assigns subgraph IDs to track which nodes and edges came from specific searches.
+
+✓ Search Query Customization: Users can modify the suggested search query before sending it.
+
+✓ Search Context: The system includes source node information and neighboring nodes in the search context.
+
+✓ Confidence Scores: The implementation assigns different confidence scores to edges based on whether they connect to existing nodes.
+
+✓ Citation Metadata: Search results include timestamp and query information in the metadata.
+
+Features Partially Implemented:
+⚠️ Graph Data Science for Relevance: There's a basic implementation using connection counts as a centrality measure through the findImportantNodes function, but it's not using advanced graph algorithms.
+
+⚠️ Contextual Query Generation: The app generates suggested queries based on node type, but they could be more sophisticated.
+
+Features Not Yet Implemented:
+❌ Multi-hop Exploration: Currently only searches from a single node, not from paths or small subgraphs.
+
+❌ Temporal Aspects: No special handling for temporal dimensions in the graph.
+
+❌ Interactive Refinement: No way for users to approve/reject proposed nodes and connections.
+
+❌ Entity Disambiguation: No advanced techniques for ensuring new nodes properly connect to existing nodes representing the same entity.
+
+❌ Domain-specific Prioritization: No domain-aware relevance adjustment.
+
+❌ Integration with Knowledge Graphs: No direct connection to structured knowledge graphs like Wikidata.
+
+❌ Historical Search Context: No tracking of previous searches to avoid repetition.
+
+Would you like me to focus on implementing any of these missing features? Or would you prefer to enhance one of the partially implemented features?
