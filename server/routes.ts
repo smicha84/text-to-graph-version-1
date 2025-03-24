@@ -473,6 +473,24 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
       node.properties.search_query = query;
       node.properties.search_date = new Date().toISOString();
       node.properties.source_node_id = nodeId;
+      node.properties.source_node_label = sourceNode.label;
+      node.properties.source_node_type = sourceNode.type;
+      
+      // Add structured metadata object for organization
+      if (!node.properties.metadata) {
+        node.properties.metadata = {};
+      }
+      
+      node.properties.metadata.webSearch = {
+        query,
+        timestamp: new Date().toISOString(),
+        subgraphId,
+        originNode: {
+          id: nodeId,
+          label: sourceNode.label,
+          type: sourceNode.type
+        }
+      };
     }
   });
   
@@ -495,6 +513,24 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
       edge.properties.source = "web search result";
       edge.properties.search_query = query;
       edge.properties.search_date = new Date().toISOString();
+      edge.properties.source_node_id = nodeId;
+      edge.properties.subgraph_id = subgraphId;
+      
+      // Add structured metadata object for organization
+      if (!edge.properties.metadata) {
+        edge.properties.metadata = {};
+      }
+      
+      edge.properties.metadata.webSearch = {
+        query,
+        timestamp: new Date().toISOString(),
+        subgraphId,
+        originNode: {
+          id: nodeId,
+          label: sourceNode.label,
+          type: sourceNode.type
+        }
+      };
       
       // Calculate and set edge confidence if connecting to existing nodes
       const isConnectingExisting = 
