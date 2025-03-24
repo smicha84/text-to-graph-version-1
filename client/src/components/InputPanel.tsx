@@ -6,11 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { GraphGenerationOptions, WebSearchOptions, Graph } from "@/types/graph";
 import { 
   ChevronLeftIcon, ChevronRightIcon, Share2Icon, 
-  XIcon, RotateCwIcon, GlobeIcon 
+  XIcon, RotateCwIcon
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
-import SidebarPromptStation from "@/components/SidebarPromptStation";
+import ActivityTracker from "@/components/ActivityTracker";
 
 interface InputPanelProps {
   onGenerateGraph: (text: string, options: GraphGenerationOptions) => void;
@@ -46,7 +46,11 @@ export default function InputPanel({
     inferProperties: true,
     mergeEntities: true,
     model: "claude", // Only using Claude model
-    appendMode: false
+    appendMode: false,
+    // Setting default toggle values for entity processing - all LLM by default
+    useEntityMergingLLM: true,
+    useEntityTypeLLM: true, 
+    useRelationInferenceLLM: true
   });
 
   // State for prompt station (web search) - always visible when node is selected
@@ -205,7 +209,7 @@ export default function InputPanel({
       
       {expanded ? (
         <div className="flex-1 overflow-auto flex flex-col">
-          <div className="p-4 flex-grow">
+          <div className="p-4 flex-grow overflow-auto">
             <Textarea
               id="textInput"
               className="w-full h-56 p-3 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
@@ -296,6 +300,13 @@ export default function InputPanel({
               </div>
             </div>
             
+            {/* Activity Tracker - shows text-to-graph process and LLM vs Algo toggles */}
+            <ActivityTracker 
+              options={options} 
+              onOptionsChange={setOptions} 
+              isProcessing={isLoading}
+            />
+            
             <Button
               onClick={handleGenerateClick}
               disabled={isLoading || !text.trim()}
@@ -314,14 +325,6 @@ export default function InputPanel({
               )}
             </Button>
           </div>
-          
-          {/* Persistent Sidebar Prompt Station for Web Search - always visible */}
-          <SidebarPromptStation
-            onWebSearch={onWebSearch!}
-            isSearching={isSearching}
-            selectedNodeId={selectedNodeId}
-            graph={graph}
-          />
         </div>
       ) : (
         <div className="flex flex-col h-full">
@@ -347,16 +350,6 @@ export default function InputPanel({
                 </>
               )}
             </Button>
-          </div>
-          
-          {/* Persistent Sidebar Prompt Station in collapsed view - always visible */}
-          <div className="mt-auto">
-            <SidebarPromptStation
-              onWebSearch={onWebSearch!}
-              isSearching={isSearching}
-              selectedNodeId={selectedNodeId}
-              graph={graph}
-            />
           </div>
         </div>
       )}
