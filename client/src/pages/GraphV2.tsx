@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
-import Header from "@/components/Header";
 import GraphPanel from "@/components/GraphPanel";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
 import PropertyPanel from "@/components/PropertyPanel";
@@ -148,8 +147,6 @@ export default function GraphV2() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
-      
       <main className="flex-1 flex overflow-hidden">
         {/* Left sidebar for prompt station */}
         <div className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 overflow-y-auto bg-gray-50 border-r h-full`}>

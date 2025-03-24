@@ -151,8 +151,6 @@ export default function Home() {
 
   return (
     <div className="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col">
-      <Header />
-      
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar with always-visible prompt station - fixed width, non-resizable */}
         <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col">
