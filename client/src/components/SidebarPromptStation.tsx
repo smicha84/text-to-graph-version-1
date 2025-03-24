@@ -157,7 +157,7 @@ export default function SidebarPromptStation({
                 value={searchPrompt}
                 onChange={(e) => setSearchPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={selectedNodeId ? "Enter search query..." : "Select a node first"}
+                placeholder={selectedNodeId ? "Enter search query..." : "Select a node to search"}
                 className="pr-10"
                 disabled={isSearching || !selectedNodeId}
               />
@@ -205,9 +205,20 @@ export default function SidebarPromptStation({
                 </CardContent>
               </Card>
             ) : !selectedNodeId ? (
-              <div className="flex flex-col items-center justify-center h-48 text-center text-gray-400">
-                <Search className="h-8 w-8 mb-2 opacity-50" />
-                <p>Select a node to get started with web search</p>
+              <div className="flex flex-col items-center justify-center h-48 text-center">
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-5 w-full max-w-xs">
+                  <div className="flex flex-col items-center">
+                    <Search className="h-8 w-8 mb-3 text-blue-500" />
+                    <h3 className="font-medium text-blue-800 mb-1">How to use Web Search</h3>
+                    <p className="text-blue-700 text-sm text-center mb-3">
+                      Click on any node in your graph to start a web search and expand your graph with new connections.
+                    </p>
+                    <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded-md w-full">
+                      <p className="mb-1"><strong>Tip:</strong> Search results will appear as connected nodes in your graph.</p>
+                      <p><strong>Tip:</strong> You can search for any topic related to a node in your graph.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-48 text-center text-gray-400">
@@ -289,19 +300,19 @@ export default function SidebarPromptStation({
                 <Separator className="my-1" />
                 <div className="flex justify-between">
                   <span className="text-sm">Prompt Tokens:</span>
-                  <span className="text-sm font-medium">{metrics.promptTokens}</span>
+                  <span className="text-sm font-medium">{metrics.promptTokens || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Completion Tokens:</span>
-                  <span className="text-sm font-medium">{metrics.completionTokens}</span>
+                  <span className="text-sm font-medium">{metrics.completionTokens || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Total Tokens:</span>
-                  <span className="text-sm font-medium">{metrics.totalTokens}</span>
+                  <span className="text-sm font-medium">{metrics.totalTokens || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Processing Time:</span>
-                  <span className="text-sm font-medium">{metrics.processingTimeMs}ms</span>
+                  <span className="text-sm font-medium">{metrics.processingTimeMs ? `${metrics.processingTimeMs}ms` : "—"}</span>
                 </div>
               </div>
             </CardContent>
@@ -313,13 +324,13 @@ export default function SidebarPromptStation({
               <span>Recent API Activity:</span>
             </div>
             
-            <div className={`p-3 rounded-md border mb-2 ${
-              status === 'loading' ? 'bg-blue-50 border-blue-200' :
-              status === 'complete' ? 'bg-green-50 border-green-200' :
-              status === 'error' ? 'bg-red-50 border-red-200' :
-              'bg-gray-50 border-gray-200'
-            }`}>
-              {lastActivity ? (
+            {lastActivity ? (
+              <div className={`p-3 rounded-md border mb-2 ${
+                status === 'loading' ? 'bg-blue-50 border-blue-200' :
+                status === 'complete' ? 'bg-green-50 border-green-200' :
+                status === 'error' ? 'bg-red-50 border-red-200' :
+                'bg-gray-50 border-gray-200'
+              }`}>
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <p className={`font-medium ${
@@ -339,14 +350,29 @@ export default function SidebarPromptStation({
                   </div>
                   <p className="text-xs text-gray-600">{lastActivity.message}</p>
                 </div>
-              ) : (
-                <p className="text-gray-600">No recent API activity</p>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-gray-50 border border-gray-100 rounded-md text-center mb-2">
+                <div className="flex flex-col items-center">
+                  <Clock className="h-6 w-6 mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-500 mb-2">No recent search activity</p>
+                  <p className="text-xs text-gray-400">
+                    This panel will display real-time updates when you perform a web search
+                  </p>
+                </div>
+              </div>
+            )}
             
-            <p className="text-center text-xs text-gray-500 mt-4">
-              View the <a href="/logs" className="text-blue-500 hover:underline">Logs page</a> for complete history
-            </p>
+            <div className="text-center p-3 bg-blue-50 border border-blue-100 rounded-md mt-4">
+              <h4 className="text-xs font-medium text-blue-700 mb-1">How the Web Search Works</h4>
+              <p className="text-xs text-blue-600 mb-2">
+                The web search uses Claude to analyze search results and extract entities and relationships.
+                Each search is saved with a timestamp and can be viewed in the logs.
+              </p>
+              <p className="text-center text-xs text-blue-500">
+                <a href="/logs" className="hover:underline">View complete logs →</a>
+              </p>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
