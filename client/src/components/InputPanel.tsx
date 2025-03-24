@@ -284,6 +284,22 @@ export default function InputPanel({
                           Merge Similar Entities
                         </Label>
                       </div>
+                      <div className="flex items-center relative group">
+                        <Checkbox
+                          id="generateOntologyInput"
+                          checked={options.generateOntology}
+                          onCheckedChange={(checked) => 
+                            handleOptionChange("generateOntology", checked === true)
+                          }
+                          className="h-4 w-4 text-purple-600 border-purple-300 rounded focus:ring-purple-500"
+                        />
+                        <Label htmlFor="generateOntologyInput" className="ml-2 text-sm text-purple-800">
+                          Generate Ontology
+                        </Label>
+                        <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-purple-50 border border-purple-200 p-2 rounded shadow-sm w-52 text-xs text-purple-800 z-10">
+                          Creates a domain-specific ontology before extracting entities, resulting in more coherent and consistent graphs. Slightly increases processing time.
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -361,8 +377,8 @@ export default function InputPanel({
                 <div className="mt-2 text-xs text-gray-500 flex items-start px-1">
                   <InfoIcon className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
                   <span>
-                    This will process your text using Claude AI to extract entities and relationships,
-                    then visualize them as a graph. Processing takes 5-10 seconds.
+                    This will process your text using Claude AI to {options.generateOntology ? 'create a domain ontology and ' : ''}extract entities and relationships,
+                    then visualize them as a graph. Processing takes {options.generateOntology ? '8-15' : '5-10'} seconds.
                   </span>
                 </div>
               </div>
