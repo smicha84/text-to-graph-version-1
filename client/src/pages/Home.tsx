@@ -210,14 +210,12 @@ export default function Home() {
           
           {/* Property panel appears over the graph as a floating panel */}
           {showPropertyPanel && selectedElement && (
-            <div className="absolute top-4 right-4 bg-white shadow-lg border border-gray-200 rounded-lg w-72 z-10 max-h-[80%] overflow-auto">
               <PropertyPanel 
                 element={selectedElement}
                 onClose={() => setShowPropertyPanel(false)}
                 onWebSearch={handleWebSearch}
                 graph={graph}
               />
-            </div>
           )}
         </div>
       </div>
