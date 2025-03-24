@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { Graph, GraphOptions, Node, Edge } from '@shared/schema';
+import { logApiInteraction } from './database';
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -13,7 +14,24 @@ const CLAUDE_MODEL = 'claude-3-7-sonnet-20250219';
 export async function performWebSearch(query: string): Promise<string> {
   console.log(`Performing web search for query: ${query}`);
   
+  const startTime = Date.now();
+  let statusCode = 200;
+  
   try {
+    // Log the request to the database
+    const requestData = {
+      query,
+      model: CLAUDE_MODEL,
+      max_tokens: 2000,
+      temperature: 0.7,
+    };
+    
+    await logApiInteraction(
+      'request',
+      'web_search',
+      requestData
+    );
+    
     // In a real application, this would use an actual web search API
     // Here we're using Claude to generate information that simulates search results
     const response = await anthropic.messages.create({
@@ -37,9 +55,45 @@ export async function performWebSearch(query: string): Promise<string> {
       }
     }
     
+    // Calculate processing time
+    const processingTimeMs = Date.now() - startTime;
+    
+    // Log the response to the database
+    const responseData = {
+      search_results: searchResults,
+      model: CLAUDE_MODEL,
+      completion_tokens: response.usage?.output_tokens || 0,
+      prompt_tokens: response.usage?.input_tokens || 0
+    };
+    
+    await logApiInteraction(
+      'response',
+      'web_search',
+      requestData,
+      responseData,
+      statusCode,
+      processingTimeMs
+    );
+    
     console.log('Received simulated web search results');
     return searchResults;
   } catch (error) {
+    // Update status code for error
+    statusCode = 500;
+    
+    // Calculate processing time even for errors
+    const processingTimeMs = Date.now() - startTime;
+    
+    // Log the error to the database
+    await logApiInteraction(
+      'error',
+      'web_search',
+      { query },
+      { error: error instanceof Error ? error.message : String(error) },
+      statusCode,
+      processingTimeMs
+    );
+    
     console.error('Error performing web search:', error);
     throw new Error(`Failed to perform web search: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -63,6 +117,28 @@ interface Relationship {
 export async function generateGraphWithClaude(text: string, options: GraphOptions): Promise<Graph> {
   // Construct a prompt for Claude to extract entities and relationships
   const extractionPrompt = buildPrompt(text, options);
+  
+  const startTime = Date.now();
+  let statusCode = 200;
+  
+  // Prepare request data for logging
+  const requestData = {
+    text_length: text.length,
+    text_excerpt: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
+    options,
+    model: CLAUDE_MODEL,
+    max_tokens: 4000,
+    temperature: 1.0,
+    thinking_enabled: true,
+    thinking_budget: 2000
+  };
+  
+  // Log the request to the database
+  await logApiInteraction(
+    'request',
+    'generate_graph',
+    requestData
+  );
   
   try {
     // Call Claude API with advanced system prompt and thinking enabled for deeper analysis
@@ -158,9 +234,52 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
         
         // Process the graph data
         processGraphData(graphData, text);
+        
+        // Calculate processing time
+        const processingTimeMs = Date.now() - startTime;
+        
+        // Log the fallback success response
+        const responseData = {
+          nodeCount: graphData.nodes.length,
+          edgeCount: graphData.edges.length,
+          method: 'fallback_extraction',
+          completion_tokens: response.usage?.output_tokens || 0,
+          prompt_tokens: response.usage?.input_tokens || 0,
+          model: CLAUDE_MODEL
+        };
+        
+        await logApiInteraction(
+          'response',
+          'generate_graph',
+          requestData,
+          responseData,
+          statusCode,
+          processingTimeMs
+        );
+        
         return graphData;
       } catch (finalError) {
         console.error('All JSON extraction methods failed:', finalError);
+        
+        // Update status code for extraction error
+        statusCode = 422; // Unprocessable Entity
+        
+        // Calculate processing time
+        const processingTimeMs = Date.now() - startTime;
+        
+        // Log the extraction error
+        await logApiInteraction(
+          'error',
+          'generate_graph',
+          requestData,
+          { 
+            error: finalError instanceof Error ? finalError.message : String(finalError),
+            method: 'fallback_extraction_failed'
+          },
+          statusCode,
+          processingTimeMs
+        );
+        
         throw new Error('Failed to extract any usable graph data from Claude response');
       }
     }
@@ -174,13 +293,69 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
       
       // Process the graph data
       processGraphData(graphData, text);
+      
+      // Calculate processing time
+      const processingTimeMs = Date.now() - startTime;
+      
+      // Log the successful response
+      const responseData = {
+        nodeCount: graphData.nodes.length,
+        edgeCount: graphData.edges.length,
+        completion_tokens: response.usage?.output_tokens || 0,
+        prompt_tokens: response.usage?.input_tokens || 0,
+        model: CLAUDE_MODEL
+      };
+      
+      await logApiInteraction(
+        'response',
+        'generate_graph',
+        requestData,
+        responseData,
+        statusCode,
+        processingTimeMs
+      );
+      
       return graphData;
     } catch (parseError) {
       console.error('Error parsing regex-matched JSON response:', parseError);
+      
+      // Update status code for parsing error
+      statusCode = 422; // Unprocessable Entity
+      
+      // Calculate processing time
+      const processingTimeMs = Date.now() - startTime;
+      
+      // Log the parsing error
+      await logApiInteraction(
+        'error',
+        'generate_graph',
+        requestData,
+        { error: parseError instanceof Error ? parseError.message : String(parseError) },
+        statusCode,
+        processingTimeMs
+      );
+      
       throw new Error(`Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
     }
   } catch (error) {
     console.error('Error calling Claude API:', error);
+    
+    // Update status code for API error
+    statusCode = 500;
+    
+    // Calculate processing time
+    const processingTimeMs = Date.now() - startTime;
+    
+    // Log the API error
+    await logApiInteraction(
+      'error',
+      'generate_graph',
+      requestData,
+      { error: error instanceof Error ? error.message : String(error) },
+      statusCode,
+      processingTimeMs
+    );
+    
     throw new Error(`Failed to generate graph with Claude: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

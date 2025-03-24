@@ -67,9 +67,19 @@ export async function getApiLogs(
       .offset(offset);
     
     // Get total count for pagination
-    const totalQuery = db.select({ count: sql`count(*)` }).from(schema.apiLogs);
+    let totalCount = 0;
+    
     if (operationFilter) {
-      totalQuery.where(({ operation }) => sql`${operation} = ${operationFilter}`);
+      const countResult = await db
+        .select({ count: sql`count(*)` })
+        .from(schema.apiLogs)
+        .where(({ operation }) => sql`${operation} = ${operationFilter}`);
+      totalCount = Number(countResult[0]?.count || 0);
+    } else {
+      const countResult = await db
+        .select({ count: sql`count(*)` })
+        .from(schema.apiLogs);
+      totalCount = Number(countResult[0]?.count || 0);
     }
     const totalResult = await totalQuery;
     const total = Number(totalResult[0]?.count || 0);
