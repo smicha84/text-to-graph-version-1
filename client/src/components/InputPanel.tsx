@@ -1,25 +1,33 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { GraphGenerationOptions, WebSearchOptions, Graph } from "@/types/graph";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { GraphGenerationOptions, Graph } from "@/types/graph";
 import { 
-  ChevronLeftIcon, ChevronRightIcon, Share2Icon, 
-  XIcon, RotateCwIcon
+  FileTextIcon, 
+  Share2Icon, 
+  RotateCwIcon,
+  SettingsIcon,
+  InfoIcon,
+  ArrowRightIcon,
+  RefreshCwIcon
 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
 import ActivityTracker from "@/components/ActivityTracker";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface InputPanelProps {
   onGenerateGraph: (text: string, options: GraphGenerationOptions) => void;
-  onWebSearch?: (nodeId: string, query: string) => void; // Added for web search
+  onWebSearch?: (nodeId: string, query: string) => void;
   isLoading: boolean;
-  isSearching?: boolean; // Added to show loading state for search
-  hasExistingGraph: boolean; // Whether there's already a graph to append to
-  selectedNodeId?: string; // ID of the selected node for web search
-  graph?: Graph | null; // The current graph data (optional)
+  isSearching?: boolean;
+  hasExistingGraph: boolean;
+  selectedNodeId?: string;
+  graph?: Graph | null;
 }
 
 // Sample examples to populate the textarea
@@ -39,28 +47,33 @@ export default function InputPanel({
   graph = null
 }: InputPanelProps) {
   const [text, setText] = useState(EXAMPLES[0]);
-  const [expanded, setExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("input");
+  const [searchPrompt, setSearchPrompt] = useState<string>("");
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
+  
+  // Default options
   const [options, setOptions] = useState<GraphGenerationOptions>({
     extractEntities: true,
     extractRelations: true,
     inferProperties: true,
     mergeEntities: true,
-    model: "claude", // Only using Claude model
+    model: "claude",
     appendMode: false,
-    // Setting default toggle values for entity processing - all LLM by default
     useEntityMergingLLM: true,
     useEntityTypeLLM: true, 
     useRelationInferenceLLM: true
   });
-
-  // State for prompt station (web search) - always visible when node is selected
-  const [searchPrompt, setSearchPrompt] = useState("");
-  const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
-
+  
+  // When process starts, switch to activity tab
+  useEffect(() => {
+    if (isLoading) {
+      setActiveTab("activity");
+    }
+  }, [isLoading]);
+  
   // Auto-generate search prompt and suggestions when a node is selected
   useEffect(() => {
     if (selectedNodeId && graph) {
-      // Generate default search prompt when a node is selected
       try {
         const searchQuery = generateWebSearchQuery(graph, selectedNodeId);
         setSearchPrompt(searchQuery);
@@ -73,7 +86,6 @@ export default function InputPanel({
       // Generate contextual suggestions
       setSuggestedQueries(generateSuggestions());
     } else {
-      // Clear when no node is selected
       setSearchPrompt("");
       setSuggestedQueries([]);
     }
@@ -96,10 +108,6 @@ export default function InputPanel({
     // Select a random example
     const randomExample = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
     setText(randomExample);
-  };
-  
-  const toggleExpanded = () => {
-    setExpanded(!expanded);
   };
 
   // Function to generate contextual search suggestions based on node type
@@ -132,41 +140,9 @@ export default function InputPanel({
         suggestions.push(`${node.properties.name || node.label} related concepts`);
       }
       
-      // Try using webSearchUtils for a more comprehensive query
-      try {
-        const contextualQuery = generateWebSearchQuery(graph, selectedNodeId);
-        suggestions.push(contextualQuery);
-      } catch (error) {
-        // Skip if there's an error
-      }
-
       return suggestions;
     }
     return [];
-  };
-
-  // Function to prepare the web search prompt using webSearchUtils - refreshes the suggestions
-  const prepareWebSearch = () => {
-    if (selectedNodeId && graph) {
-      try {
-        // Generate a better search query based on the node and its connections
-        const searchQuery = generateWebSearchQuery(graph, selectedNodeId);
-        setSearchPrompt(searchQuery);
-      } catch (error) {
-        // Fallback if there's an error with the utility
-        const node = graph.nodes.find(n => n.id === selectedNodeId);
-        const nodeName = node ? (node.properties.name || node.label) : "this entity";
-        setSearchPrompt(`Find more information about ${nodeName} and its relationships`);
-      }
-      
-      // Refresh contextual suggestions
-      setSuggestedQueries(generateSuggestions());
-    }
-  };
-  
-  // Function to use a suggested query
-  const useSuggestedQuery = (query: string) => {
-    setSearchPrompt(query);
   };
 
   // Function to execute the web search
@@ -177,191 +153,234 @@ export default function InputPanel({
   };
 
   return (
-    <div className={`${expanded ? 'w-2/5' : 'w-[300px]'} transition-all duration-300 bg-white shadow-md border-r border-gray-200 flex flex-col h-full`}>
-      <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
-        <h2 className="font-semibold text-gray-700 flex items-center">
-          Input Text
-          <button 
-            onClick={toggleExpanded}
-            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-          >
-            {expanded ? <ChevronLeftIcon size={14} /> : <ChevronRightIcon size={14} />}
-          </button>
-        </h2>
-        
-        {expanded && (
-          <div className="flex space-x-2">
-            <button 
-              onClick={handleClearClick}
-              className="text-xs px-2 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-            >
-              Clear
-            </button>
-            <button 
-              onClick={handleExampleClick}
-              className="text-xs px-2 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-            >
-              Example
-            </button>
-          </div>
-        )}
-      </div>
-      
-      {expanded ? (
-        <div className="flex-1 overflow-auto flex flex-col">
-          <div className="p-4 flex-grow overflow-auto">
-            <Textarea
-              id="textInput"
-              className="w-full h-56 p-3 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-              placeholder="Enter your text here to generate a property graph..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-            
-            <div className="mt-4">
-              <div className="mb-3">
-                <Label className="block text-sm font-medium text-gray-700 mb-1">Claude Processing Options</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center">
-                    <Checkbox
-                      id="extractEntities"
-                      checked={options.extractEntities}
-                      onCheckedChange={(checked) => 
-                        handleOptionChange("extractEntities", checked === true)
-                      }
-                      className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                    />
-                    <Label htmlFor="extractEntities" className="ml-2 text-sm text-gray-700">
-                      Extract Entities
-                    </Label>
-                  </div>
-                  <div className="flex items-center">
-                    <Checkbox
-                      id="extractRelations"
-                      checked={options.extractRelations}
-                      onCheckedChange={(checked) => 
-                        handleOptionChange("extractRelations", checked === true)
-                      }
-                      className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                    />
-                    <Label htmlFor="extractRelations" className="ml-2 text-sm text-gray-700">
-                      Extract Relations
-                    </Label>
-                  </div>
-                  <div className="flex items-center">
-                    <Checkbox
-                      id="inferProperties"
-                      checked={options.inferProperties}
-                      onCheckedChange={(checked) => 
-                        handleOptionChange("inferProperties", checked === true)
-                      }
-                      className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                    />
-                    <Label htmlFor="inferProperties" className="ml-2 text-sm text-gray-700">
-                      Infer Properties
-                    </Label>
-                  </div>
-                  <div className="flex items-center">
-                    <Checkbox
-                      id="mergeEntities"
-                      checked={options.mergeEntities}
-                      onCheckedChange={(checked) => 
-                        handleOptionChange("mergeEntities", checked === true)
-                      }
-                      className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                    />
-                    <Label htmlFor="mergeEntities" className="ml-2 text-sm text-gray-700">
-                      Merge Similar Entities
-                    </Label>
-                  </div>
-                </div>
-                
-                {/* Append Mode Toggle - Only show when there's an existing graph */}
-                {hasExistingGraph && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                    <div className="flex items-center">
-                      <Checkbox
-                        id="appendMode"
-                        checked={options.appendMode === true}
-                        onCheckedChange={(checked) => 
-                          handleOptionChange("appendMode", checked === true)
-                        }
-                        className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                      />
-                      <Label htmlFor="appendMode" className="ml-2 text-sm font-medium text-blue-800">
-                        Append to Existing Graph
-                      </Label>
-                    </div>
-                    <p className="mt-1 text-xs text-blue-600 ml-6">
-                      Add new nodes and connections to the current graph instead of replacing it
-                    </p>
-                  </div>
+    <div className="flex flex-col h-full w-full bg-white border-gray-200 overflow-hidden">
+      {/* Tabs Navigation */}
+      <div className="border-b border-gray-200">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab} 
+          className="w-full"
+        >
+          <div className="px-4 pt-3 pb-0">
+            <TabsList className="grid grid-cols-2 mb-1">
+              <TabsTrigger value="input" className="text-sm">
+                <FileTextIcon className="h-4 w-4 mr-2" />
+                Input Text
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="text-sm">
+                <RotateCwIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Activity
+                {isLoading && (
+                  <span className="ml-1 h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
                 )}
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          {/* Input Text Tab */}
+          <TabsContent 
+            value="input" 
+            className="mt-0 flex-1 flex flex-col overflow-auto p-0"
+          >
+            {/* Input panel header with utility buttons */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">
+              <h3 className="text-sm font-medium text-gray-700">Generate Knowledge Graph</h3>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={handleClearClick}
+                  size="sm" 
+                  variant="outline"
+                  className="h-7 text-xs"
+                >
+                  Clear
+                </Button>
+                <Button 
+                  onClick={handleExampleClick}
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                >
+                  Example
+                </Button>
               </div>
             </div>
             
-            <Button
-              onClick={handleGenerateClick}
-              disabled={isLoading || !text.trim()}
-              className={`w-full mt-4 ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white font-medium py-2 rounded transition-colors flex items-center justify-center`}
-            >
-              {isLoading ? (
-                <>
-                  <RotateCwIcon size={16} className="mr-2 animate-spin" />
-                  <span>{options.appendMode ? 'Appending...' : 'Generating...'}</span>
-                </>
-              ) : (
-                <>
-                  <Share2Icon size={16} className="mr-2" />
-                  <span>{options.appendMode ? 'Append to Graph' : 'Generate Graph'}</span>
-                </>
+            <div className="p-4 flex flex-col gap-4 flex-1 overflow-auto">
+              {/* Text input area */}
+              <div>
+                <Label htmlFor="textInput" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Enter Text to Transform
+                </Label>
+                <Textarea
+                  id="textInput"
+                  className="w-full min-h-[150px] p-3 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  placeholder="Enter your text here to generate a property graph..."
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                />
+              </div>
+              
+              {/* Options section */}
+              <div>
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm flex items-center">
+                      <SettingsIcon className="h-4 w-4 mr-2 text-gray-500" />
+                      Processing Options
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-2 pb-3">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                      <div className="flex items-center">
+                        <Checkbox
+                          id="extractEntities"
+                          checked={options.extractEntities}
+                          onCheckedChange={(checked) => 
+                            handleOptionChange("extractEntities", checked === true)
+                          }
+                          className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                        />
+                        <Label htmlFor="extractEntities" className="ml-2 text-sm text-gray-700">
+                          Extract Entities
+                        </Label>
+                      </div>
+                      <div className="flex items-center">
+                        <Checkbox
+                          id="extractRelations"
+                          checked={options.extractRelations}
+                          onCheckedChange={(checked) => 
+                            handleOptionChange("extractRelations", checked === true)
+                          }
+                          className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                        />
+                        <Label htmlFor="extractRelations" className="ml-2 text-sm text-gray-700">
+                          Extract Relations
+                        </Label>
+                      </div>
+                      <div className="flex items-center">
+                        <Checkbox
+                          id="inferProperties"
+                          checked={options.inferProperties}
+                          onCheckedChange={(checked) => 
+                            handleOptionChange("inferProperties", checked === true)
+                          }
+                          className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                        />
+                        <Label htmlFor="inferProperties" className="ml-2 text-sm text-gray-700">
+                          Infer Properties
+                        </Label>
+                      </div>
+                      <div className="flex items-center">
+                        <Checkbox
+                          id="mergeEntities"
+                          checked={options.mergeEntities}
+                          onCheckedChange={(checked) => 
+                            handleOptionChange("mergeEntities", checked === true)
+                          }
+                          className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                        />
+                        <Label htmlFor="mergeEntities" className="ml-2 text-sm text-gray-700">
+                          Merge Similar Entities
+                        </Label>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Append mode - only when there's an existing graph */}
+              {hasExistingGraph && (
+                <div>
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardContent className="p-3">
+                      <div className="flex items-center mb-1">
+                        <Checkbox
+                          id="appendMode"
+                          checked={options.appendMode === true}
+                          onCheckedChange={(checked) => 
+                            handleOptionChange("appendMode", checked === true)
+                          }
+                          className="h-4 w-4 text-blue-600 border-blue-300 rounded focus:ring-blue-500"
+                        />
+                        <Label htmlFor="appendMode" className="ml-2 text-sm font-medium text-blue-800">
+                          Append to Existing Graph
+                        </Label>
+                      </div>
+                      <p className="mt-1 text-xs text-blue-700 ml-6">
+                        Add new nodes and connections to the current graph instead of replacing it
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
               )}
-            </Button>
-            
-            {/* Activity Tracker - shows text-to-graph process and LLM vs Algo toggles */}
+              
+              {/* Smart web search section - only shown when a node is selected */}
+              {selectedNodeId && graph && (
+                <div>
+                  <Card className="border-green-200">
+                    <CardHeader className="py-2.5">
+                      <CardTitle className="text-sm flex items-center">
+                        <InfoIcon className="h-4 w-4 mr-2 text-green-600" />
+                        Web Search Available
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="py-2 pb-3">
+                      <p className="text-xs text-gray-600 mb-2">
+                        You can search the web for more information about the selected node. Use the sidebar to run a search and expand your graph.
+                      </p>
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-300">
+                        Node Selected: {graph.nodes.find(n => n.id === selectedNodeId)?.label}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+              
+              {/* Generate button at the bottom */}
+              <div className="mt-auto pt-2">
+                <Button
+                  onClick={handleGenerateClick}
+                  disabled={isLoading || !text.trim()}
+                  className={`w-full ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white font-medium py-2 rounded transition-colors flex items-center justify-center`}
+                >
+                  {isLoading ? (
+                    <>
+                      <RotateCwIcon size={16} className="mr-2 animate-spin" />
+                      <span>{options.appendMode ? 'Appending...' : 'Generating...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2Icon size={16} className="mr-2" />
+                      <span>{options.appendMode ? 'Append to Graph' : 'Generate Graph'}</span>
+                    </>
+                  )}
+                </Button>
+                
+                {/* Info about process */}
+                <div className="mt-2 text-xs text-gray-500 flex items-start px-1">
+                  <InfoIcon className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
+                  <span>
+                    This will process your text using Claude AI to extract entities and relationships,
+                    then visualize them as a graph. Processing takes 5-10 seconds.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          {/* Activity Monitor Tab */}
+          <TabsContent 
+            value="activity" 
+            className="mt-0 flex-1 overflow-auto p-4"
+          >
             <ActivityTracker 
               options={options} 
               onOptionsChange={setOptions} 
               isProcessing={isLoading}
             />
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col h-full overflow-auto">
-          <div className="p-3 flex flex-col space-y-3">
-            <div className="text-xs text-gray-500 truncate max-w-full">
-              {text ? text.substring(0, 80) + (text.length > 80 ? "..." : "") : "Enter text to generate a graph..."}
-            </div>
-            <Button
-              onClick={handleGenerateClick}
-              disabled={isLoading || !text.trim()}
-              className={`w-full ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white text-sm py-1 rounded transition-colors flex items-center justify-center`}
-              size="sm"
-            >
-              {isLoading ? (
-                <>
-                  <RotateCwIcon size={12} className="mr-1 animate-spin" />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <Share2Icon size={12} className="mr-1" />
-                  <span>Generate Graph</span>
-                </>
-              )}
-            </Button>
-            
-            {/* Activity Tracker visible in compact view too */}
-            <div className="mt-2">
-              <ActivityTracker 
-                options={options} 
-                onOptionsChange={setOptions} 
-                isProcessing={isLoading}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

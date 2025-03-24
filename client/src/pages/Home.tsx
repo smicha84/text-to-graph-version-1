@@ -152,8 +152,8 @@ export default function Home() {
       <Header />
       
       <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar with always-visible prompt station */}
-        <div className="w-72 bg-white border-r border-gray-200 flex-shrink-0">
+        {/* Left sidebar with always-visible prompt station - fixed width, non-resizable */}
+        <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col">
           <SidebarPromptStation 
             onWebSearch={handleWebSearch}
             isSearching={webSearchMutation.isPending}
@@ -162,8 +162,8 @@ export default function Home() {
           />
         </div>
         
-        {/* Input panel in the center with more width */}
-        <div className="w-96 flex-shrink-0 overflow-auto bg-white border-r border-gray-200">
+        {/* Input panel with fixed width - no dynamic resizing for proper layout */}
+        <div className="w-96 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
           <InputPanel 
             onGenerateGraph={handleGenerateGraph}
             onWebSearch={handleWebSearch}
@@ -175,7 +175,8 @@ export default function Home() {
           />
         </div>
         
-        <div className="flex-1 flex flex-col h-full">
+        {/* Graph visualization area - flexible width */}
+        <div className="flex-1 flex flex-col h-full relative">
           <GraphPanel 
             graph={graph}
             isLoading={generateMutation.isPending || webSearchMutation.isPending}
@@ -184,8 +185,9 @@ export default function Home() {
             onWebSearch={handleWebSearch}
           />
           
+          {/* Property panel appears over the graph as a floating panel */}
           {showPropertyPanel && selectedElement && (
-            <div className="absolute top-16 right-80 bg-white shadow-lg border border-gray-200 rounded-lg w-72 z-10">
+            <div className="absolute top-4 right-4 bg-white shadow-lg border border-gray-200 rounded-lg w-72 z-10 max-h-[80%] overflow-auto">
               <PropertyPanel 
                 element={selectedElement}
                 onClose={() => setShowPropertyPanel(false)}
