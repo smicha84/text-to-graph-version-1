@@ -1,6 +1,66 @@
 import { Node, Edge } from "@/types/graph";
 
 /**
+ * Extracts a subtype from a type string if it contains parentheses
+ * For example, "Person (Employee)" would return "Person" as main type and "Employee" as type2
+ * 
+ * @param typeString The type string to parse
+ * @returns An object with mainType and type2 (subtype) properties
+ */
+export function parseNodeType(typeString: string): { mainType: string, type2: string | null } {
+  if (!typeString) {
+    return { mainType: "", type2: null };
+  }
+  
+  // Check if the type contains parentheses with content inside
+  const typeMatch = typeString.match(/^(.*?)\s*\((.*?)\)\s*$/);
+  
+  if (typeMatch && typeMatch[1] && typeMatch[2]) {
+    // Return the parts outside and inside parentheses
+    return {
+      mainType: typeMatch[1].trim(),
+      type2: typeMatch[2].trim()
+    };
+  }
+  
+  // If no parentheses or invalid format, return the whole string as mainType
+  return {
+    mainType: typeString.trim(),
+    type2: null
+  };
+}
+
+/**
+ * Get a node's type2 value (subtype in parentheses)
+ * Checks properties.type2 first, then parses from type if needed
+ * 
+ * @param node The node to get type2 for
+ * @returns The type2 value or null if none exists
+ */
+export function getNodeType2(node: Node): string | null {
+  // First check if type2 is already available in properties
+  if (node.properties.type2) {
+    return node.properties.type2 as string;
+  }
+  
+  // If not, try to parse it from the type
+  const { type2 } = parseNodeType(node.type);
+  return type2;
+}
+
+/**
+ * Get a node's main type (without parenthetical part)
+ * 
+ * @param node The node to get main type for
+ * @returns The main type value
+ */
+export function getNodeMainType(node: Node): string {
+  // Parse the node type
+  const { mainType } = parseNodeType(node.type);
+  return mainType || node.type; // Fallback to full type if parsing failed
+}
+
+/**
  * Utility function to derive a display label from a node's properties
  * This centralizes the logic for how labels are generated throughout the UI
  * 
@@ -37,7 +97,7 @@ export function getNodeDisplayLabel(node: Node): string {
   }
   
   // Last resort fallback
-  return `${node.type} (${node.id.substring(0, 5)})`;
+  return `${getNodeMainType(node)} (${node.id.substring(0, 5)})`;
 }
 
 /**

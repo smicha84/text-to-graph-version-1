@@ -2,7 +2,12 @@ import * as d3 from "d3";
 import { Graph, Node, Edge } from "@/types/graph";
 import { NodeStyle, EdgeStyle } from "@/types/graph";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
-import { getNodeDisplayLabel, getEdgeDisplayLabel } from "@/lib/displayUtils";
+import { 
+  getNodeDisplayLabel, 
+  getEdgeDisplayLabel, 
+  getNodeType2, 
+  getNodeMainType 
+} from "@/lib/displayUtils";
 
 // Define extension types for D3 force simulation
 interface SimulationNode extends d3.SimulationNodeDatum {
@@ -353,12 +358,31 @@ export class GraphVisualizer {
     // Add node ID info
     const nodeIdSection = `<div style="font-size: 12px; color: #666; margin-top: 4px;">ID: ${d.id}</div>`;
     
+    // Extract type2 information using our utility functions
+    const mainType = getNodeMainType(d);
+    const type2 = getNodeType2(d);
+    
+    // Create type section with both type and subtype if available
+    let typeSection = '';
+    if (nodeType) {
+      typeSection = `<div style="font-size: 13px;"><strong>Type:</strong> ${mainType}</div>`;
+      if (type2) {
+        typeSection += `<div style="font-size: 13px;"><strong>Subtype:</strong> ${type2}</div>`;
+      }
+    }
+    
+    // Store type2 in properties if it's not already there, for use in search and display
+    if (type2 && !d.properties.type2) {
+      if (!d.properties) d.properties = {};
+      d.properties.type2 = type2;
+    }
+    
     // Create tooltip content with web search buttons and properties
     this.nodeTooltip
       .html(`
         <div class="tooltip-header" style="border-bottom: 1px solid #ddd; margin-bottom: 6px; padding-bottom: 4px;">
           <h4 style="margin: 0; font-size: 16px;">${nodeName}</h4>
-          ${nodeType ? `<div style="font-size: 13px;"><strong>Type:</strong> ${nodeType}</div>` : ''}
+          ${typeSection}
           ${nodeIdSection}
         </div>
         <div class="node-tooltip-content">
