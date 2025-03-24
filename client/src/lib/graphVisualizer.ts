@@ -420,10 +420,8 @@ export class GraphVisualizer {
     const nodeName = d.properties.name || d.label;
     const nodeType = d.type || '';
     
-    // Create HTML for properties
-    const propertyEntries = Object.entries(d.properties).filter(([key]) => 
-      key !== 'name' && key !== 'id'
-    );
+    // Create HTML for properties - show all properties
+    const propertyEntries = Object.entries(d.properties || {});
     
     const propertiesHTML = propertyEntries.length > 0 
       ? `
