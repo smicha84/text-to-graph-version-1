@@ -5,7 +5,7 @@ import { fromZodError } from "zod-validation-error";
 import { generateGraphInputSchema, exportGraphSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { generateGraphWithClaude, performWebSearch } from "./anthropic";
-import { getApiLogs } from "./database";
+import { getApiLogs, logApiInteraction } from "./database";
 
 // Function to merge two graphs with subgraph tracking
 function mergeGraphs(existingGraph: any, newGraph: any): any {
@@ -430,6 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API endpoint for web search
   app.post('/api/web-search', async (req, res) => {
+    const startTime = Date.now();
     try {
       // Validate request body (ideally, we'd create a Zod schema for this)
       const { query, nodeId, graph } = req.body;
@@ -446,18 +447,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'A valid graph object is required' });
       }
       
+      // Log the request
+      await logApiInteraction(
+        'request',
+        'web_search',
+        {
+          query,
+          nodeId,
+          graphStats: {
+            nodeCount: graph.nodes.length,
+            edgeCount: graph.edges.length
+          }
+        },
+        null,
+        null,
+        0,
+        req.ip,
+        req.headers['user-agent']
+      );
+      
       // Perform web search and expand the graph
       const expandedGraph = await webSearchAndExpandGraph(query, nodeId, graph);
+      
+      // Calculate processing time
+      const processingTime = Date.now() - startTime;
+      
+      // Log the response
+      await logApiInteraction(
+        'response',
+        'web_search',
+        null,
+        {
+          query,
+          nodeId,
+          processingTimeMs: processingTime,
+          resultStats: {
+            totalNodes: expandedGraph.nodes.length,
+            totalEdges: expandedGraph.edges.length,
+            newNodesAdded: expandedGraph.nodes.length - graph.nodes.length,
+            newEdgesAdded: expandedGraph.edges.length - graph.edges.length
+          }
+        },
+        200,
+        processingTime,
+        req.ip,
+        req.headers['user-agent']
+      );
       
       // Return the expanded graph
       res.json(expandedGraph);
     } catch (error) {
       console.error('Error performing web search:', error);
       let errorMessage = 'Failed to perform web search';
+      const statusCode = 500;
+      
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-      res.status(500).json({ 
+      
+      // Log the error
+      await logApiInteraction(
+        'error',
+        'web_search',
+        req.body,
+        { error: errorMessage },
+        statusCode,
+        Date.now() - startTime,
+        req.ip,
+        req.headers['user-agent']
+      );
+      
+      res.status(statusCode).json({ 
         message: 'Failed to perform web search',
         details: errorMessage
       });

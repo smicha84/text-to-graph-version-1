@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import LogsPage from "@/pages/Logs";
 import GraphV2 from "@/pages/GraphV2";
+import LogTest from "@/pages/LogTest";
 
 function Router() {
   return (
@@ -13,6 +14,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/logs" component={LogsPage} />
       <Route path="/graph-v2" component={GraphV2} />
+      <Route path="/log-test" component={LogTest} />
       <Route component={NotFound} />
     </Switch>
   );
