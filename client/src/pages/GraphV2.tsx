@@ -3,8 +3,10 @@ import { useMutation } from "@tanstack/react-query";
 import GraphPanel from "@/components/GraphPanel";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
 import PropertyPanel from "@/components/PropertyPanel";
+import WikipediaTaxonomyPanel from "@/components/WikipediaTaxonomyPanel";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getNodeDisplayLabel, getEdgeDisplayLabel } from "@/lib/displayUtils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +14,7 @@ import { Graph, GraphGenerationOptions, Node, Edge, WebSearchOptions, ExportOpti
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronRight, Loader2, PanelLeftOpen, PanelLeftClose } from "lucide-react";
+import { ChevronRight, Loader2, PanelLeftOpen, PanelLeftClose, DatabaseIcon, NetworkIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import ExportModal from "@/components/ExportModal";
 
@@ -31,7 +33,11 @@ export default function GraphV2() {
     extractRelations: true,
     inferProperties: true,
     mergeEntities: true,
-    model: "claude"
+    generateOntology: false,
+    model: "claude",
+    useEntityMergingLLM: true,
+    useEntityTypeLLM: true,
+    useRelationInferenceLLM: true
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { toast } = useToast();

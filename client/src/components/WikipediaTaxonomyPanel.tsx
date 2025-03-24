@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   BuildingIcon, 
   UserIcon, 
@@ -220,9 +220,16 @@ export default function WikipediaTaxonomyPanel({
             <div className="border-t p-4">
               <h4 className="font-semibold mb-2 flex items-center">
                 <span className="mr-2">Wikipedia Categories for {selectedType}</span>
-                <Tooltip content="These categories are sourced from Wikipedia and show the taxonomic classification of this entity type">
-                  <InfoIcon size={14} className="text-muted-foreground cursor-help" />
-                </Tooltip>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoIcon size={14} className="text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      These categories are sourced from Wikipedia and show the taxonomic classification of this entity type
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </h4>
               
               <div className="bg-muted p-3 rounded-md max-h-48 overflow-y-auto">
