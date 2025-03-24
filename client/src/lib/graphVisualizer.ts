@@ -6,7 +6,6 @@ import { generateWebSearchQuery } from "@/lib/webSearchUtils";
 // Define extension types for D3 force simulation
 interface SimulationNode extends d3.SimulationNodeDatum {
   id: string;
-  label: string;
   type: string;
   properties: Record<string, any>;
   subgraphIds?: string[]; // Array of subgraph IDs this node belongs to

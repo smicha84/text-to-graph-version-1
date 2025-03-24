@@ -69,9 +69,7 @@ export type ExportGraphInput = z.infer<typeof exportGraphSchema>;
 // In-memory graph representation
 export interface Node {
   id: string;
-  label: string;
   type: string;
-  labelDetail?: string; // New property to store what was in parentheses
   properties: Record<string, any>;
   x?: number;
   y?: number;
