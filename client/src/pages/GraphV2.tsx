@@ -317,6 +317,16 @@ export default function GraphV2() {
               </div>
             )}
             
+            {/* Wikipedia Taxonomy Panel */}
+            {graph && (
+              <div className="mb-6">
+                <WikipediaTaxonomyPanel 
+                  graph={graph}
+                  onUpdateGraph={(updatedGraph) => setGraph(updatedGraph)}
+                />
+              </div>
+            )}
+            
             {/* Tabular representation of the graph */}
             {graph && (
               <div className="mt-8">
@@ -356,7 +366,7 @@ export default function GraphV2() {
                               onClick={() => setSelectedElement(node)}
                             >
                               <CardHeader className="p-3 pb-1 bg-gray-50">
-                                <CardTitle className="text-md">{node.label}</CardTitle>
+                                <CardTitle className="text-md">{getNodeDisplayLabel(node)}</CardTitle>
                                 <CardDescription className="text-xs">Type: {node.type}</CardDescription>
                               </CardHeader>
                               <CardContent className="p-3 pt-2">
@@ -394,17 +404,19 @@ export default function GraphV2() {
                               onClick={() => setSelectedElement(edge)}
                             >
                               <div className="w-1/3 font-medium truncate">
-                                {graph.nodes.find(n => n.id === edge.source)?.label || edge.source}
+                                {graph.nodes.find(n => n.id === edge.source) ? 
+                                  getNodeDisplayLabel(graph.nodes.find(n => n.id === edge.source)!) : edge.source}
                               </div>
                               <div className="flex-1 flex justify-center items-center gap-2">
                                 <ChevronRight className="h-4 w-4 text-gray-400" />
                                 <span className="bg-gray-100 px-2 py-1 rounded text-sm font-medium">
-                                  {edge.label}
+                                  {getEdgeDisplayLabel(edge)}
                                 </span>
                                 <ChevronRight className="h-4 w-4 text-gray-400" />
                               </div>
                               <div className="w-1/3 text-right font-medium truncate">
-                                {graph.nodes.find(n => n.id === edge.target)?.label || edge.target}
+                                {graph.nodes.find(n => n.id === edge.target) ? 
+                                  getNodeDisplayLabel(graph.nodes.find(n => n.id === edge.target)!) : edge.target}
                               </div>
                               {edge.properties.source === "web search result" && (
                                 <div className="ml-2 text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
