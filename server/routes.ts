@@ -204,7 +204,7 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
     extractEntities: true,
     extractRelations: true,
     inferProperties: true,
-    mergeEntities: true,
+    mergeEntities: true, // Enable entity merging
     model: 'claude',
     appendMode: true,
     webSearchNode: nodeId,
@@ -218,11 +218,242 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
   // Use the search results to generate the graph with the enhanced context
   const graphWithWebResults = await generateGraphFromText(searchResults, options, existingGraph, true);
   
-  // Add metadata to all new nodes and edges
+  // Identify original nodes and edges for tracking changes
   const originalNodeIds = new Set(existingGraph.nodes.map((node: any) => node.id));
   const originalEdgeIds = new Set(existingGraph.edges.map((edge: any) => edge.id));
   
-  // Mark new nodes as part of the web search subgraph with enhanced metadata
+  // Create an index of existing nodes by their labels and types for more effective merging
+  const existingNodeIndex = new Map();
+  existingGraph.nodes.forEach((node: any) => {
+    // Create composite keys based on different node attributes for matching
+    const labelKey = `label:${node.label.toLowerCase()}`;
+    existingNodeIndex.set(labelKey, node);
+    
+    if (node.properties.name) {
+      const nameKey = `name:${node.properties.name.toLowerCase()}`;
+      existingNodeIndex.set(nameKey, node);
+      
+      // Combine label and name for even more specific matching
+      const labelNameKey = `label+name:${node.label.toLowerCase()}:${node.properties.name.toLowerCase()}`;
+      existingNodeIndex.set(labelNameKey, node);
+    }
+  });
+  
+  // Ensure we have a direct connection from the source node to at least one new node
+  let hasDirectConnectionToSource = false;
+  const newNodeIds = graphWithWebResults.nodes
+    .filter((node: any) => !originalNodeIds.has(node.id))
+    .map((node: any) => node.id);
+  
+  // Check if any new edges connect the source node to a new node
+  graphWithWebResults.edges.forEach((edge: any) => {
+    if (!originalEdgeIds.has(edge.id)) {
+      if ((edge.source === nodeId && newNodeIds.includes(edge.target)) ||
+          (edge.target === nodeId && newNodeIds.includes(edge.source))) {
+        hasDirectConnectionToSource = true;
+      }
+    }
+  });
+  
+  // If no direct connection exists, create one to the most relevant new node
+  if (!hasDirectConnectionToSource && newNodeIds.length > 0) {
+    // Find the most relevant new node (could be enhanced with more sophisticated relevance scoring)
+    let mostRelevantNodeId = newNodeIds[0]; // Default to first new node
+    let mostRelevantNode = graphWithWebResults.nodes.find((n: any) => n.id === mostRelevantNodeId);
+    
+    // If the source node has a name, try to find a new node with similar characteristics
+    if (sourceNode.properties.name) {
+      const sourceNameTokens = sourceNode.properties.name.toLowerCase().split(/\s+/);
+      
+      // Score new nodes by name similarity to source node
+      let highestRelevanceScore = 0;
+      
+      newNodeIds.forEach((newId: string) => {
+        const newNode = graphWithWebResults.nodes.find((n: any) => n.id === newId);
+        if (newNode?.properties?.name) {
+          const newNameTokens = newNode.properties.name.toLowerCase().split(/\s+/);
+          
+          // Calculate simple token overlap score
+          let matchScore = 0;
+          sourceNameTokens.forEach((token: string) => {
+            if (newNameTokens.some((t: string) => t.includes(token) || token.includes(t))) {
+              matchScore++;
+            }
+          });
+          
+          // If same type, boost the score
+          if (newNode.type === sourceNode.type) {
+            matchScore += 2;
+          }
+          
+          if (matchScore > highestRelevanceScore) {
+            highestRelevanceScore = matchScore;
+            mostRelevantNodeId = newId;
+            mostRelevantNode = newNode;
+          }
+        }
+      });
+    }
+    
+    // Create a new edge connecting the source node to the most relevant new node
+    const newEdgeId = `e${graphWithWebResults.edges.length + 1}`;
+    const relationLabel = determineAppropriateRelation(sourceNode, mostRelevantNode);
+    
+    graphWithWebResults.edges.push({
+      id: newEdgeId,
+      source: nodeId,
+      target: mostRelevantNodeId,
+      label: relationLabel,
+      properties: {
+        source: "web search result",
+        search_query: query,
+        search_date: new Date().toISOString(),
+        confidence: 0.75,
+        auto_connected: true
+      },
+      subgraphIds: [subgraphId]
+    });
+    
+    console.log(`Created automatic connection from source node ${nodeId} to relevant new node ${mostRelevantNodeId}`);
+  }
+  
+  // Second phase: Perform additional entity merging for new nodes that are similar to existing ones
+  // but weren't caught by the initial merging process
+  const newNodes = graphWithWebResults.nodes.filter((node: any) => !originalNodeIds.has(node.id));
+  
+  // Define the structure for node merging info
+  interface MergeInfo {
+    newNodeId: string;
+    existingNodeId: string;
+    strength: number;
+  }
+  
+  const nodesToMerge: MergeInfo[] = []; // Track nodes that should be merged into existing ones
+  
+  // First pass: identify which new nodes should be merged with existing ones
+  newNodes.forEach((newNode: any) => {
+    // Skip nodes that are already directly connected to the source node
+    const isDirectlyConnectedToSource = graphWithWebResults.edges.some((edge: any) => 
+      (edge.source === nodeId && edge.target === newNode.id) || 
+      (edge.target === nodeId && edge.source === newNode.id));
+    
+    if (isDirectlyConnectedToSource) {
+      return; // Keep direct connections as separate nodes
+    }
+    
+    // Check for name-based matches
+    if (newNode.properties.name) {
+      const newNodeName = newNode.properties.name.toLowerCase();
+      
+      // Look for existing nodes with similar names
+      for (const existingNode of existingGraph.nodes) {
+        if (existingNode.properties.name) {
+          const existingName = existingNode.properties.name.toLowerCase();
+          
+          // Check for exact match or significant overlap
+          if (existingName === newNodeName || 
+              (existingName.includes(newNodeName) && newNodeName.length > 3) ||
+              (newNodeName.includes(existingName) && existingName.length > 3)) {
+            
+            // Additional check - if same type or label, this is a stronger match
+            const isSameType = existingNode.type === newNode.type;
+            const isSameLabel = existingNode.label === newNode.label;
+            
+            if (isSameType || isSameLabel) {
+              nodesToMerge.push({
+                newNodeId: newNode.id,
+                existingNodeId: existingNode.id,
+                strength: (isSameType ? 2 : 0) + (isSameLabel ? 2 : 0) + 3 // Base score + bonuses
+              });
+              break;
+            } else {
+              // Still a potential match but weaker
+              nodesToMerge.push({
+                newNodeId: newNode.id,
+                existingNodeId: existingNode.id,
+                strength: 2 // Lower confidence for different type/label
+              });
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  // Sort merges by strength and merge from highest to lowest confidence
+  nodesToMerge.sort((a, b) => b.strength - a.strength);
+  
+  // Track which nodes have been processed to avoid duplicate merges
+  const processedNodes = new Set();
+  
+  // Second pass: perform the actual merging
+  nodesToMerge.forEach((mergeInfo) => {
+    if (processedNodes.has(mergeInfo.newNodeId)) {
+      return; // Skip if this node has already been processed
+    }
+    
+    const newNode = graphWithWebResults.nodes.find((n: any) => n.id === mergeInfo.newNodeId);
+    const existingNode = graphWithWebResults.nodes.find((n: any) => n.id === mergeInfo.existingNodeId);
+    
+    if (!newNode || !existingNode) {
+      return; // Skip if either node can't be found
+    }
+    
+    // Merge properties from new node to existing node
+    Object.entries(newNode.properties).forEach(([key, value]) => {
+      // Don't overwrite existing values unless they're empty
+      if (!existingNode.properties[key] || existingNode.properties[key] === "") {
+        existingNode.properties[key] = value;
+      }
+    });
+    
+    // Add the subgraph ID from the new node to the existing node
+    if (newNode.subgraphIds) {
+      if (!existingNode.subgraphIds) {
+        existingNode.subgraphIds = [];
+      }
+      
+      newNode.subgraphIds.forEach((sgId: string) => {
+        if (!existingNode.subgraphIds.includes(sgId)) {
+          existingNode.subgraphIds.push(sgId);
+        }
+      });
+    }
+    
+    // Update all edges that were connected to the new node to connect to the existing node instead
+    graphWithWebResults.edges.forEach((edge: any) => {
+      if (edge.source === mergeInfo.newNodeId) {
+        edge.source = mergeInfo.existingNodeId;
+      }
+      if (edge.target === mergeInfo.newNodeId) {
+        edge.target = mergeInfo.existingNodeId;
+      }
+    });
+    
+    // Mark the new node for removal
+    processedNodes.add(mergeInfo.newNodeId);
+    
+    console.log(`Merged node ${mergeInfo.newNodeId} into existing node ${mergeInfo.existingNodeId}`);
+  });
+  
+  // Remove merged nodes from the graph
+  if (processedNodes.size > 0) {
+    graphWithWebResults.nodes = graphWithWebResults.nodes.filter((node: any) => 
+      !processedNodes.has(node.id));
+    
+    // Remove duplicate edges that might have been created during merging
+    const seenEdges = new Set();
+    graphWithWebResults.edges = graphWithWebResults.edges.filter((edge: any) => {
+      const edgeKey = `${edge.source}-${edge.label}-${edge.target}`;
+      if (seenEdges.has(edgeKey)) {
+        return false; // Skip this duplicate edge
+      }
+      seenEdges.add(edgeKey);
+      return true;
+    });
+  }
+  
+  // Mark all remaining new nodes as part of the web search subgraph with enhanced metadata
   graphWithWebResults.nodes.forEach((node: any) => {
     if (!originalNodeIds.has(node.id)) {
       if (!node.subgraphIds) {
@@ -245,7 +476,7 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
     }
   });
   
-  // Mark new edges as part of the web search subgraph with enhanced metadata
+  // Mark all remaining new edges as part of the web search subgraph with enhanced metadata
   graphWithWebResults.edges.forEach((edge: any) => {
     if (!originalEdgeIds.has(edge.id)) {
       if (!edge.subgraphIds) {
@@ -294,10 +525,77 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
     timestamp: new Date().toISOString(),
     newNodesAdded: graphWithWebResults.nodes.length - existingGraph.nodes.length,
     newEdgesAdded: graphWithWebResults.edges.length - existingGraph.edges.length,
+    mergedNodeCount: processedNodes.size,
     subgraphId
   });
   
   return graphWithWebResults;
+}
+
+/**
+ * Determine an appropriate relation label between two nodes based on their types
+ */
+function determineAppropriateRelation(sourceNode: any, targetNode: any): string {
+  // Default relation if nothing else matches
+  let relation = "RELATED_TO";
+  
+  // Get node types in lowercase for easier matching
+  const sourceType = (sourceNode.type || "").toLowerCase();
+  const targetType = (targetNode.type || "").toLowerCase();
+  const sourceLabel = (sourceNode.label || "").toLowerCase();
+  const targetLabel = (targetNode.label || "").toLowerCase();
+  
+  // Location-based relations
+  if (sourceType.includes("location") || sourceLabel.includes("location")) {
+    if (targetType.includes("location") || targetLabel.includes("location")) {
+      // Location to location
+      relation = "CONNECTED_TO";
+    } else if (targetType.includes("person") || targetLabel.includes("person")) {
+      // Location to person
+      relation = "LOCATION_OF";
+    } else if (targetType.includes("organization") || targetLabel.includes("organization")) {
+      // Location to organization
+      relation = "HEADQUARTERS_OF";
+    } else if (targetType.includes("event") || targetLabel.includes("event")) {
+      // Location to event
+      relation = "VENUE_OF";
+    }
+  }
+  // Person-based relations
+  else if (sourceType.includes("person") || sourceLabel.includes("person")) {
+    if (targetType.includes("location") || targetLabel.includes("location")) {
+      // Person to location
+      relation = "LIVES_IN";
+    } else if (targetType.includes("organization") || targetLabel.includes("organization")) {
+      // Person to organization
+      relation = "AFFILIATED_WITH";
+    } else if (targetType.includes("person") || targetLabel.includes("person")) {
+      // Person to person
+      relation = "KNOWS";
+    } else if (targetType.includes("concept") || targetLabel.includes("concept")) {
+      // Person to concept
+      relation = "ASSOCIATED_WITH";
+    }
+  }
+  // Organization-based relations
+  else if (sourceType.includes("organization") || sourceLabel.includes("organization")) {
+    if (targetType.includes("location") || targetLabel.includes("location")) {
+      // Organization to location
+      relation = "LOCATED_IN";
+    } else if (targetType.includes("person") || targetLabel.includes("person")) {
+      // Organization to person
+      relation = "EMPLOYS";
+    } else if (targetType.includes("organization") || targetLabel.includes("organization")) {
+      // Organization to organization
+      relation = "PARTNERED_WITH";
+    }
+  }
+  // Concept-based relations
+  else if (sourceType.includes("concept") || sourceLabel.includes("concept")) {
+    relation = "RELATED_TO";
+  }
+  
+  return relation;
 }
 
 /**
@@ -459,9 +757,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             edgeCount: graph.edges.length
           }
         },
-        null,
-        null,
-        0,
+        undefined, // No response data for request log
+        200, // Success status code
+        0, // No processing time yet
         req.ip,
         req.headers['user-agent']
       );
@@ -476,7 +774,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await logApiInteraction(
         'response',
         'web_search',
-        null,
+        undefined, // No request data needed in response log
         {
           query,
           nodeId,
@@ -594,7 +892,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           temperature: 0.5,
           has_graph_context: true,
           context_size: 500
-        }
+        },
+        undefined,
+        200,
+        0,
+        req.ip,
+        req.headers['user-agent']
       );
       
       // Simulate processing time
@@ -604,9 +907,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await logApiInteraction(
         'response',
         'web_search',
-        {
-          query: 'Test web search query'
-        },
+        undefined,
         {
           model: 'claude-3-7-sonnet-20250219',
           prompt_tokens: 1250,
@@ -618,7 +919,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]
         },
         200,
-        1050
+        1050,
+        req.ip,
+        req.headers['user-agent']
       );
       
       res.json({ message: 'Test logs created successfully' });
