@@ -821,8 +821,8 @@ export class GraphVisualizer {
             if (count > 1) {
               // For multiple edges, we'll create a curved path
               // The curvature increases based on the index of the edge
-              // Increased base curveFactor for more pronounced curves
-              const curveFactor = 50 * (index / count); // Scale the curve based on index (increased from 20 to 50)
+              // Tripled curveFactor for much more pronounced curves and better separation
+              const curveFactor = 150 * (index / count); // Scale the curve based on index (increased from 50 to 150)
               
               // Calculate control point - perpendicular to the direction vector
               const cpX = (sourceX + endX) / 2 + normY * curveFactor;
