@@ -607,26 +607,65 @@ export class GraphVisualizer {
         // Use custom color if available, otherwise fall back to default color map
         return this.customNodeColors[d.type] || NODE_COLORS[d.type] || NODE_COLORS.default;
       })
-      .attr("stroke", (d: SimulationNode, i: number) => {
-        // Add a border to the first node to indicate it's anchored
+      .attr("stroke", (d: SimulationNode) => {
+        // If the node has a web search source, add a distinctive border
+        if (d.properties.source === "web search result") {
+          return "#2563EB"; // Blue border for web search results
+        }
+        
+        // Otherwise, add a border to the first node to indicate it's anchored
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "#000" : null;
       })
-      .attr("stroke-width", (d: SimulationNode, i: number) => {
-        // Add a border to the first node to indicate it's anchored
+      .attr("stroke-width", (d: SimulationNode) => {
+        // Web search results and the anchor node get borders
+        if (d.properties.source === "web search result") {
+          return 3;
+        }
+        
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? 2 : 0;
       })
-      .attr("stroke-dasharray", (d: SimulationNode, i: number) => {
-        // Add a dashed border to the first node to indicate it's anchored
+      .attr("stroke-dasharray", (d: SimulationNode) => {
+        // Different dash patterns for different node types
+        if (d.properties.source === "web search result") {
+          return "5,2"; // Distinctive dash pattern for web search results
+        }
+        
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "3,3" : null;
       })
-      .style("cursor", (d: SimulationNode, i: number) => {
+      .style("cursor", (d: SimulationNode) => {
         // The first node is fixed and cannot be freely dragged
         const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "default" : "grab";
       })
+    
+    // Add web search indicator badge for search results
+    nodes.append("circle")
+      .attr("r", 6)
+      .attr("cx", 18)
+      .attr("cy", -18)
+      .attr("fill", "#2563EB") // Blue badge for web search results
+      .attr("stroke", "#FFF")
+      .attr("stroke-width", 1.5)
+      .style("display", (d: SimulationNode) => 
+        d.properties.source === "web search result" ? "block" : "none"
+      );
+      
+    // Add globe icon in the badge for web search results
+    nodes.append("text")
+      .attr("x", 18)
+      .attr("y", -18)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central")
+      .attr("fill", "white")
+      .attr("font-size", "6px")
+      .attr("font-weight", "bold")
+      .text((d: SimulationNode) => d.properties.source === "web search result" ? "W" : "")
+      .style("display", (d: SimulationNode) => 
+        d.properties.source === "web search result" ? "block" : "none"
+      );
     
     // Node labels (inside circle)
     nodes.append("text")

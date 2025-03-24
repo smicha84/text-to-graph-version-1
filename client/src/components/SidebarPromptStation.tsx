@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Graph } from "@/types/graph";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
-import { Globe, Search, ArrowRight, History, InfoIcon, BrainCircuit } from "lucide-react";
+import { Globe, Search, ArrowRight, History, InfoIcon, BrainCircuit, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { useApiOperationStatus } from "@/hooks/use-api-logs";
 
 interface SidebarPromptStationProps {
   onWebSearch: (nodeId: string, query: string) => void;
@@ -28,20 +30,12 @@ export default function SidebarPromptStation({
   // Search history to show recently used prompts
   const [searchHistory, setSearchHistory] = useState<{nodeId: string, query: string, timestamp: Date}[]>([]);
   
-  // Sample current prompt info (would be updated in real-time from LLM API)
-  const [currentPromptInfo, setCurrentPromptInfo] = useState<{
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-    model: string;
-    status: "idle" | "loading" | "complete" | "error";
-  }>({
-    promptTokens: 0,
-    completionTokens: 0,
-    totalTokens: 0,
-    model: "claude-3-opus-20240229",
-    status: "idle"
-  });
+  // Use the API logs hook to track web search operations
+  const { 
+    status, 
+    metrics, 
+    lastActivity 
+  } = useApiOperationStatus('web_search');
 
   // Update suggestions when selected node changes
   useEffect(() => {
@@ -108,12 +102,8 @@ export default function SidebarPromptStation({
         ...prev.slice(0, 9) // Keep only the 10 most recent searches
       ]);
       
-      // Simulate prompt info update
-      setCurrentPromptInfo({
-        ...currentPromptInfo,
-        status: "loading",
-        promptTokens: Math.floor(searchPrompt.length / 4) // Rough approximation
-      });
+      // Switch to live view tab to show progress
+      setActiveTab("live");
       
       // Execute the search
       onWebSearch(selectedNodeId, searchPrompt.trim());
@@ -126,24 +116,13 @@ export default function SidebarPromptStation({
       handleSearch();
     }
   };
-
-  // Update the status when search completes or starts
-  useEffect(() => {
-    if (isSearching) {
-      setCurrentPromptInfo(prev => ({
-        ...prev,
-        status: "loading"
-      }));
-    } else if (currentPromptInfo.status === "loading") {
-      // This means we were searching and now we're done
-      setCurrentPromptInfo(prev => ({
-        ...prev,
-        status: "complete",
-        completionTokens: Math.floor(Math.random() * 1000) + 500, // Simulate completion tokens
-        totalTokens: prev.promptTokens + Math.floor(Math.random() * 1000) + 500
-      }));
-    }
-  }, [isSearching]);
+  
+  // Format timestamp for display
+  const formatTimestamp = (timestamp: string) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString();
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -163,7 +142,12 @@ export default function SidebarPromptStation({
         <TabsList className="mx-4 mt-2 grid w-auto grid-cols-3">
           <TabsTrigger value="search">Search</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
-          <TabsTrigger value="live">Live View</TabsTrigger>
+          <TabsTrigger value="live">
+            Live View
+            {status === 'loading' && (
+              <span className="ml-2 h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+            )}
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="search" className="flex-1 overflow-hidden flex flex-col p-4 pt-2">
@@ -273,65 +257,96 @@ export default function SidebarPromptStation({
         
         <TabsContent value="live" className="flex-1 overflow-auto p-4 pt-2">
           <Card className="mb-4">
-            <CardHeader className="py-3">
+            <CardHeader className="py-3 flex flex-row items-center justify-between">
               <CardTitle className="text-sm flex items-center">
                 <BrainCircuit className="h-4 w-4 mr-2" />
-                Current AI Operation
+                Current Operation Status
               </CardTitle>
+              <Badge 
+                variant={
+                  status === 'idle' ? 'outline' :
+                  status === 'loading' ? 'default' :
+                  status === 'complete' ? 'secondary' : 'destructive'
+                }
+                className={`text-xs ${status === 'complete' ? 'bg-green-500 hover:bg-green-700' : ''}`}
+              >
+                {status === 'idle' && 'Idle'}
+                {status === 'loading' && 'Processing'}
+                {status === 'complete' && 'Complete'}
+                {status === 'error' && 'Error'}
+              </Badge>
             </CardHeader>
             <CardContent className="py-2">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm">Status:</span>
-                  <span className="text-sm font-medium">
-                    {currentPromptInfo.status === "idle" && "Idle"}
-                    {currentPromptInfo.status === "loading" && (
-                      <span className="flex items-center">
-                        Processing
-                        <div className="ml-2 h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-                      </span>
-                    )}
-                    {currentPromptInfo.status === "complete" && "Complete"}
-                    {currentPromptInfo.status === "error" && "Error"}
-                  </span>
+                  <span className="text-sm">Operation:</span>
+                  <span className="text-sm font-medium">Web Search</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Model:</span>
-                  <span className="text-sm font-medium">{currentPromptInfo.model}</span>
+                  <span className="text-sm font-medium">{metrics.model || "claude-3-7-sonnet-20250219"}</span>
                 </div>
                 <Separator className="my-1" />
                 <div className="flex justify-between">
                   <span className="text-sm">Prompt Tokens:</span>
-                  <span className="text-sm font-medium">{currentPromptInfo.promptTokens}</span>
+                  <span className="text-sm font-medium">{metrics.promptTokens}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Completion Tokens:</span>
-                  <span className="text-sm font-medium">{currentPromptInfo.completionTokens}</span>
+                  <span className="text-sm font-medium">{metrics.completionTokens}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Total Tokens:</span>
-                  <span className="text-sm font-medium">{currentPromptInfo.totalTokens}</span>
+                  <span className="text-sm font-medium">{metrics.totalTokens}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Processing Time:</span>
+                  <span className="text-sm font-medium">{metrics.processingTimeMs}ms</span>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <div className="text-xs text-gray-500 p-2">
-            <p className="mb-2">Recent API Activity:</p>
-            <div className="bg-gray-50 p-2 rounded-md border border-gray-200 mb-2">
-              <p className="font-mono text-xs">
-                {isSearching ? (
-                  <span className="text-blue-600">⟳ Currently processing web search query...</span>
-                ) : searchHistory.length > 0 ? (
-                  <span className="text-green-600">✓ Last query completed successfully</span>
-                ) : (
-                  <span className="text-gray-600">No recent API activity</span>
-                )}
-              </p>
-              <p className="font-mono text-xs mt-1 text-gray-500">
-                View the Logs page for complete history
-              </p>
+          <div className="text-xs text-gray-500">
+            <div className="flex items-center gap-1 mb-2">
+              <Clock size={12} />
+              <span>Recent API Activity:</span>
             </div>
+            
+            <div className={`p-3 rounded-md border mb-2 ${
+              status === 'loading' ? 'bg-blue-50 border-blue-200' :
+              status === 'complete' ? 'bg-green-50 border-green-200' :
+              status === 'error' ? 'bg-red-50 border-red-200' :
+              'bg-gray-50 border-gray-200'
+            }`}>
+              {lastActivity ? (
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <p className={`font-medium ${
+                      status === 'loading' ? 'text-blue-700' :
+                      status === 'complete' ? 'text-green-700' :
+                      status === 'error' ? 'text-red-700' :
+                      'text-gray-700'
+                    }`}>
+                      {status === 'loading' && '⟳ Processing...'}
+                      {status === 'complete' && '✓ Complete'}
+                      {status === 'error' && '✗ Error'}
+                      {status === 'idle' && 'Idle'}
+                    </p>
+                    <span className="text-xs text-gray-500">
+                      {formatTimestamp(lastActivity.timestamp)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-600">{lastActivity.message}</p>
+                </div>
+              ) : (
+                <p className="text-gray-600">No recent API activity</p>
+              )}
+            </div>
+            
+            <p className="text-center text-xs text-gray-500 mt-4">
+              View the <a href="/logs" className="text-blue-500 hover:underline">Logs page</a> for complete history
+            </p>
           </div>
         </TabsContent>
       </Tabs>
