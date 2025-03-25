@@ -210,6 +210,12 @@ export default function Home() {
             </div>
             
             <div className="mt-4 bg-white border rounded-lg shadow-sm">
+              <div className="p-4 border-b">
+                <h2 className="text-lg font-semibold">Strategic Graph Explorer</h2>
+                <p className="text-sm text-gray-500">
+                  Analyze your graph and discover strategic insights for exploration
+                </p>
+              </div>
               <SimpleStrategyPrompt
                 graph={graph || {nodes: [], edges: []}}
                 selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
