@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Graph } from "@/types/graph";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
 import { getNodeDisplayLabel } from "@/lib/displayUtils";
-import { Globe, Search, ArrowRight, History, InfoIcon, BrainCircuit, Clock, BarChart3 } from "lucide-react";
-import SimpleStrategyPrompt from "@/components/SimpleStrategyPrompt";
+import { Globe, Search, ArrowRight, History, InfoIcon, BrainCircuit, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +26,7 @@ export default function SidebarPromptStation({
 }: SidebarPromptStationProps) {
   const [searchPrompt, setSearchPrompt] = useState("");
   const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState("strategy");
+  const [activeTab, setActiveTab] = useState("search");
   
   // Search history to show recently used prompts
   const [searchHistory, setSearchHistory] = useState<{nodeId: string, query: string, timestamp: Date}[]>([]);
@@ -131,19 +130,18 @@ export default function SidebarPromptStation({
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center mb-1">
           <Globe className="mr-2 h-5 w-5 text-blue-500" />
-          <h2 className="text-lg font-semibold">Strategic Graph Explorer</h2>
+          <h2 className="text-lg font-semibold">Web Search</h2>
         </div>
         <p className="text-xs text-gray-500">
           {selectedNodeId 
-            ? "Analyze graph structure and expand connections with strategic web searches" 
-            : "Select a node from the graph to enable strategic analysis and search"}
+            ? "Search the web to expand your graph with new connections" 
+            : "Select a node from the graph to enable web search"}
         </p>
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="mx-4 mt-2 grid w-auto grid-cols-4">
+        <TabsList className="mx-4 mt-2 grid w-auto grid-cols-3">
           <TabsTrigger value="search">Search</TabsTrigger>
-          <TabsTrigger value="strategy">Strategy</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="live">
             Live View
@@ -152,15 +150,6 @@ export default function SidebarPromptStation({
             )}
           </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="strategy" className="flex-1 overflow-auto p-0">
-          <SimpleStrategyPrompt
-            graph={graph}
-            selectedNodeId={selectedNodeId}
-            onWebSearch={onWebSearch}
-            isSearching={isSearching}
-          />
-        </TabsContent>
         
         <TabsContent value="search" className="flex-1 overflow-hidden flex flex-col p-4 pt-2">
           {/* Search input fixed at the top */}

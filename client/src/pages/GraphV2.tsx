@@ -306,7 +306,21 @@ export default function GraphV2() {
               </div>
             )}
             
-            {/* Strategy Prompt Area is now in SidebarPromptStation */}
+            {/* Strategy Prompt Area */}
+            {graph && (
+              <div className="mb-6">
+                <Card>
+                  <CardContent className="p-0">
+                    <SimpleStrategyPrompt
+                      graph={graph}
+                      selectedNodeId={isNode(selectedElement) ? selectedElement?.id : undefined}
+                      onWebSearch={handleWebSearch}
+                      isSearching={webSearchMutation.isPending}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
             
             {/* Wikipedia Taxonomy Panel */}
             {graph && (
