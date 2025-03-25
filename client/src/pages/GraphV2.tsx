@@ -294,8 +294,8 @@ export default function GraphV2() {
             </div>
             
             {/* Graph Visualization Panel */}
-            {graph && (
-              <div className="mb-6">
+            <div className="mb-6">
+              <div className="h-[50vh] overflow-auto border rounded-lg">
                 <GraphPanel
                   graph={graph}
                   isLoading={generateMutation.isPending || webSearchMutation.isPending}
@@ -304,23 +304,27 @@ export default function GraphV2() {
                   onWebSearch={handleWebSearch}
                 />
               </div>
-            )}
+            </div>
             
             {/* Strategy Prompt Area */}
-            {graph && (
-              <div className="mb-6">
-                <Card>
-                  <CardContent className="p-0">
-                    <SimpleStrategyPrompt
-                      graph={graph}
-                      selectedNodeId={isNode(selectedElement) ? selectedElement?.id : undefined}
-                      onWebSearch={handleWebSearch}
-                      isSearching={webSearchMutation.isPending}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            <div className="mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Strategic Graph Prompt</CardTitle>
+                  <CardDescription>
+                    Analyze your graph and generate strategic insights for exploration
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <SimpleStrategyPrompt
+                    graph={graph || {nodes: [], edges: []}}
+                    selectedNodeId={isNode(selectedElement) ? selectedElement?.id : undefined}
+                    onWebSearch={handleWebSearch}
+                    isSearching={webSearchMutation.isPending}
+                  />
+                </CardContent>
+              </Card>
+            </div>
             
             {/* Wikipedia Taxonomy Panel */}
             {graph && (
