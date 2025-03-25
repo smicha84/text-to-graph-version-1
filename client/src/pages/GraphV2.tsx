@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import GraphPanel from "@/components/GraphPanel";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
-import StrategyPrompt from "@/components/StrategyPrompt";
+import SimpleStrategyPrompt from "@/components/SimpleStrategyPrompt";
 import WikipediaTaxonomyPanel from "@/components/WikipediaTaxonomyPanel";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -311,7 +311,7 @@ export default function GraphV2() {
               <div className="mb-6">
                 <Card>
                   <CardContent className="p-0">
-                    <StrategyPrompt
+                    <SimpleStrategyPrompt
                       graph={graph}
                       selectedNodeId={isNode(selectedElement) ? selectedElement?.id : undefined}
                       onWebSearch={handleWebSearch}

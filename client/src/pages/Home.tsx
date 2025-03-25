@@ -5,6 +5,7 @@ import GraphPanel from "@/components/GraphPanel";
 import ExportModal from "@/components/ExportModal";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
 import NodeAnatomyChart from "@/components/NodeAnatomyChart";
+import SimpleStrategyPrompt from "@/components/SimpleStrategyPrompt";
 import { Graph, Node, Edge, GraphGenerationOptions, ExportOptions, WebSearchOptions } from "@/types/graph";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
