@@ -40,8 +40,8 @@ export default function StrategyPromptArea({
 Graph Summary:
 - ${graph.nodes.length} nodes (entities)
 - ${graph.edges.length} relationships
-- Primary node types: ${[...new Set(graph.nodes.map(node => node.type))].slice(0, 5).join(', ')}
-- Main relationship types: ${[...new Set(graph.edges.map(edge => edge.label))].slice(0, 5).join(', ')}
+- Primary node types: ${Array.from(new Set(graph.nodes.map(node => node.type))).slice(0, 5).join(', ')}
+- Main relationship types: ${Array.from(new Set(graph.edges.map(edge => edge.label))).slice(0, 5).join(', ')}
 `.trim() : "";
 
   // Get node context for the selected node

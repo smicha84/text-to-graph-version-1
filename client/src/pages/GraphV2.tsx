@@ -306,14 +306,19 @@ export default function GraphV2() {
               </div>
             )}
             
-            {/* Selected element property panel */}
-            {selectedElement && (
+            {/* Strategy Prompt Area */}
+            {graph && (
               <div className="mb-6">
-                <PropertyPanel 
-                  element={selectedElement} 
-                  onClose={() => setSelectedElement(null)}
-                  onWebSearch={handleWebSearch}
-                />
+                <Card>
+                  <CardContent className="p-0">
+                    <StrategyPromptArea
+                      graph={graph}
+                      selectedNodeId={isNode(selectedElement) ? selectedElement?.id : undefined}
+                      onWebSearch={handleWebSearch}
+                      isSearching={webSearchMutation.isPending}
+                    />
+                  </CardContent>
+                </Card>
               </div>
             )}
             
