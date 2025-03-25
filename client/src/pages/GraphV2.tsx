@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import GraphPanel from "@/components/GraphPanel";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
-import PropertyPanel from "@/components/PropertyPanel";
+import StrategyPromptArea from "@/components/StrategyPromptArea";
 import WikipediaTaxonomyPanel from "@/components/WikipediaTaxonomyPanel";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
