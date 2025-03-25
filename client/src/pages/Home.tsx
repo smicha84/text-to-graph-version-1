@@ -198,26 +198,13 @@ export default function Home() {
             </DialogContent>
           </Dialog>
           
-          <div className="flex flex-col h-full">
-            <GraphPanel 
-              graph={graph}
-              isLoading={generateMutation.isPending || webSearchMutation.isPending}
-              onElementSelect={handleElementSelect}
-              onShowExportModal={() => setShowExportModal(true)}
-              onWebSearch={handleWebSearch}
-            />
-            
-            {graph && (
-              <div className="mt-4 bg-white border rounded-lg shadow-sm">
-                <SimpleStrategyPrompt
-                  graph={graph}
-                  selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
-                  onWebSearch={handleWebSearch}
-                  isSearching={webSearchMutation.isPending}
-                />
-              </div>
-            )}
-          </div>
+          <GraphPanel 
+            graph={graph}
+            isLoading={generateMutation.isPending || webSearchMutation.isPending}
+            onElementSelect={handleElementSelect}
+            onShowExportModal={() => setShowExportModal(true)}
+            onWebSearch={handleWebSearch}
+          />
         </div>
       </div>
       
