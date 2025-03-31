@@ -754,6 +754,245 @@ export default function UIShowcase() {
                 </div>}
                 explanation="Advanced UI customization empowers users to tailor the application's interface precisely to their needs and preferences. Rather than being limited to predefined layouts, this approach gives users granular control over every UI element's size, position, and appearance. The implementation requires a comprehensive design system with styled components that accept dimension and position props, along with a specialized editing mode that renders resize/move handles around selected elements. By storing these customizations in user profiles, the system provides a personalized experience that significantly enhances productivity by allowing users to optimize screen real estate for their specific workflows."
               />
+              
+              <ShowcaseItem
+                title="Enhanced Global UI Customization"
+                description="Global controls in the header to customize the entire interface layout and appearance"
+                complexity="Medium"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white p-2 border rounded">
+                    <div className="flex justify-between items-center p-1 bg-gray-100 mb-2">
+                      <div className="text-[10px] font-medium">Application Header</div>
+                      <div className="flex gap-1">
+                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-1 h-24 bg-gray-50 border rounded p-1">
+                        <div className="text-[8px] font-medium">Panel 1</div>
+                        <div className="w-full h-16 bg-gray-100 mt-1 rounded"></div>
+                      </div>
+                      <div className="flex-1 h-24 bg-gray-50 border rounded p-1">
+                        <div className="text-[8px] font-medium">Panel 2</div>
+                        <div className="w-full h-16 bg-gray-100 mt-1 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white p-2 border rounded">
+                    <div className="flex justify-between items-center p-1 bg-gray-100 mb-2">
+                      <div className="text-[10px] font-medium">Application Header</div>
+                      <div className="flex gap-1">
+                        <div className="px-1.5 py-0.5 bg-blue-100 border border-blue-300 rounded text-[8px] text-blue-800 flex items-center">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full mr-1"></div>
+                          Customize UI
+                        </div>
+                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Customization panel below header */}
+                    <div className="mb-2 border rounded bg-blue-50 p-1.5">
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="text-[9px] font-medium text-blue-800">Global UI Customization</div>
+                        <div className="flex gap-1">
+                          <button className="px-1 py-0.5 bg-white border border-blue-200 rounded text-[7px]">Exit</button>
+                          <button className="px-1 py-0.5 bg-green-500 text-white rounded text-[7px]">Save</button>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <div className="flex-1 border border-blue-200 rounded bg-white p-1">
+                          <div className="text-[7px] font-medium mb-0.5">Layout</div>
+                          <div className="grid grid-cols-2 gap-0.5">
+                            <button className="bg-blue-100 border border-blue-300 rounded text-[6px] p-0.5">Side by Side</button>
+                            <button className="bg-white border rounded text-[6px] p-0.5">Stacked</button>
+                          </div>
+                        </div>
+                        <div className="flex-1 border border-blue-200 rounded bg-white p-1">
+                          <div className="text-[7px] font-medium mb-0.5">Theme</div>
+                          <div className="grid grid-cols-2 gap-0.5">
+                            <button className="bg-white border rounded text-[6px] p-0.5">Light</button>
+                            <button className="bg-blue-100 border border-blue-300 rounded text-[6px] p-0.5">Dark</button>
+                          </div>
+                        </div>
+                        <div className="flex-1 border border-blue-200 rounded bg-white p-1">
+                          <div className="text-[7px] font-medium mb-0.5">Density</div>
+                          <div className="grid grid-cols-3 gap-0.5">
+                            <button className="bg-white border rounded text-[6px] p-0.5">Low</button>
+                            <button className="bg-blue-100 border border-blue-300 rounded text-[6px] p-0.5">Med</button>
+                            <button className="bg-white border rounded text-[6px] p-0.5">High</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Main content with custom layout */}
+                    <div className="flex gap-2">
+                      <div className="w-2/3 h-16 bg-gray-50 border rounded p-1">
+                        <div className="text-[8px] font-medium">Panel 1 (Resized)</div>
+                        <div className="w-full h-8 bg-gray-100 mt-1 rounded"></div>
+                      </div>
+                      <div className="w-1/3 h-16 bg-gray-50 border rounded p-1">
+                        <div className="text-[8px] font-medium">Panel 2</div>
+                        <div className="w-full h-8 bg-gray-100 mt-1 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Placing UI customization controls in the global header allows users to modify the entire application layout in a consistent way from anywhere in the application. This enhanced approach includes a dedicated customization panel where users can adjust layout type, theme, and content density without entering a special 'edit mode'. The changes apply globally across all screens, ensuring a unified experience. By including preset configurations alongside granular controls, this implementation balances simplicity and power - giving users quick access to common arrangements while still allowing detailed customization where needed. The panel's persistent position in the header makes UI customization a first-class feature rather than a hidden setting."
+              />
+              
+              <ShowcaseItem
+                title="Graph-Specific Appearance Controls"
+                description="Dedicated controls for customizing graph visualization appearance separate from UI layout"
+                complexity="Medium"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white p-2 border rounded">
+                    <div className="text-xs font-medium mb-2">Graph Visualization Settings</div>
+                    <div className="flex mb-2">
+                      <div className="flex-1 h-20 bg-gray-100 rounded flex items-center justify-center">
+                        <div className="text-[8px] text-gray-500">Graph preview</div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1">
+                      <div className="text-[8px]">Node Size: <span className="font-medium">Medium</span></div>
+                      <div className="text-[8px]">Edge Width: <span className="font-medium">1px</span></div>
+                      <div className="text-[8px]">Node Color: <span className="font-medium">Default</span></div>
+                      <div className="text-[8px]">Label Size: <span className="font-medium">10pt</span></div>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white p-2 border rounded">
+                    <div className="text-xs font-medium mb-2">Graph Appearance Customization</div>
+                    
+                    {/* Split layout with preview and controls */}
+                    <div className="flex gap-2 mb-2">
+                      {/* Left side: Graph preview */}
+                      <div className="w-1/2 h-36 bg-gray-100 rounded relative">
+                        <div className="flex items-center justify-center h-full">
+                          {/* Sample graph */}
+                          <div className="relative">
+                            {/* Node 1 (Person) */}
+                            <div className="absolute top-0 left-0 w-10 h-10 rounded-lg bg-blue-100 border-2 border-blue-400 flex items-center justify-center text-[8px] shadow-md transform -translate-x-1/2 -translate-y-1/2">
+                              Person
+                            </div>
+                            
+                            {/* Node 2 (Organization) */}
+                            <div className="absolute bottom-0 right-0 w-12 h-8 rounded-lg bg-green-100 border-2 border-green-400 flex items-center justify-center text-[8px] shadow-md transform translate-x-1/2 translate-y-1/2">
+                              Organization
+                            </div>
+                            
+                            {/* Edge */}
+                            <svg width="100" height="60" className="absolute top-0 left-0 pointer-events-none">
+                              <defs>
+                                <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                  <path d="M0,0 L0,6 L9,3 z" fill="#6366f1" />
+                                </marker>
+                              </defs>
+                              <line x1="5" y1="5" x2="95" y2="55" stroke="#6366f1" strokeWidth="2" markerEnd="url(#arrow)" />
+                              <text x="45" y="25" fill="#4f46e5" fontSize="6px" textAnchor="middle" transform="rotate(45, 45, 25)">works_at</text>
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        {/* Custom theme indicator */}
+                        <div className="absolute top-1 right-1 bg-white/80 backdrop-blur-sm px-1 py-0.5 rounded text-[6px] border">
+                          Custom Theme: Executive
+                        </div>
+                      </div>
+                      
+                      {/* Right side: Controls */}
+                      <div className="w-1/2 space-y-1.5">
+                        {/* Node Style section */}
+                        <div>
+                          <div className="text-[8px] font-medium mb-0.5">Node Style</div>
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                            <div>
+                              <div className="text-[7px] text-gray-600">Shape</div>
+                              <select className="w-full text-[7px] border rounded p-0.5">
+                                <option>Rounded Rectangle</option>
+                                <option>Circle</option>
+                                <option>Hexagon</option>
+                              </select>
+                            </div>
+                            <div>
+                              <div className="text-[7px] text-gray-600">Border</div>
+                              <select className="w-full text-[7px] border rounded p-0.5">
+                                <option>Medium (2px)</option>
+                                <option>Thin (1px)</option>
+                                <option>Thick (3px)</option>
+                              </select>
+                            </div>
+                            <div>
+                              <div className="text-[7px] text-gray-600">Size Scaling</div>
+                              <select className="w-full text-[7px] border rounded p-0.5">
+                                <option>By Connections</option>
+                                <option>By Type</option>
+                                <option>Fixed</option>
+                              </select>
+                            </div>
+                            <div>
+                              <div className="text-[7px] text-gray-600">Shadow</div>
+                              <select className="w-full text-[7px] border rounded p-0.5">
+                                <option>Medium</option>
+                                <option>None</option>
+                                <option>Large</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Edge Style section */}
+                        <div>
+                          <div className="text-[8px] font-medium mb-0.5">Edge Style</div>
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                            <div>
+                              <div className="text-[7px] text-gray-600">Line Style</div>
+                              <select className="w-full text-[7px] border rounded p-0.5">
+                                <option>Straight</option>
+                                <option>Curved</option>
+                                <option>Angled</option>
+                              </select>
+                            </div>
+                            <div>
+                              <div className="text-[7px] text-gray-600">Arrow Style</div>
+                              <select className="w-full text-[7px] border rounded p-0.5">
+                                <option>Triangle</option>
+                                <option>Open</option>
+                                <option>None</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Theme presets */}
+                        <div>
+                          <div className="text-[8px] font-medium mb-0.5">Preset Themes</div>
+                          <div className="flex gap-1">
+                            <button className="px-1.5 py-0.5 bg-white border rounded text-[7px]">Default</button>
+                            <button className="px-1.5 py-0.5 bg-indigo-100 border border-indigo-300 rounded text-[7px]">Executive</button>
+                            <button className="px-1.5 py-0.5 bg-white border rounded text-[7px]">Minimal</button>
+                            <button className="px-1.5 py-0.5 bg-white border rounded text-[7px]">Vibrant</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Bottom bar with save button */}
+                    <div className="flex justify-end">
+                      <button className="px-2 py-0.5 bg-blue-500 text-white rounded text-[8px]">
+                        Save Appearance Settings
+                      </button>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Separating graph-specific appearance controls from global UI customization provides a more focused experience for users who want to customize how their data is visualized without changing the overall interface layout. This dedicated panel offers comprehensive controls for node shape, size, border styles, shadows, edge types, arrow styles, and directional indicators. The real-time preview shows how these changes will affect the graph visualization, helping users make informed decisions. Preset themes offer quick, cohesive style changes, while the granular controls allow for detailed customization. The separation of graph appearance from UI layout concerns follows good design principles by grouping related functionality and preventing settings from becoming overwhelming. The dedicated 'Save Appearance Settings' button ensures users don't lose their customizations."
+              />
             </div>
           </TabsContent>
           
