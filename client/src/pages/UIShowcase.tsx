@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
@@ -1086,92 +1086,158 @@ export default function UIShowcase() {
                 afterImage={(() => {
                   const [isDragging, setIsDragging] = useState(false);
                   const [isConnected, setIsConnected] = useState(false);
+                  const [isNearTarget, setIsNearTarget] = useState(false);
                   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+                  
+                  // Store node positions
+                  const nodeAPosition = { x: 60, y: 60 };
+                  const nodeBPosition = { x: 180, y: 60 };
+                  
+                  const containerRef = useRef<HTMLDivElement>(null);
                   
                   const handleDragStart = () => {
                     setIsDragging(true);
+                    // Start from node A center
+                    setDragPosition({ ...nodeAPosition });
                   };
                   
                   const handleDragEnd = () => {
                     if (isDragging) {
-                      // If we released close enough to node B, connect them
-                      if (dragPosition.x > 100) {
+                      // If we released while near the target, connect
+                      if (isNearTarget) {
                         setIsConnected(true);
+                        // Snap to node B center
+                        setDragPosition({ ...nodeBPosition });
+                      } else {
+                        // Return to node A
+                        setDragPosition({ ...nodeAPosition });
                       }
                       setIsDragging(false);
+                      setIsNearTarget(false);
                     }
                   };
                   
-                  const handleMouseMove = (e) => {
-                    if (isDragging) {
-                      // Get position relative to the container
-                      const container = e.currentTarget.getBoundingClientRect();
-                      const x = e.clientX - container.left;
-                      const y = e.clientY - container.top;
-                      setDragPosition({ x, y });
+                  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+                    if (isDragging && !isConnected) {
+                      const container = containerRef.current?.getBoundingClientRect();
+                      if (container) {
+                        const x = e.clientX - container.left;
+                        const y = e.clientY - container.top;
+                        
+                        // Check if close to node B
+                        const distance = Math.sqrt(
+                          Math.pow(x - nodeBPosition.x, 2) + Math.pow(y - nodeBPosition.y, 2)
+                        );
+                        
+                        // If within 30px of node B center, snap to it
+                        if (distance < 30) {
+                          setIsNearTarget(true);
+                          // But don't update position yet
+                        } else {
+                          setIsNearTarget(false);
+                        }
+                        
+                        // Update handle position to follow mouse
+                        setDragPosition({ x, y });
+                      }
                     }
                   };
                   
                   const reset = () => {
                     setIsDragging(false);
                     setIsConnected(false);
+                    setIsNearTarget(false);
+                    setDragPosition({ ...nodeAPosition });
                   };
+                  
+                  // Set the initial position
+                  useEffect(() => {
+                    setDragPosition({ ...nodeAPosition });
+                  }, []);
                   
                   return (
                     <div 
-                      className="p-4 border rounded bg-gray-50 relative"
+                      ref={containerRef}
+                      className="p-4 border rounded bg-gray-50 relative h-32"
                       onMouseMove={handleMouseMove}
                       onMouseUp={handleDragEnd}
                       onMouseLeave={handleDragEnd}
                     >
-                      <div className="flex justify-around items-center h-24">
-                        <div 
-                          className={`w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-                          onMouseDown={handleDragStart}
-                        >
-                          A
-                        </div>
-                        
-                        {isConnected && (
-                          <div className="h-0.5 w-32 bg-blue-500 flex items-center relative">
-                            <div className="absolute text-xs whitespace-nowrap -top-4 text-center w-full text-blue-600">Connected!</div>
-                          </div>
-                        )}
-                        
-                        <div 
-                          className={`w-16 h-16 bg-green-100 rounded-full flex items-center justify-center ${!isConnected && isDragging ? 'border-2 border-dashed border-gray-400' : ''} ${isConnected ? 'border-2 border-blue-500' : ''}`}
-                        >
-                          B
-                        </div>
+                      {/* Node A - Source */}
+                      <div 
+                        className="absolute w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center"
+                        style={{ left: nodeAPosition.x - 24, top: nodeAPosition.y - 24 }}
+                      >
+                        <span>A</span>
                       </div>
                       
-                      {isDragging && !isConnected && (
-                        <svg 
-                          className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                          style={{ zIndex: 10 }}
-                        >
+                      {/* Node B - Target */}
+                      <div 
+                        className={`absolute w-16 h-16 rounded-full flex items-center justify-center
+                          ${isNearTarget && isDragging ? 'bg-green-200 border-2 border-green-400' : 'bg-green-100'}
+                          ${isConnected ? 'border-2 border-blue-500' : ''}
+                          ${!isConnected && isDragging && !isNearTarget ? 'border-2 border-dashed border-gray-400' : ''}
+                        `}
+                        style={{ left: nodeBPosition.x - 24, top: nodeBPosition.y - 24 }}
+                      >
+                        <span>B</span>
+                      </div>
+                      
+                      {/* Connection line for connected state */}
+                      {isConnected && (
+                        <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
                           <line 
-                            x1="59" 
-                            y1="48" 
+                            x1={nodeAPosition.x} 
+                            y1={nodeAPosition.y} 
+                            x2={nodeBPosition.x} 
+                            y2={nodeBPosition.y} 
+                            stroke="#3b82f6" 
+                            strokeWidth="2" 
+                          />
+                        </svg>
+                      )}
+                      
+                      {/* Drag handle and connection line */}
+                      {isDragging && !isConnected && (
+                        <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                          <line 
+                            x1={nodeAPosition.x} 
+                            y1={nodeAPosition.y} 
                             x2={dragPosition.x} 
                             y2={dragPosition.y} 
                             stroke="#4299e1" 
                             strokeWidth="2" 
                             strokeDasharray="4"
                           />
+                          {/* Drag handle */}
+                          <circle 
+                            cx={dragPosition.x} 
+                            cy={dragPosition.y} 
+                            r="6" 
+                            fill="#3b82f6" 
+                            className="cursor-grabbing"
+                          />
                         </svg>
                       )}
                       
-                      <div className="mt-3 text-xs text-center text-gray-500">
+                      {/* Draggable area over Node A */}
+                      <div 
+                        className={`absolute w-16 h-16 rounded-full ${isDragging || isConnected ? '' : 'cursor-grab'}`}
+                        style={{ left: nodeAPosition.x - 24, top: nodeAPosition.y - 24 }}
+                        onMouseDown={!isConnected ? handleDragStart : undefined}
+                      />
+                      
+                      {/* Instructions */}
+                      <div className="absolute bottom-2 left-0 right-0 text-xs text-center text-gray-500">
                         {!isConnected ? (
-                          <div>Click and drag node A to node B to connect them</div>
+                          <div>Drag from node A to node B to connect</div>
                         ) : (
                           <div className="flex justify-center">
                             <button
                               className="px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
                               onClick={reset}
                             >
-                              Reset demo
+                              Reset
                             </button>
                           </div>
                         )}
