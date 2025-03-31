@@ -6,6 +6,7 @@ import LayoutControls, { LayoutSettings } from "@/components/LayoutControls";
 import ColorEditor from "@/components/ColorEditor";
 import StylePanel from "@/components/StylePanel";
 import CenterControls from "@/components/CenterControls";
+import UICustomizationDemo from "@/components/UICustomizationDemo";
 import { 
   MinusIcon, 
   PlusIcon, 
@@ -633,11 +634,16 @@ export default function GraphPanel({
                     UI Customization
                   </h3>
                   <p className="text-sm text-gray-500 mb-4">
-                    Customize the layout and appearance of UI elements
+                    Customize the layout and appearance of UI elements. Toggle "Edit Mode" to activate customization controls,
+                    then select panels to resize, reposition, or reshape them according to your preferences.
                   </p>
                   
                   <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
+                    <UICustomizationDemo />
+                  </div>
+                  
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2 hidden">
                       <span className="text-sm font-medium">Edit Mode</span>
                       <button
                         onClick={() => setEditMode(!editMode)}
@@ -663,7 +669,7 @@ export default function GraphPanel({
                     )}
                   </div>
                   
-                  <div className="mb-4">
+                  <div className="mb-4 hidden">
                     <h4 className="text-sm font-medium mb-2">Customizable Elements</h4>
                     <div className="space-y-2">
                       {['graphPanel', 'controlPanel', 'propertyPanel'].map((panel) => (
@@ -685,7 +691,7 @@ export default function GraphPanel({
                   </div>
                   
                   {selectedPanel && (
-                    <div className="border rounded-md p-3">
+                    <div className="border rounded-md p-3 hidden">
                       <h4 className="text-sm font-medium mb-2">Panel Properties</h4>
                       
                       <div className="mb-3">
