@@ -1089,9 +1089,9 @@ export default function UIShowcase() {
                   const [isNearTarget, setIsNearTarget] = useState(false);
                   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
                   
-                  // Store node positions
-                  const nodeAPosition = { x: 60, y: 60 };
-                  const nodeBPosition = { x: 180, y: 60 };
+                  // Store node positions to match the "before" section layout
+                  const nodeAPosition = { x: 70, y: 40 };
+                  const nodeBPosition = { x: 170, y: 40 };
                   
                   const containerRef = useRef<HTMLDivElement>(null);
                   
@@ -1163,24 +1163,35 @@ export default function UIShowcase() {
                       onMouseUp={handleDragEnd}
                       onMouseLeave={handleDragEnd}
                     >
-                      {/* Node A - Source */}
-                      <div 
-                        className="absolute w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center"
-                        style={{ left: nodeAPosition.x - 24, top: nodeAPosition.y - 24 }}
-                      >
-                        <span>A</span>
-                      </div>
-                      
-                      {/* Node B - Target */}
-                      <div 
-                        className={`absolute w-16 h-16 rounded-full flex items-center justify-center
+                      {/* Use the same flex layout as the "before" section */}
+                      <div className="flex justify-around">
+                        {/* Node A */}
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center cursor-grab"
+                          onMouseDown={!isConnected ? handleDragStart : undefined}>
+                          <span>A</span>
+                        </div>
+                        
+                        {/* Node B */}
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center
                           ${isNearTarget && isDragging ? 'bg-green-200 border-2 border-green-400' : 'bg-green-100'}
                           ${isConnected ? 'border-2 border-blue-500' : ''}
                           ${!isConnected && isDragging && !isNearTarget ? 'border-2 border-dashed border-gray-400' : ''}
-                        `}
-                        style={{ left: nodeBPosition.x - 24, top: nodeBPosition.y - 24 }}
-                      >
-                        <span>B</span>
+                        `}>
+                          <span>B</span>
+                        </div>
+                      </div>
+                      
+                      {/* Instructions text at the bottom */}
+                      <div className="mt-3 text-xs text-center text-gray-500">
+                        {!isConnected ? 
+                          "Drag from node A to node B to connect" : 
+                          <button
+                            className="px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                            onClick={reset}
+                          >
+                            Reset
+                          </button>
+                        }
                       </div>
                       
                       {/* Connection line for connected state */}
@@ -1209,7 +1220,6 @@ export default function UIShowcase() {
                             strokeWidth="2" 
                             strokeDasharray="4"
                           />
-                          {/* Drag handle */}
                           <circle 
                             cx={dragPosition.x} 
                             cy={dragPosition.y} 
@@ -1219,29 +1229,6 @@ export default function UIShowcase() {
                           />
                         </svg>
                       )}
-                      
-                      {/* Draggable area over Node A */}
-                      <div 
-                        className={`absolute w-16 h-16 rounded-full ${isDragging || isConnected ? '' : 'cursor-grab'}`}
-                        style={{ left: nodeAPosition.x - 24, top: nodeAPosition.y - 24 }}
-                        onMouseDown={!isConnected ? handleDragStart : undefined}
-                      />
-                      
-                      {/* Instructions */}
-                      <div className="absolute bottom-2 left-0 right-0 text-xs text-center text-gray-500">
-                        {!isConnected ? (
-                          <div>Drag from node A to node B to connect</div>
-                        ) : (
-                          <div className="flex justify-center">
-                            <button
-                              className="px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                              onClick={reset}
-                            >
-                              Reset
-                            </button>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   );
                 })()}
@@ -1308,79 +1295,6 @@ export default function UIShowcase() {
           
           <TabsContent value="accessibility" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ShowcaseItem
-                title="Keyboard Navigation for Graphs"
-                description="Enable full keyboard navigation of graph elements without requiring a mouse"
-                complexity="Hard"
-                impact="High"
-                beforeImage={<div className="p-4 border rounded bg-gray-50">
-                  <div className="bg-gray-200 rounded h-32 flex items-center justify-center text-xs">
-                    Graph only navigable with mouse
-                  </div>
-                </div>}
-                afterImage={<div className="p-4 border rounded bg-gray-50">
-                  <div className="bg-gray-200 rounded h-32 flex items-center justify-center text-xs relative">
-                    <div className="absolute top-2 left-2 right-2 bg-black bg-opacity-10 text-white text-opacity-80 text-xs p-1 rounded">
-                      Use Tab to select nodes, Arrow keys to navigate connected nodes
-                    </div>
-                    <div className="w-16 h-16 bg-blue-100 border-2 border-blue-500 rounded-full flex items-center justify-center relative">
-                      <div className="text-sm">Node</div>
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-blue-500 text-[10px]">
-                        ↵
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-xs text-center text-gray-600">
-                    Press Tab to select elements, Enter to activate, arrows to navigate
-                  </div>
-                </div>}
-                explanation="Keyboard navigation is essential for both accessibility and power user efficiency, allowing users to interact with the graph without requiring a mouse. This feature is critical for users with motor impairments but benefits all users by enabling faster workflows. Implementation requires adding focus management, visible focus indicators, and keyboard event handling to navigate and interact with graph elements using only the keyboard."
-              />
-              
-              <ShowcaseItem
-                title="High Contrast Mode"
-                description="Add a high contrast mode for better visibility and accessibility"
-                complexity="Medium"
-                impact="Medium"
-                beforeImage={<div className="p-4 border rounded bg-gray-50">
-                  <div className="p-3 bg-white rounded shadow-sm">
-                    <div className="flex">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 text-xs">P</div>
-                      <div className="ml-2">
-                        <div className="text-xs font-medium text-gray-800">Person</div>
-                        <div className="text-xs text-gray-500">John Doe</div>
-                      </div>
-                    </div>
-                    <div className="mt-2 h-0.5 bg-gray-200"></div>
-                    <div className="mt-2 flex justify-end">
-                      <button className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50 rounded">Edit</button>
-                    </div>
-                  </div>
-                </div>}
-                afterImage={<div className="p-4 border rounded bg-gray-50">
-                  <div className="absolute top-2 right-2 flex items-center text-xs">
-                    <div className="mr-2">High Contrast</div>
-                    <div className="w-8 h-4 bg-black rounded-full relative">
-                      <div className="absolute top-0.5 right-0.5 w-3 h-3 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-black rounded shadow-sm">
-                    <div className="flex">
-                      <div className="w-8 h-8 rounded-full bg-yellow-300 flex items-center justify-center text-black font-bold text-xs">P</div>
-                      <div className="ml-2">
-                        <div className="text-xs font-bold text-white">Person</div>
-                        <div className="text-xs text-yellow-300">John Doe</div>
-                      </div>
-                    </div>
-                    <div className="mt-2 h-0.5 bg-white"></div>
-                    <div className="mt-2 flex justify-end">
-                      <button className="text-xs px-2 py-1 bg-yellow-300 text-black font-bold rounded">Edit</button>
-                    </div>
-                  </div>
-                </div>}
-                explanation="High contrast mode improves visibility and readability for users with visual impairments or those working in challenging lighting conditions. This feature uses strongly contrasting colors and clear visual distinctions between elements to ensure all content is perceivable. Implementation involves creating alternative color schemes with sufficient contrast ratios and allowing users to toggle between standard and high-contrast appearances."
-              />
-              
               <ShowcaseItem
                 title="Text Scaling Support"
                 description="Ensure the interface properly scales when users increase text size"
