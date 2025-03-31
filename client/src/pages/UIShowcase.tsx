@@ -528,11 +528,13 @@ export default function UIShowcase() {
         </p>
         
         <Tabs defaultValue="layout" className="mb-10">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="layout">Layout Structure</TabsTrigger>
             <TabsTrigger value="visual">Visual Space</TabsTrigger>
             <TabsTrigger value="ux">User Experience</TabsTrigger>
             <TabsTrigger value="navigation">Navigation</TabsTrigger>
+            <TabsTrigger value="interaction">Interaction Patterns</TabsTrigger>
+            <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
           </TabsList>
           
           <TabsContent value="layout" className="mt-6">
@@ -1005,6 +1007,265 @@ export default function UIShowcase() {
                   </div>
                 </div>}
                 explanation="Keyboard shortcuts significantly increase efficiency for power users by reducing reliance on mouse interactions for common tasks. This feature is especially valuable for applications that involve repetitive operations or frequent switching between different modes or tools. Implementation requires setting up event listeners for key combinations and associating them with appropriate actions, as well as providing visual cues and documentation to help users discover and learn available shortcuts."
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="interaction" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ShowcaseItem
+                title="Hover States for Nodes"
+                description="Add rich hover states for graph nodes to show more information without clicking"
+                complexity="Medium"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="w-32 h-32 mx-auto bg-gray-100 rounded-full flex items-center justify-center relative">
+                    <div className="text-sm">Person</div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="w-32 h-32 mx-auto bg-blue-100 border-2 border-blue-400 rounded-full flex items-center justify-center relative shadow-lg">
+                    <div className="text-sm">Person</div>
+                    <div className="absolute top-full mt-2 bg-white p-3 rounded shadow-lg border w-48 z-10">
+                      <h5 className="text-xs font-medium mb-1">John Doe (Person)</h5>
+                      <div className="text-xs mb-1">Age: 35</div>
+                      <div className="text-xs mb-1">Role: Software Engineer</div>
+                      <div className="text-xs mb-1">Connections: 5</div>
+                      <div className="text-xs text-blue-500 cursor-pointer">View Details →</div>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Enhanced hover states for graph nodes provide immediate access to key information without requiring additional clicks or navigation steps. This approach is particularly valuable in knowledge graphs where users frequently need to scan and assess many nodes quickly. The implementation involves CSS hover states and absolutely positioned tooltips or popovers that appear on hover and display contextual information from the node's data."
+              />
+              
+              <ShowcaseItem
+                title="Drag-to-Connect"
+                description="Enable dragging from one node to another to create connections"
+                complexity="Hard"
+                impact="Medium"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="flex justify-around">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">A</div>
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">B</div>
+                  </div>
+                  <div className="mt-3 text-xs text-center text-gray-500">
+                    Menu → Add Edge → Select Source → Select Target
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="flex justify-around items-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center cursor-grab">A</div>
+                    <div className="h-0.5 w-16 bg-gray-400 flex items-center relative">
+                      <div className="absolute text-xs whitespace-nowrap -top-4 text-center w-full">Drag to connect</div>
+                    </div>
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center border-2 border-dashed border-gray-400">B</div>
+                  </div>
+                </div>}
+                explanation="Drag-to-connect functionality creates a more intuitive, direct manipulation interface for building graph relationships compared to traditional multi-step processes. This approach feels more natural and reduces the cognitive load required to understand how nodes relate to each other. Implementation requires more complex event handling for drag operations, visual feedback during the drag state, and logic to validate and create connections between compatible node types."
+              />
+              
+              <ShowcaseItem
+                title="Contextual Right-Click Menu"
+                description="Add a context menu with node-specific actions on right-click"
+                complexity="Medium"
+                impact="Medium"
+                beforeImage={<div className="p-4 border rounded bg-gray-50 flex justify-center">
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+                    <div className="text-sm">Node</div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50 flex justify-center relative">
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center border-2 border-blue-400">
+                    <div className="text-sm">Node</div>
+                  </div>
+                  <div className="absolute bg-white border rounded shadow-lg w-48 p-1 left-1/2 top-1/2">
+                    <div className="text-xs py-1.5 px-2 hover:bg-gray-100 rounded cursor-pointer">View Details</div>
+                    <div className="text-xs py-1.5 px-2 hover:bg-gray-100 rounded cursor-pointer">Edit Properties</div>
+                    <div className="text-xs py-1.5 px-2 hover:bg-gray-100 rounded cursor-pointer">Add Connection</div>
+                    <div className="text-xs py-1.5 px-2 hover:bg-gray-100 rounded cursor-pointer">Web Search</div>
+                    <div className="text-xs py-1.5 px-2 hover:bg-gray-100 rounded cursor-pointer">Navigate to Related</div>
+                    <div className="text-xs py-1.5 px-2 hover:bg-gray-100 rounded text-red-500 cursor-pointer">Delete</div>
+                  </div>
+                </div>}
+                explanation="Contextual right-click menus provide quick access to relevant actions based on the specific element clicked, following established UI patterns that users are already familiar with. This approach reduces the need for fixed toolbars or multi-step processes, making the interface more efficient and responsive. Implementation requires handling right-click events and rendering a conditional menu with actions appropriate to the clicked element's type and state."
+              />
+              
+              <ShowcaseItem
+                title="Zoom Controls with Preview"
+                description="Add zoom controls with a preview of what's being zoomed into"
+                complexity="Medium"
+                impact="Medium"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-gray-200 rounded h-32 flex items-center justify-center text-xs">
+                    Graph visualization area
+                  </div>
+                  <div className="flex justify-end mt-2">
+                    <button className="text-xs px-2 py-1 border rounded mr-1">-</button>
+                    <button className="text-xs px-2 py-1 border rounded">+</button>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-gray-200 rounded h-32 flex items-center justify-center text-xs relative">
+                    Graph visualization area
+                    <div className="absolute bottom-2 right-2 flex items-center bg-white shadow-md rounded border p-1">
+                      <button className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-l">-</button>
+                      <div className="text-xs px-3 border-x">100%</div>
+                      <button className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-r">+</button>
+                      <div className="ml-2 w-12 h-12 border bg-gray-50 rounded flex items-center justify-center">
+                        <div className="w-6 h-6 bg-gray-400 rounded-sm"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Enhanced zoom controls with a preview provide better context and orientation when navigating a complex graph, reducing the disorientation that can happen with traditional zoom operations. This feature is particularly valuable for large knowledge graphs where users need to maintain awareness of their location within the overall structure. Implementation requires tracking the current viewport in relation to the full graph and rendering a miniature representation that updates as the user navigates."
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="accessibility" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ShowcaseItem
+                title="Keyboard Navigation for Graphs"
+                description="Enable full keyboard navigation of graph elements without requiring a mouse"
+                complexity="Hard"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-gray-200 rounded h-32 flex items-center justify-center text-xs">
+                    Graph only navigable with mouse
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-gray-200 rounded h-32 flex items-center justify-center text-xs relative">
+                    <div className="absolute top-2 left-2 right-2 bg-black bg-opacity-10 text-white text-opacity-80 text-xs p-1 rounded">
+                      Use Tab to select nodes, Arrow keys to navigate connected nodes
+                    </div>
+                    <div className="w-16 h-16 bg-blue-100 border-2 border-blue-500 rounded-full flex items-center justify-center relative">
+                      <div className="text-sm">Node</div>
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-blue-500 text-[10px]">
+                        ↵
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-center text-gray-600">
+                    Press Tab to select elements, Enter to activate, arrows to navigate
+                  </div>
+                </div>}
+                explanation="Keyboard navigation is essential for both accessibility and power user efficiency, allowing users to interact with the graph without requiring a mouse. This feature is critical for users with motor impairments but benefits all users by enabling faster workflows. Implementation requires adding focus management, visible focus indicators, and keyboard event handling to navigate and interact with graph elements using only the keyboard."
+              />
+              
+              <ShowcaseItem
+                title="High Contrast Mode"
+                description="Add a high contrast mode for better visibility and accessibility"
+                complexity="Medium"
+                impact="Medium"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="p-3 bg-white rounded shadow-sm">
+                    <div className="flex">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 text-xs">P</div>
+                      <div className="ml-2">
+                        <div className="text-xs font-medium text-gray-800">Person</div>
+                        <div className="text-xs text-gray-500">John Doe</div>
+                      </div>
+                    </div>
+                    <div className="mt-2 h-0.5 bg-gray-200"></div>
+                    <div className="mt-2 flex justify-end">
+                      <button className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50 rounded">Edit</button>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="absolute top-2 right-2 flex items-center text-xs">
+                    <div className="mr-2">High Contrast</div>
+                    <div className="w-8 h-4 bg-black rounded-full relative">
+                      <div className="absolute top-0.5 right-0.5 w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-black rounded shadow-sm">
+                    <div className="flex">
+                      <div className="w-8 h-8 rounded-full bg-yellow-300 flex items-center justify-center text-black font-bold text-xs">P</div>
+                      <div className="ml-2">
+                        <div className="text-xs font-bold text-white">Person</div>
+                        <div className="text-xs text-yellow-300">John Doe</div>
+                      </div>
+                    </div>
+                    <div className="mt-2 h-0.5 bg-white"></div>
+                    <div className="mt-2 flex justify-end">
+                      <button className="text-xs px-2 py-1 bg-yellow-300 text-black font-bold rounded">Edit</button>
+                    </div>
+                  </div>
+                </div>}
+                explanation="High contrast mode improves visibility and readability for users with visual impairments or those working in challenging lighting conditions. This feature uses strongly contrasting colors and clear visual distinctions between elements to ensure all content is perceivable. Implementation involves creating alternative color schemes with sufficient contrast ratios and allowing users to toggle between standard and high-contrast appearances."
+              />
+              
+              <ShowcaseItem
+                title="Text Scaling Support"
+                description="Ensure the interface properly scales when users increase text size"
+                complexity="Medium"
+                impact="Medium"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="overflow-hidden bg-white rounded border p-2">
+                    <div className="text-xs font-medium whitespace-nowrap">Node Properties (cannot expand with larger text)</div>
+                    <div className="flex text-xs mt-1 overflow-hidden">
+                      <div className="font-medium w-20 flex-shrink-0">Type:</div>
+                      <div className="truncate">Person</div>
+                    </div>
+                    <div className="flex text-xs mt-1 overflow-hidden">
+                      <div className="font-medium w-20 flex-shrink-0">Name:</div>
+                      <div className="truncate">John Smith gets cut off when text is too large</div>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white rounded border p-2">
+                    <div className="text-xs font-medium">Node Properties (adapts to text size)</div>
+                    <div className="mt-1">
+                      <div className="text-xs font-medium">Type:</div>
+                      <div className="text-xs bg-gray-50 p-1 rounded break-words">Person</div>
+                    </div>
+                    <div className="mt-1">
+                      <div className="text-xs font-medium">Name:</div>
+                      <div className="text-xs bg-gray-50 p-1 rounded break-words">John Smith text wraps naturally when content is too long for a single line</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex justify-end text-xs space-x-2">
+                    <button className="px-2 py-1 border rounded">A<span className="text-[8px]">-</span></button>
+                    <button className="px-2 py-1 border rounded">A</button>
+                    <button className="px-2 py-1 border rounded">A<span className="text-[12px]">+</span></button>
+                  </div>
+                </div>}
+                explanation="Text scaling support ensures the interface remains usable when users adjust their browser's text size or zoom level to improve readability. This feature is essential for users with visual impairments but benefits anyone who prefers larger text. Implementation involves using flexible layout techniques like CSS Grid and Flexbox, avoiding fixed dimensions that can't accommodate larger text, and testing the interface at various text sizes to ensure proper adaptation."
+              />
+              
+              <ShowcaseItem
+                title="Screen Reader Optimization"
+                description="Enhance the interface for non-visual navigation with screen readers"
+                complexity="Hard"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white border rounded p-2">
+                    <div className="w-full h-28 bg-gray-100 flex items-center justify-center text-xs">
+                      Graph visualization (not accessible to screen readers)
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white border rounded p-2">
+                    <div className="w-full h-28 bg-gray-100 flex items-center justify-center text-xs relative">
+                      Graph visualization (screen reader optimized)
+                      <div className="absolute top-0 left-0 invisible">
+                        <div className="sr-only">
+                          Graph contains 5 nodes and 8 edges. Current node: Person "John Doe" has 3 connections.
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 bg-black text-green-400 text-xs p-2 rounded font-mono">
+                      &gt; Node: Person "John Doe"<br/>
+                      &gt; Connected to: Company "Acme Inc" via "WORKS_AT"<br/>
+                      &gt; Connected to: Person "Jane Smith" via "COLLEAGUE"
+                    </div>
+                  </div>
+                </div>}
+                explanation="Screen reader optimization makes your application accessible to users who rely on assistive technologies for navigation and information consumption. This involves adding appropriate ARIA attributes, ensuring a logical tab order, providing text alternatives for visual elements, and structuring content in a way that makes sense when read aloud. For graph visualizations specifically, this requires creating alternative text-based representations of the graph structure and relationships that can be navigated non-visually."
               />
             </div>
           </TabsContent>
