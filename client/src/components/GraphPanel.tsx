@@ -631,18 +631,172 @@ export default function GraphPanel({
                 <div>
                   <h3 className="flex items-center gap-2 font-semibold text-gray-700 mb-3">
                     <Edit2Icon size={16} className="text-gray-500" />
-                    UI Customization
+                    Graph Appearance
                   </h3>
                   <p className="text-sm text-gray-500 mb-4">
-                    Customize the layout and appearance of UI elements. Toggle "Edit Mode" to activate customization controls,
-                    then select panels to resize, reposition, or reshape them according to your preferences.
+                    Customize the appearance of the graph visualization. Use the "Customize UI" button in the 
+                    header for global UI element customization.
                   </p>
                   
-                  <div className="mb-4">
-                    <UICustomizationDemo />
+                  <div className="mb-5 p-4 border rounded-md bg-blue-50">
+                    <div className="text-sm text-blue-800">
+                      <div className="flex items-center mb-2">
+                        <i className="fas fa-info-circle mr-2"></i>
+                        <h4 className="font-medium">UI Customization</h4>
+                      </div>
+                      <p>Global UI customization has moved to the app header. Click the "Customize UI" button in the top navigation bar.</p>
+                    </div>
                   </div>
                   
-                  <div className="mb-4">
+                  {/* Graph Appearance Controls */}
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Node Appearance</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-1">Node Size</label>
+                          <input 
+                            type="range" 
+                            min="10" 
+                            max="50" 
+                            defaultValue="25"
+                            className="w-full" 
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-1">Node Spacing</label>
+                          <input 
+                            type="range" 
+                            min="1" 
+                            max="10" 
+                            defaultValue="5"
+                            className="w-full" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Edge Appearance</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-1">Edge Thickness</label>
+                          <input 
+                            type="range" 
+                            min="1" 
+                            max="5" 
+                            defaultValue="1.5"
+                            step="0.5"
+                            className="w-full" 
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-1">Edge Curvature</label>
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="1" 
+                            defaultValue="0.3"
+                            step="0.1"
+                            className="w-full" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Labels</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-1">Label Size</label>
+                          <input 
+                            type="range" 
+                            min="8" 
+                            max="16" 
+                            defaultValue="12"
+                            className="w-full" 
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-1">Label Opacity</label>
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="1" 
+                            defaultValue="0.8"
+                            step="0.1"
+                            className="w-full" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Visual Theme</h4>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div 
+                          className="border border-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-50 flex flex-col items-center"
+                          onClick={() => console.log('Theme: Default')}
+                        >
+                          <div className="w-full h-12 rounded bg-gray-100 mb-1 flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full bg-blue-500"></div>
+                            <div className="w-12 h-[2px] bg-gray-400 mx-1"></div>
+                            <div className="w-6 h-6 rounded-full bg-green-500"></div>
+                          </div>
+                          <span className="text-xs">Default</span>
+                        </div>
+                        
+                        <div 
+                          className="border border-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-50 flex flex-col items-center"
+                          onClick={() => console.log('Theme: Dark')}
+                        >
+                          <div className="w-full h-12 rounded bg-gray-800 mb-1 flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full bg-blue-400"></div>
+                            <div className="w-12 h-[2px] bg-gray-500 mx-1"></div>
+                            <div className="w-6 h-6 rounded-full bg-green-400"></div>
+                          </div>
+                          <span className="text-xs">Dark</span>
+                        </div>
+                        
+                        <div 
+                          className="border border-gray-200 rounded-md p-2 cursor-pointer hover:bg-gray-50 flex flex-col items-center"
+                          onClick={() => console.log('Theme: Colorful')}
+                        >
+                          <div className="w-full h-12 rounded bg-gradient-to-r from-blue-50 to-purple-50 mb-1 flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full bg-pink-500"></div>
+                            <div className="w-12 h-[2px] bg-purple-400 mx-1"></div>
+                            <div className="w-6 h-6 rounded-full bg-indigo-500"></div>
+                          </div>
+                          <span className="text-xs">Colorful</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-8">
+                      <button
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-md py-2 text-sm font-medium flex items-center justify-center"
+                        onClick={() => {
+                          // Show a toast notification
+                          const toast = document.createElement('div');
+                          toast.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-md flex items-center animate-fade-in z-50';
+                          toast.innerHTML = `
+                            <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                            <div>Graph appearance settings saved!</div>
+                          `;
+                          document.body.appendChild(toast);
+                          setTimeout(() => {
+                            toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                            setTimeout(() => document.body.removeChild(toast), 500);
+                          }, 3000);
+                        }}
+                      >
+                        <SaveIcon size={16} className="mr-2" />
+                        Save Appearance Settings
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4 hidden">
                     <div className="flex items-center justify-between mb-2 hidden">
                       <span className="text-sm font-medium">Edit Mode</span>
                       <button
