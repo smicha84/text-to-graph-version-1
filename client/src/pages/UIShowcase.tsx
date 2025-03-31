@@ -1084,41 +1084,96 @@ export default function UIShowcase() {
                   </div>
                 </div>}
                 afterImage={(() => {
-                  const [isDragging, setIsDragging] = useState(false);
-                  const [isConnected, setIsConnected] = useState(false);
+                  // State machine states: 'idle', 'dragging', 'connected'
+                  const [connectState, setConnectState] = useState('idle');
                   const [isNearTarget, setIsNearTarget] = useState(false);
+                  const [isValidConnection, setIsValidConnection] = useState(true); // Rule-based validation
                   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+                  const [connectionType, setConnectionType] = useState('RELATES_TO');
+                  const [undoHistory, setUndoHistory] = useState<string[]>([]);
+                  const [showConnectionTypeMenu, setShowConnectionTypeMenu] = useState(false);
                   
                   // Store node positions to match the "before" section layout
                   const nodeAPosition = { x: 70, y: 40 };
                   const nodeBPosition = { x: 170, y: 40 };
                   
+                  // Node types for rule-based validation
+                  const nodeAType = 'Person';
+                  const nodeBType = 'Organization';
+                  
+                  // Connection rules matrix (which types can connect)
+                  const connectionRules = {
+                    Person: ['Person', 'Organization', 'Event'],
+                    Organization: ['Person', 'Organization'],
+                    Event: ['Person', 'Organization', 'Event']
+                  };
+                  
+                  // Available connection types based on node types
+                  const getAvailableConnectionTypes = () => {
+                    if (nodeAType === 'Person' && nodeBType === 'Organization') {
+                      return ['WORKS_AT', 'MEMBER_OF', 'FOUNDED'];
+                    }
+                    return ['RELATES_TO', 'CONNECTED_TO'];
+                  };
+                  
+                  const isConnectionValid = () => {
+                    // Check if nodeB type is in the list of allowed connections for nodeA
+                    return connectionRules[nodeAType]?.includes(nodeBType) || false;
+                  };
+                  
                   const containerRef = useRef<HTMLDivElement>(null);
+                  const nodeARef = useRef<HTMLDivElement>(null);
+                  const nodeBRef = useRef<HTMLDivElement>(null);
+                  
+                  const isDragging = connectState === 'dragging';
+                  const isConnected = connectState === 'connected';
+                  
+                  // Throttle function to limit expensive calculations
+                  const throttle = (func: Function, limit: number) => {
+                    let inThrottle: boolean;
+                    return function(...args: any[]) {
+                      if (!inThrottle) {
+                        func(...args);
+                        inThrottle = true;
+                        setTimeout(() => inThrottle = false, limit);
+                      }
+                    };
+                  };
                   
                   const handleDragStart = () => {
-                    setIsDragging(true);
-                    // Start from node A center
-                    setDragPosition({ ...nodeAPosition });
+                    if (connectState !== 'connected') {
+                      setConnectState('dragging');
+                      setDragPosition({ ...nodeAPosition });
+                      setIsValidConnection(isConnectionValid());
+                      
+                      // Add to undo history
+                      setUndoHistory(prev => [...prev, connectState]);
+                    }
                   };
                   
                   const handleDragEnd = () => {
-                    if (isDragging) {
-                      // If we released while near the target, connect
-                      if (isNearTarget) {
-                        setIsConnected(true);
-                        // Snap to node B center
+                    if (connectState === 'dragging') {
+                      if (isNearTarget && isValidConnection) {
+                        // Success - show connection type menu
+                        setConnectState('connected');
+                        setShowConnectionTypeMenu(true);
+                        
+                        // Create successful connection animation
                         setDragPosition({ ...nodeBPosition });
+                        
+                        // Add connection success sound effect
+                        // (just simulated in this demo)
                       } else {
-                        // Return to node A
+                        // Return to starting position with animation
+                        setConnectState('idle');
                         setDragPosition({ ...nodeAPosition });
                       }
-                      setIsDragging(false);
                       setIsNearTarget(false);
                     }
                   };
                   
-                  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-                    if (isDragging && !isConnected) {
+                  const handleMouseMove = throttle((e: React.MouseEvent<HTMLDivElement>) => {
+                    if (connectState === 'dragging') {
                       const container = containerRef.current?.getBoundingClientRect();
                       if (container) {
                         const x = e.clientX - container.left;
@@ -1129,10 +1184,9 @@ export default function UIShowcase() {
                           Math.pow(x - nodeBPosition.x, 2) + Math.pow(y - nodeBPosition.y, 2)
                         );
                         
-                        // If within 30px of node B center, snap to it
+                        // If within 30px of node B center, prepare to snap
                         if (distance < 30) {
                           setIsNearTarget(true);
-                          // But don't update position yet
                         } else {
                           setIsNearTarget(false);
                         }
@@ -1141,13 +1195,58 @@ export default function UIShowcase() {
                         setDragPosition({ x, y });
                       }
                     }
-                  };
+                  }, 16); // Throttle to ~60fps
                   
                   const reset = () => {
-                    setIsDragging(false);
-                    setIsConnected(false);
+                    setConnectState('idle');
                     setIsNearTarget(false);
                     setDragPosition({ ...nodeAPosition });
+                    setShowConnectionTypeMenu(false);
+                    setUndoHistory([]);
+                  };
+                  
+                  const undo = () => {
+                    if (undoHistory.length > 0) {
+                      const prevState = undoHistory[undoHistory.length - 1];
+                      setConnectState(prevState);
+                      setUndoHistory(prev => prev.slice(0, -1));
+                      
+                      if (prevState === 'idle') {
+                        setDragPosition({ ...nodeAPosition });
+                      }
+                    }
+                  };
+                  
+                  const handleKeyDown = (e: React.KeyboardEvent) => {
+                    // Space or Enter to start/complete connection when a node is focused
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      if (document.activeElement === nodeARef.current && connectState === 'idle') {
+                        handleDragStart();
+                        // Focus the target node
+                        nodeBRef.current?.focus();
+                      } else if (document.activeElement === nodeBRef.current && connectState === 'dragging') {
+                        if (isValidConnection) {
+                          handleDragEnd();
+                        }
+                      }
+                    }
+                    
+                    // Arrow keys to navigate between nodes
+                    if (e.key === 'ArrowRight' && document.activeElement === nodeARef.current) {
+                      nodeBRef.current?.focus();
+                    } else if (e.key === 'ArrowLeft' && document.activeElement === nodeBRef.current) {
+                      nodeARef.current?.focus();
+                    }
+                    
+                    // Escape to cancel
+                    if (e.key === 'Escape') {
+                      reset();
+                    }
+                    
+                    // Ctrl+Z for undo
+                    if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+                      undo();
+                    }
                   };
                   
                   // Set the initial position
@@ -1162,61 +1261,160 @@ export default function UIShowcase() {
                       onMouseMove={handleMouseMove}
                       onMouseUp={handleDragEnd}
                       onMouseLeave={handleDragEnd}
+                      onKeyDown={handleKeyDown}
+                      tabIndex={-1} // Make container focusable for keyboard events
                     >
-                      {/* Use the same flex layout as the "before" section */}
+                      {/* Status indicator for keyboard users */}
+                      <div className="absolute top-1 left-0 right-0 text-[9px] text-center text-gray-500">
+                        Press Tab to navigate, Space/Enter to connect, Escape to cancel
+                      </div>
+                      
+                      {/* Main nodes container */}
                       <div className="flex justify-around">
                         {/* Node A */}
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center cursor-grab"
-                          onMouseDown={!isConnected ? handleDragStart : undefined}>
-                          <span>A</span>
+                        <div 
+                          ref={nodeARef}
+                          tabIndex={0} // Make focusable
+                          aria-label={`Node A: ${nodeAType}. Press Enter to start connection.`}
+                          role="button"
+                          className={`w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center 
+                            ${connectState !== 'connected' ? 'cursor-grab' : ''} 
+                            ${document.activeElement === nodeARef.current ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+                            transition-all duration-200 ease-in-out`
+                          }
+                          onMouseDown={connectState !== 'connected' ? handleDragStart : undefined}
+                          style={{ position: 'relative' }}
+                        >
+                          <span className="font-medium">A</span>
+                          <span className="absolute -top-1 -right-1 text-[8px] px-1 bg-blue-200 rounded-full">{nodeAType}</span>
                         </div>
                         
                         {/* Node B */}
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center
-                          ${isNearTarget && isDragging ? 'bg-green-200 border-2 border-green-400' : 'bg-green-100'}
-                          ${isConnected ? 'border-2 border-blue-500' : ''}
-                          ${!isConnected && isDragging && !isNearTarget ? 'border-2 border-dashed border-gray-400' : ''}
-                        `}>
-                          <span>B</span>
+                        <div 
+                          ref={nodeBRef}
+                          tabIndex={0} // Make focusable
+                          aria-label={`Node B: ${nodeBType}. ${isValidConnection ? 'Valid connection target.' : 'Invalid connection target.'}`}
+                          role="button"
+                          className={`w-16 h-16 rounded-full flex items-center justify-center
+                            ${isNearTarget && isDragging ? isValidConnection ? 'bg-green-200 border-2 border-green-400 scale-110' : 'bg-red-200 border-2 border-red-400' : 'bg-green-100'}
+                            ${isConnected ? 'border-2 border-blue-500 scale-105' : ''}
+                            ${!isConnected && isDragging && !isNearTarget ? 'border border-dashed border-gray-400' : ''}
+                            ${document.activeElement === nodeBRef.current ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+                            transition-all duration-200 ease-in-out
+                          `}
+                          style={{ position: 'relative' }}
+                        >
+                          <span className="font-medium">B</span>
+                          <span className="absolute -top-1 -right-1 text-[8px] px-1 bg-green-200 rounded-full">{nodeBType}</span>
                         </div>
                       </div>
                       
-                      {/* Instructions text at the bottom */}
-                      <div className="mt-3 text-xs text-center text-gray-500">
-                        {!isConnected ? 
-                          "Drag from node A to node B to connect" : 
-                          <button
-                            className="px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                            onClick={reset}
-                          >
-                            Reset
-                          </button>
-                        }
+                      {/* Connection type menu - shown when connection is made */}
+                      {showConnectionTypeMenu && (
+                        <div className="absolute left-1/2 transform -translate-x-1/2 top-16 bg-white shadow-lg rounded border p-1 z-10 w-32 text-xs">
+                          <div className="font-medium text-center pb-1 border-b">Select Relation Type</div>
+                          {getAvailableConnectionTypes().map((type) => (
+                            <div 
+                              key={type}
+                              className="py-1 px-2 hover:bg-blue-50 cursor-pointer text-center"
+                              onClick={() => {
+                                setConnectionType(type);
+                                setShowConnectionTypeMenu(false);
+                              }}
+                            >
+                              {type.replace('_', ' ')}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Instructions/actions text */}
+                      <div className="mt-3 text-xs text-center text-gray-500 flex justify-center items-center">
+                        {!isConnected ? (
+                          "Drag from A to B to connect"
+                        ) : (
+                          <div>
+                            <span className="font-medium mr-2">{connectionType}</span>
+                            <button
+                              className="px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                              onClick={reset}
+                            >
+                              Reset
+                            </button>
+                            {undoHistory.length > 0 && (
+                              <button
+                                className="px-2 py-1 ml-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                                onClick={undo}
+                                aria-label="Undo last action"
+                              >
+                                Undo
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                       
-                      {/* Connection line for connected state */}
+                      {/* Validation info for non-valid connections */}
+                      {isDragging && !isValidConnection && (
+                        <div className="absolute top-1 right-2 text-[9px] text-red-500 font-medium">
+                          Invalid connection: {nodeAType} → {nodeBType}
+                        </div>
+                      )}
+                      
+                      {/* Connection line for connected state - with animation */}
                       {isConnected && (
                         <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                          <line 
-                            x1={nodeAPosition.x} 
-                            y1={nodeAPosition.y} 
-                            x2={nodeBPosition.x} 
-                            y2={nodeBPosition.y} 
-                            stroke="#3b82f6" 
-                            strokeWidth="2" 
+                          <defs>
+                            <marker 
+                              id="arrowhead" 
+                              markerWidth="5" 
+                              markerHeight="5" 
+                              refX="5" 
+                              refY="2.5" 
+                              orient="auto"
+                            >
+                              <polygon points="0 0, 5 2.5, 0 5" fill="#3b82f6" />
+                            </marker>
+                          </defs>
+                          <path
+                            d={`M ${nodeAPosition.x} ${nodeAPosition.y} L ${nodeBPosition.x} ${nodeBPosition.y}`}
+                            stroke="#3b82f6"
+                            strokeWidth="2"
+                            fill="none"
+                            markerEnd="url(#arrowhead)"
+                            className="origin-center"
+                            style={{
+                              animation: "drawLine 0.5s ease-in-out forwards"
+                            }}
                           />
+                          <text 
+                            x={(nodeAPosition.x + nodeBPosition.x) / 2} 
+                            y={(nodeAPosition.y + nodeBPosition.y) / 2 - 5}
+                            fontSize="9"
+                            textAnchor="middle"
+                            fill="#4b5563"
+                            className="font-medium"
+                          >
+                            {connectionType}
+                          </text>
                         </svg>
                       )}
                       
                       {/* Drag handle and connection line */}
                       {isDragging && !isConnected && (
                         <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                          <defs>
+                            <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+                              <feGaussianBlur stdDeviation="2" result="blur" />
+                              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                          </defs>
                           <line 
                             x1={nodeAPosition.x} 
                             y1={nodeAPosition.y} 
                             x2={dragPosition.x} 
                             y2={dragPosition.y} 
-                            stroke="#4299e1" 
+                            stroke={isValidConnection ? "#4299e1" : "#f87171"} 
                             strokeWidth="2" 
                             strokeDasharray="4"
                           />
@@ -1224,11 +1422,30 @@ export default function UIShowcase() {
                             cx={dragPosition.x} 
                             cy={dragPosition.y} 
                             r="6" 
-                            fill="#3b82f6" 
+                            fill={isValidConnection ? "#3b82f6" : "#ef4444"} 
                             className="cursor-grabbing"
+                            filter={isNearTarget ? "url(#glow)" : ""}
+                            style={{
+                              animation: isNearTarget ? "pulse 1s infinite" : ""
+                            }}
                           />
                         </svg>
                       )}
+                      
+                      {/* Custom CSS animations via inline style */}
+                      <style dangerouslySetInnerHTML={{
+                        __html: `
+                          @keyframes pulse {
+                            0% { transform: scale(1); opacity: 1; }
+                            50% { transform: scale(1.2); opacity: 0.7; }
+                            100% { transform: scale(1); opacity: 1; }
+                          }
+                          @keyframes drawLine {
+                            0% { stroke-dasharray: 100; stroke-dashoffset: 100; }
+                            100% { stroke-dasharray: 100; stroke-dashoffset: 0; }
+                          }
+                        `
+                      }} />
                     </div>
                   );
                 })()}
