@@ -777,26 +777,55 @@ export default function UIShowcase() {
                     </div>
                   </div>
                 </div>}
-                afterImage={<div className="border p-3 rounded">
-                  <div className="bg-gray-100 p-2 rounded mb-2">
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-xs font-medium">Graph Summary</h4>
-                      <button className="text-xs text-blue-500">Show</button>
+                afterImage={(() => {
+                  const [showSummary, setShowSummary] = useState(false);
+                  const [showContext, setShowContext] = useState(false);
+                  
+                  return (
+                    <div className="border p-3 rounded">
+                      <div className="bg-gray-100 p-2 rounded mb-2">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-xs font-medium">Graph Summary</h4>
+                          <button 
+                            className="text-xs text-blue-500 hover:underline"
+                            onClick={() => setShowSummary(!showSummary)}
+                          >
+                            {showSummary ? 'Hide' : 'Show'}
+                          </button>
+                        </div>
+                        {showSummary && (
+                          <div className="bg-white p-2 border rounded mt-1 text-xs animate-fadeIn">
+                            Statistics and information that may not be needed immediately
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="bg-gray-100 p-2 rounded mb-2">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-xs font-medium">Node Context</h4>
+                          <button 
+                            className="text-xs text-blue-500 hover:underline"
+                            onClick={() => setShowContext(!showContext)}
+                          >
+                            {showContext ? 'Hide' : 'Show'}
+                          </button>
+                        </div>
+                        {showContext && (
+                          <div className="bg-white p-2 border rounded mt-1 text-xs animate-fadeIn">
+                            No node selected yet
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="bg-gray-100 p-2 rounded">
+                        <h4 className="text-xs font-medium">Input Area</h4>
+                        <div className="bg-white p-2 border rounded mt-1 text-xs">
+                          Primary input area (expanded by default)
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="bg-gray-100 p-2 rounded mb-2">
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-xs font-medium">Node Context</h4>
-                      <button className="text-xs text-blue-500">Show</button>
-                    </div>
-                  </div>
-                  <div className="bg-gray-100 p-2 rounded">
-                    <h4 className="text-xs font-medium">Input Area</h4>
-                    <div className="bg-white p-2 border rounded mt-1 text-xs">
-                      Primary input area (expanded by default)
-                    </div>
-                  </div>
-                </div>}
+                  );
+                })()}
                 explanation="Smart default states present an optimized initial view of the application, showing only what's most relevant to beginning users or common workflows. This approach reduces initial complexity and helps users focus on getting started without being overwhelmed. Less frequently used features or contextual information are collapsed but easily accessible when needed. This requires thoughtful analysis of user workflows to determine appropriate defaults, but implementation is relatively straightforward."
               />
               
