@@ -625,7 +625,15 @@ export default function UIShowcase() {
                 afterImage={<div className="p-4 border rounded bg-gray-50">
                   <div className="bg-white border rounded p-2">
                     <div className="flex justify-between items-center mb-3">
-                      <div className="text-xs font-medium">UI Customization Center</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs font-medium">UI Customization Center</div>
+                        <div className="flex items-center bg-gray-100 rounded-full p-0.5">
+                          <div className="relative flex h-4 w-8 cursor-pointer items-center rounded-full bg-blue-500 px-0.5">
+                            <div className="absolute h-3 w-3 rounded-full bg-white transition-transform translate-x-4"></div>
+                          </div>
+                          <span className="text-[8px] font-medium ml-1 text-blue-600">Edit Mode ON</span>
+                        </div>
+                      </div>
                       <div className="flex gap-1">
                         <button className="bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 text-[8px]">Save Layout</button>
                         <button className="bg-gray-50 border rounded px-1.5 py-0.5 text-[8px]">Reset</button>
