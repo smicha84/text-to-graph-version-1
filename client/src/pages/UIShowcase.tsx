@@ -706,6 +706,138 @@ export default function UIShowcase() {
                 </div>}
                 explanation="Fixed-height containers can lead to content being cut off or create awkward empty spaces. Adaptive height management ensures all content is accessible while maintaining a clean layout. This can be implemented either by allowing containers to expand based on their content (auto-height) or by adding scrolling to containers that exceed a maximum height. Both approaches ensure users can access all information without disrupting the overall layout consistency."
               />
+              
+              <ShowcaseItem
+                title="Advanced Data Visualization Controls"
+                description="Provide sophisticated controls for exploring complex graph data"
+                complexity="Hard"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white border rounded p-2">
+                    <div className="text-xs font-medium mb-2">Graph Visualization</div>
+                    <div className="bg-gray-100 h-28 rounded flex items-center justify-center text-xs">
+                      Graph with basic default visualization
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                      <button className="border rounded px-2 py-1 text-xs mr-1">+</button>
+                      <button className="border rounded px-2 py-1 text-xs">-</button>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white border rounded">
+                    {/* Control panel header */}
+                    <div className="p-2 border-b flex justify-between items-center">
+                      <div className="text-xs font-medium">Graph Visualization</div>
+                      <div className="flex space-x-1">
+                        <button className="text-xs px-1.5 py-0.5 bg-blue-50 border border-blue-200 rounded">Reset</button>
+                        <button className="text-xs px-1.5 py-0.5 bg-gray-50 border rounded">Save View</button>
+                      </div>
+                    </div>
+                    
+                    {/* Main content area */}
+                    <div className="flex">
+                      {/* Left sidebar with controls */}
+                      <div className="w-1/3 p-2 border-r">
+                        <div className="mb-3">
+                          <div className="text-xs font-medium mb-1">Display Mode</div>
+                          <div className="grid grid-cols-2 gap-1">
+                            <button className="text-[9px] py-1 bg-blue-100 border border-blue-200 rounded">Force-Directed</button>
+                            <button className="text-[9px] py-1 bg-gray-50 border rounded">Hierarchical</button>
+                            <button className="text-[9px] py-1 bg-gray-50 border rounded">Circular</button>
+                            <button className="text-[9px] py-1 bg-gray-50 border rounded">Radial</button>
+                          </div>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <div className="text-xs font-medium mb-1">Node Filters</div>
+                          <div className="space-y-1">
+                            <div className="flex items-center">
+                              <input type="checkbox" className="mr-1" checked />
+                              <span className="text-[9px]">Person</span>
+                              <div className="ml-1 w-2 h-2 rounded-full bg-blue-400"></div>
+                              <span className="text-[9px] ml-auto">24</span>
+                            </div>
+                            <div className="flex items-center">
+                              <input type="checkbox" className="mr-1" checked />
+                              <span className="text-[9px]">Organization</span>
+                              <div className="ml-1 w-2 h-2 rounded-full bg-green-400"></div>
+                              <span className="text-[9px] ml-auto">18</span>
+                            </div>
+                            <div className="flex items-center">
+                              <input type="checkbox" className="mr-1" />
+                              <span className="text-[9px]">Location</span>
+                              <div className="ml-1 w-2 h-2 rounded-full bg-purple-400"></div>
+                              <span className="text-[9px] ml-auto">12</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-xs font-medium mb-1">Edge Controls</div>
+                          <div className="mb-1">
+                            <div className="flex justify-between text-[9px]">
+                              <span>Link Distance</span>
+                              <span>75px</span>
+                            </div>
+                            <input type="range" className="w-full h-1" value={75} />
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-[9px]">
+                              <span>Force Strength</span>
+                              <span>0.5</span>
+                            </div>
+                            <input type="range" className="w-full h-1" value={50} />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Main visualization area */}
+                      <div className="w-2/3 p-2">
+                        <div className="h-32 bg-gray-100 rounded relative">
+                          {/* Sample visualization */}
+                          <div className="absolute top-1/4 left-1/4 w-5 h-5 rounded-full bg-blue-100 border border-blue-400"></div>
+                          <div className="absolute top-1/2 left-1/2 w-5 h-5 rounded-full bg-blue-100 border border-blue-400"></div>
+                          <div className="absolute bottom-1/4 right-1/4 w-5 h-5 rounded-full bg-green-100 border border-green-400"></div>
+                          
+                          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                            <line x1="25%" y1="25%" x2="50%" y2="50%" stroke="#6366f1" strokeWidth="1" />
+                            <line x1="50%" y1="50%" x2="75%" y2="75%" stroke="#6366f1" strokeWidth="1" />
+                          </svg>
+                          
+                          {/* Visualization controls */}
+                          <div className="absolute bottom-2 right-2 flex space-x-1">
+                            <button className="bg-white rounded-full w-5 h-5 flex items-center justify-center text-[8px] border shadow-sm">+</button>
+                            <button className="bg-white rounded-full w-5 h-5 flex items-center justify-center text-[8px] border shadow-sm">-</button>
+                            <button className="bg-white rounded-full w-5 h-5 flex items-center justify-center text-[8px] border shadow-sm">↔</button>
+                          </div>
+                          
+                          {/* Minimap */}
+                          <div className="absolute top-2 right-2 w-12 h-12 bg-white border rounded shadow-sm p-1">
+                            <div className="w-full h-full relative bg-gray-50">
+                              <div className="absolute top-1/4 left-1/4 w-1 h-1 rounded-full bg-blue-400"></div>
+                              <div className="absolute top-1/2 left-1/2 w-1 h-1 rounded-full bg-blue-400"></div>
+                              <div className="absolute bottom-1/4 right-1/4 w-1 h-1 rounded-full bg-green-400"></div>
+                              <div className="absolute inset-0 border border-dashed border-blue-400 m-1"></div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Bottom analytics/metrics panel */}
+                        <div className="mt-2 bg-gray-50 rounded p-1 border flex justify-between items-center">
+                          <div className="flex space-x-2 text-[9px] text-gray-500">
+                            <div>Nodes: 42</div>
+                            <div>Edges: 67</div>
+                            <div>Density: 0.32</div>
+                          </div>
+                          <div className="text-[9px] text-blue-500">View Analytics →</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Advanced data visualization controls empower users to explore complex graph datasets more effectively, uncovering insights that might otherwise remain hidden. This feature provides a comprehensive set of tools including layout algorithms (force-directed, hierarchical, circular), filtering options, physics controls, and visual analytics. The implementation combines interactive D3.js visualizations with React state management to create a responsive, powerful exploration interface. By giving users precise control over how the graph is rendered and analyzed, the application becomes a more effective tool for knowledge discovery and pattern recognition."
+              />
             </div>
           </TabsContent>
           
@@ -1896,6 +2028,150 @@ export default function UIShowcase() {
                   </div>
                 </div>}
                 explanation="Screen reader optimization makes your application accessible to users who rely on assistive technologies for navigation and information consumption. This involves adding appropriate ARIA attributes, ensuring a logical tab order, providing text alternatives for visual elements, and structuring content in a way that makes sense when read aloud. For graph visualizations specifically, this requires creating alternative text-based representations of the graph structure and relationships that can be navigated non-visually."
+              />
+              
+              <ShowcaseItem
+                title="Voice Command Interface"
+                description="Control the application and navigate the graph using voice commands"
+                complexity="Hard"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white border rounded p-2">
+                    <div className="w-full h-28 bg-gray-100 flex items-center justify-center text-xs">
+                      Graph visualization (keyboard & mouse only)
+                    </div>
+                    <div className="flex justify-end mt-2">
+                      <button className="border rounded px-2 py-1 text-xs bg-gray-50">Help</button>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white border rounded p-2">
+                    <div className="w-full h-28 bg-gray-100 flex items-center justify-center text-xs relative">
+                      <div className="flex flex-col items-center">
+                        <div>Graph visualization with voice control</div>
+                        <div className="mt-2 flex items-center px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200 text-[10px] text-blue-700">
+                          <div className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
+                          Listening for commands...
+                        </div>
+                      </div>
+                      
+                      {/* Voice command hints */}
+                      <div className="absolute top-1 right-1 bg-white/70 backdrop-blur-sm border rounded px-1.5 py-1 text-[8px]">
+                        <div className="font-medium mb-0.5">Voice Commands:</div>
+                        <div className="text-gray-700">• "Select node Person"</div>
+                        <div className="text-gray-700">• "Zoom in/out"</div>
+                        <div className="text-gray-700">• "Show properties"</div>
+                        <div className="text-gray-700">• "Create connection to..."</div>
+                      </div>
+                    </div>
+                    
+                    {/* Transcript panel */}
+                    <div className="flex mt-2">
+                      <div className="flex-1 mr-2 border rounded bg-gray-50 p-2 text-[10px]">
+                        <div className="font-medium mb-1 text-gray-500">Transcript:</div>
+                        <div className="font-mono">
+                          <div className="text-gray-500">You: "Select node Person"</div>
+                          <div className="text-blue-600">→ Selected node: "John Doe" (Person)</div>
+                          <div className="text-gray-500">You: "Show properties"</div>
+                          <div className="text-blue-600">→ Displaying properties for "John Doe"</div>
+                          <div className="text-gray-500">You: "Find connections"</div>
+                          <div className="text-blue-600">→ Found 3 connections</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-center space-y-1">
+                        <button className="border rounded-full w-8 h-8 flex items-center justify-center bg-blue-50 hover:bg-blue-100">
+                          <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                        </button>
+                        <button className="border rounded px-2 text-[10px] bg-gray-50">Help</button>
+                        <button className="border rounded px-2 text-[10px] bg-gray-50">Settings</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Voice command interfaces provide hands-free control of the application, making it more accessible to users with motor disabilities and offering convenience for all users. This feature uses speech recognition to interpret spoken commands and translates them into application actions. The implementation includes a command vocabulary tailored to graph operations (like node selection, path finding, and property viewing), visual feedback to confirm recognition, and a transcript panel to review past commands and responses. Voice commands are especially valuable in complex visualization contexts where traditional keyboard shortcuts might be numerous and difficult to remember."
+              />
+              
+              <ShowcaseItem
+                title="Color Blind Friendly Modes"
+                description="Provide alternative color schemes for different types of color blindness"
+                complexity="Medium"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white border rounded p-2">
+                    <div className="w-full text-center text-xs font-medium mb-1">Standard Color Scheme</div>
+                    <div className="flex space-x-3 justify-center mb-3">
+                      <div className="w-6 h-6 rounded-full bg-blue-500 border"></div>
+                      <div className="w-6 h-6 rounded-full bg-green-500 border"></div>
+                      <div className="w-6 h-6 rounded-full bg-red-500 border"></div>
+                      <div className="w-6 h-6 rounded-full bg-purple-500 border"></div>
+                      <div className="w-6 h-6 rounded-full bg-yellow-500 border"></div>
+                    </div>
+                    <div className="w-full h-20 bg-gray-100 flex items-center justify-center text-xs">
+                      Graph with standard colors (difficult for color blind users)
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white border rounded p-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-xs font-medium">Color Blind Modes</div>
+                      <select className="text-[10px] border rounded px-1 py-0.5">
+                        <option>Deuteranopia (Red-Green)</option>
+                        <option>Protanopia (Red)</option>
+                        <option>Tritanopia (Blue)</option>
+                        <option>Monochromacy</option>
+                      </select>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="p-1 border rounded">
+                        <div className="text-[10px] font-medium text-center mb-1">Deuteranopia Mode</div>
+                        <div className="flex space-x-2 justify-center mb-2">
+                          <div className="w-4 h-4 rounded-full bg-blue-600 border"></div>
+                          <div className="w-4 h-4 rounded-full bg-amber-600 border"></div>
+                          <div className="w-4 h-4 rounded-full bg-sky-400 border"></div>
+                          <div className="w-4 h-4 rounded-full bg-slate-800 border"></div>
+                        </div>
+                        <div className="w-full h-12 bg-gray-100 flex items-center justify-center text-[8px]">
+                          <div className="w-3 h-3 rounded-full bg-blue-600 border mr-1"></div>
+                          <div className="w-3 h-3 rounded-full bg-amber-600 border"></div>
+                          Distinguishable colors
+                        </div>
+                      </div>
+                      
+                      <div className="p-1 border rounded">
+                        <div className="text-[10px] font-medium text-center mb-1">Pattern Enhanced</div>
+                        <div className="flex space-x-2 justify-center mb-2">
+                          <div className="w-4 h-4 rounded-full bg-indigo-600 border"></div>
+                          <div className="w-4 h-4 rounded-full bg-rose-600 border border-dashed"></div>
+                          <div className="w-4 h-4 rounded-full bg-emerald-600 border border-dotted"></div>
+                          <div className="w-4 h-4 rounded-full bg-amber-400" style={{background: 'repeating-linear-gradient(45deg, #f59e0b, #f59e0b 2px, #fcd34d 2px, #fcd34d 4px)'}}></div>
+                        </div>
+                        <div className="w-full h-12 bg-gray-100 flex items-center justify-center text-[8px]">
+                          <div className="w-3 h-3 rounded-full bg-indigo-600 border mr-1"></div>
+                          <div className="w-3 h-3 rounded-full bg-indigo-600 border border-dashed"></div>
+                          Colors + patterns
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="w-full h-16 bg-gray-100 rounded flex items-center justify-center p-2">
+                      <div className="text-xs">
+                        <div className="flex items-center mb-1">
+                          <div className="w-3 h-3 rounded-full border mr-1" style={{background: 'repeating-linear-gradient(45deg, #1e40af, #1e40af 2px, #3b82f6 2px, #3b82f6 4px)'}}></div>
+                          Person nodes use blue with stripes
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full border border-dashed bg-amber-500 mr-1"></div>
+                          Organization nodes use amber with dashes
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Color blind friendly modes ensure that all users can distinguish between different node and edge types regardless of their color perception abilities. This accessibility feature offers alternate color palettes specifically designed for various types of color blindness (deuteranopia, protanopia, tritanopia, and monochromacy). For enhanced accessibility, the implementation combines colors with distinct patterns, shapes, or textures to provide multiple visual cues. This approach follows inclusive design principles and allows users to select the mode that works best for their specific needs, creating a more equitable experience for all users."
               />
             </div>
           </TabsContent>
