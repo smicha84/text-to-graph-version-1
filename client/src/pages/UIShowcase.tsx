@@ -2749,6 +2749,247 @@ export default function UIShowcase() {
                   </div>
                 </div>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <ShowcaseItem
+                  title="Theme Customization Profiles"
+                  description="Allow users to save and share custom theme configurations for the application"
+                  complexity="Medium"
+                  impact="High"
+                  beforeImage={<div className="p-3 border rounded">
+                    <div className="mb-3 flex items-center">
+                      <div className="w-24 h-6 bg-blue-600 rounded mr-2"></div>
+                      <div className="text-xs">Default Theme</div>
+                    </div>
+                    <div className="flex mb-2">
+                      <div className="w-6 h-6 bg-blue-600 rounded mr-1"></div>
+                      <div className="w-6 h-6 bg-blue-500 rounded mr-1"></div>
+                      <div className="w-6 h-6 bg-blue-400 rounded mr-1"></div>
+                      <div className="w-6 h-6 bg-blue-300 rounded mr-1"></div>
+                      <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                    </div>
+                    <button className="text-xs px-2 py-1 border rounded">Reset to Default</button>
+                  </div>}
+                  afterImage={<div className="p-3 border rounded">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="w-24 h-6 bg-purple-600 rounded mr-2"></div>
+                        <div className="text-xs">Custom Theme</div>
+                      </div>
+                      <select className="text-xs px-1 py-0.5 border rounded">
+                        <option>My Theme</option>
+                        <option>Dark Mode</option>
+                        <option>High Contrast</option>
+                        <option>+ Create New</option>
+                      </select>
+                    </div>
+                    <div className="flex mb-3">
+                      <div className="w-6 h-6 bg-purple-600 rounded mr-1"></div>
+                      <div className="w-6 h-6 bg-purple-500 rounded mr-1"></div>
+                      <div className="w-6 h-6 bg-purple-400 rounded mr-1"></div>
+                      <div className="w-6 h-6 bg-purple-300 rounded mr-1"></div>
+                      <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="flex justify-between">
+                      <button className="text-xs px-2 py-1 border rounded">Reset</button>
+                      <div className="flex">
+                        <button className="text-xs px-2 py-1 mr-1 border rounded bg-gray-50">Share</button>
+                        <button className="text-xs px-2 py-1 border rounded bg-purple-50 text-purple-700">Save</button>
+                      </div>
+                    </div>
+                  </div>}
+                  explanation="Theme customization profiles allow users to create, save, and share personalized color schemes and visual preferences across the application. This feature enhances user engagement by providing personalized experiences that can adapt to different working conditions, branding requirements, or accessibility needs. The implementation requires a centralized theme management system using CSS variables, persistent storage of theme configurations, and a user interface for creating and switching between themes."
+                />
+                
+                <ShowcaseItem
+                  title="Color Blind Friendly Modes"
+                  description="Provide specialized color schemes for different types of color vision deficiencies"
+                  complexity="Hard"
+                  impact="High"
+                  beforeImage={<div className="p-3 border rounded">
+                    <div className="flex justify-between mb-3">
+                      <div className="text-xs font-medium">Graph Nodes Coloring</div>
+                    </div>
+                    <div className="flex items-center justify-center mb-3 space-x-2">
+                      <div className="w-6 h-6 rounded-full bg-red-500"></div>
+                      <div className="w-6 h-6 rounded-full bg-green-500"></div>
+                      <div className="w-6 h-6 rounded-full bg-blue-500"></div>
+                      <div className="w-6 h-6 rounded-full bg-yellow-500"></div>
+                      <div className="w-6 h-6 rounded-full bg-purple-500"></div>
+                    </div>
+                    <div className="text-[8px] text-gray-500 text-center">
+                      Standard color scheme
+                    </div>
+                  </div>}
+                  afterImage={<div className="p-3 border rounded">
+                    <div className="flex justify-between mb-2">
+                      <div className="text-xs font-medium">Accessible Color Modes</div>
+                      <select className="text-xs px-1 py-0.5 border rounded">
+                        <option>Deuteranopia</option>
+                        <option>Protanopia</option>
+                        <option>Tritanopia</option>
+                        <option>Monochromacy</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center justify-center mb-2 space-x-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-700"></div>
+                      <div className="w-6 h-6 rounded-full bg-orange-500"></div>
+                      <div className="w-6 h-6 rounded-full bg-teal-500"></div>
+                      <div className="w-6 h-6 rounded-full bg-indigo-300"></div>
+                      <div className="w-6 h-6 rounded-full bg-amber-700"></div>
+                    </div>
+                    <div className="text-[8px] text-gray-500 text-center mb-1">
+                      Color blind friendly palette
+                    </div>
+                    <div className="flex text-[8px] items-center justify-center space-x-1">
+                      <div className="flex items-center mr-1">
+                        <span className="w-2 h-2 rounded-full bg-blue-700 mr-0.5"></span>
+                        <span>Person</span>
+                      </div>
+                      <div className="flex items-center mr-1">
+                        <span className="w-2 h-2 rounded-full bg-orange-500 mr-0.5"></span>
+                        <span>Organization</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="w-2 h-2 rounded-full bg-teal-500 mr-0.5"></span>
+                        <span>Event</span>
+                      </div>
+                    </div>
+                  </div>}
+                  explanation="Color blind friendly modes provide alternative color schemes optimized for various types of color vision deficiencies, ensuring that all users can distinguish between different elements in data visualizations. This feature is crucial for making applications accessible to the 8% of men and 0.5% of women with color vision deficiencies. The implementation requires creating distinct color palettes for each type of color blindness (deuteranopia, protanopia, tritanopia, and monochromacy), ensuring sufficient contrast between adjacent colors, and often adding patterns or labels as secondary identifiers."
+                />
+                
+                <ShowcaseItem
+                  title="Workspace Layouts"
+                  description="Allow users to save custom workspace layouts with preferred panel configurations"
+                  complexity="Hard"
+                  impact="High"
+                  beforeImage={<div className="p-3 border rounded">
+                    <div className="flex flex-col h-36">
+                      <div className="h-1/2 flex mb-1">
+                        <div className="w-1/2 mr-1 border rounded bg-gray-50 flex items-center justify-center">
+                          <span className="text-[8px]">Graph Panel</span>
+                        </div>
+                        <div className="w-1/2 border rounded bg-gray-50 flex items-center justify-center">
+                          <span className="text-[8px]">Properties Panel</span>
+                        </div>
+                      </div>
+                      <div className="h-1/2 border rounded bg-gray-50 flex items-center justify-center">
+                        <span className="text-[8px]">Input Panel</span>
+                      </div>
+                    </div>
+                    <div className="text-[8px] text-gray-500 text-center mt-1">
+                      Default layout (fixed)
+                    </div>
+                  </div>}
+                  afterImage={<div className="p-3 border rounded">
+                    <div className="flex justify-between mb-1">
+                      <div className="text-xs font-medium">Custom Workspace</div>
+                      <select className="text-xs px-1 py-0.5 border rounded">
+                        <option>Analytics Layout</option>
+                        <option>Editing Focus</option>
+                        <option>Presentation Mode</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col h-32">
+                      <div className="h-2/3 flex mb-1">
+                        <div className="w-3/4 mr-1 border rounded bg-gray-50 flex items-center justify-center">
+                          <span className="text-[8px]">Graph Panel (Expanded)</span>
+                        </div>
+                        <div className="w-1/4 flex flex-col">
+                          <div className="h-1/2 mb-1 border rounded bg-gray-50 flex items-center justify-center">
+                            <span className="text-[8px]">Properties</span>
+                          </div>
+                          <div className="h-1/2 border rounded bg-gray-50 flex items-center justify-center">
+                            <span className="text-[8px]">Search</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="h-1/3 border rounded bg-gray-50 flex items-center justify-center">
+                        <span className="text-[8px]">Input Panel (Minimized)</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <div className="text-[8px] text-gray-500">
+                        Saved custom layout
+                      </div>
+                      <div className="flex">
+                        <button className="text-[8px] px-1 py-0.5 border rounded-sm mr-1">Reset</button>
+                        <button className="text-[8px] px-1 py-0.5 border rounded-sm mr-1">Share</button>
+                        <button className="text-[8px] px-1 py-0.5 border rounded-sm bg-blue-50 text-blue-700">Save As...</button>
+                      </div>
+                    </div>
+                  </div>}
+                  explanation="Custom workspace layouts allow users to arrange and resize UI elements based on their specific tasks and preferences, then save these configurations for later reuse. This feature is particularly valuable for complex applications where different workflows benefit from different arrangements of the interface. Implementation requires a flexible layout system (typically using CSS Grid or a specialized layout library), the ability to drag, resize, and reposition panels, and a system to serialize and restore layout configurations."
+                />
+                
+                <ShowcaseItem
+                  title="Interaction Preferences"
+                  description="Customizable interaction behaviors for mouse, keyboard, and touch input"
+                  complexity="Medium"
+                  impact="Medium"
+                  beforeImage={<div className="p-3 border rounded">
+                    <div className="text-xs font-medium mb-2">Default Interactions</div>
+                    <div className="space-y-1 mb-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px]">Pan Graph</span>
+                        <span className="text-[10px] bg-gray-100 px-1 rounded">Click + Drag</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px]">Zoom</span>
+                        <span className="text-[10px] bg-gray-100 px-1 rounded">Scroll Wheel</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px]">Select Node</span>
+                        <span className="text-[10px] bg-gray-100 px-1 rounded">Click</span>
+                      </div>
+                    </div>
+                  </div>}
+                  afterImage={<div className="p-3 border rounded">
+                    <div className="text-xs font-medium mb-2">Customizable Interactions</div>
+                    <div className="space-y-1.5 mb-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px]">Pan Graph</span>
+                        <select className="text-[9px] px-1 py-0.5 border rounded">
+                          <option>Click + Drag</option>
+                          <option>Right-click + Drag</option>
+                          <option>Middle Button + Drag</option>
+                          <option>Shift + Drag</option>
+                        </select>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px]">Zoom</span>
+                        <select className="text-[9px] px-1 py-0.5 border rounded">
+                          <option>Scroll Wheel</option>
+                          <option>Pinch Gesture</option>
+                          <option>+/- Keys</option>
+                          <option>Double Click</option>
+                        </select>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px]">Select Multiple</span>
+                        <select className="text-[9px] px-1 py-0.5 border rounded">
+                          <option>Ctrl + Click</option>
+                          <option>Shift + Click</option>
+                          <option>Click + Drag Area</option>
+                          <option>Double Click</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-2 text-[10px]">
+                      <div className="flex items-center">
+                        <input type="checkbox" className="mr-1 w-3 h-3" checked />
+                        <span>Invert scroll</span>
+                      </div>
+                      <div className="flex items-center">
+                        <input type="checkbox" className="mr-1 w-3 h-3" />
+                        <span>Touch mode</span>
+                      </div>
+                    </div>
+                  </div>}
+                  explanation="Customizable interaction preferences allow users to personalize how they interact with the application using mouse, keyboard, and touch inputs. This feature accommodates different user habits, physical abilities, and device setups by letting them map their preferred input methods to different actions. The implementation involves creating a configurable input management system that can bind different input events to application functions, storing these preferences in user profiles, and providing an interface to modify these bindings."
+                />
+              </div>
             </div>
           </TabsContent>
         </Tabs>
