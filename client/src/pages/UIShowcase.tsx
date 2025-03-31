@@ -594,6 +594,156 @@ export default function UIShowcase() {
                 </div>}
                 explanation="Floating panels provide maximum flexibility, allowing users to create custom workspace layouts that suit their specific needs. This approach requires implementing drag-and-drop functionality, panel minimization, and z-index management, but results in a highly adaptable interface. The implementation would require a more substantial change to the application architecture but could significantly enhance the user experience for power users."
               />
+              
+              <ShowcaseItem
+                title="Global UI Element Customization"
+                description="Let users resize, reposition, and reshape any UI element across the entire application"
+                complexity="Hard"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white p-2 border rounded">
+                    <div className="text-xs font-medium mb-2">Predefined UI Layouts</div>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      <button className="bg-gray-100 border rounded px-2 py-0.5 text-[9px]">Default</button>
+                      <button className="bg-gray-100 border rounded px-2 py-0.5 text-[9px]">Compact</button>
+                      <button className="bg-gray-100 border rounded px-2 py-0.5 text-[9px]">Expanded</button>
+                    </div>
+                    <div className="flex items-center justify-between text-[9px] mb-1">
+                      <span>Panel Size</span>
+                      <div className="flex">
+                        <button className="border px-1 rounded-l">S</button>
+                        <button className="border-t border-b px-1 bg-blue-50">M</button>
+                        <button className="border px-1 rounded-r">L</button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 mt-2">
+                      <span className="text-[9px]">Reset All</span>
+                      <button className="bg-gray-100 border rounded px-1 py-0.5 text-[9px]">↺</button>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white border rounded p-2">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="text-xs font-medium">UI Customization Center</div>
+                      <div className="flex gap-1">
+                        <button className="bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 text-[8px]">Save Layout</button>
+                        <button className="bg-gray-50 border rounded px-1.5 py-0.5 text-[8px]">Reset</button>
+                      </div>
+                    </div>
+                    
+                    {/* Main content with tabs */}
+                    <div className="border rounded mb-3">
+                      <div className="flex border-b text-[9px]">
+                        <div className="px-2 py-1 bg-blue-50 border-r">Elements</div>
+                        <div className="px-2 py-1 border-r">Themes</div>
+                        <div className="px-2 py-1">Presets</div>
+                      </div>
+                      
+                      {/* Element customization panel */}
+                      <div className="p-2">
+                        {/* Selected element indicator with resize handles */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-[9px] font-medium">Selected: <span className="text-blue-500">Graph Panel</span></div>
+                          <div className="flex items-center gap-1">
+                            <button className="border rounded w-4 h-4 flex items-center justify-center bg-gray-50">
+                              <div className="w-2 h-2 border border-dashed"></div>
+                            </button>
+                            <button className="border rounded w-4 h-4 flex items-center justify-center bg-gray-50">
+                              <div className="w-2 h-0.5 bg-gray-400"></div>
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Size controls */}
+                        <div className="mb-2">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-[9px]">Size</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[8px] text-gray-500">W: 640px</span>
+                              <span className="text-[8px] text-gray-500">H: 480px</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <input type="range" className="w-full h-1.5" value={75} />
+                            <button className="border rounded px-1 bg-gray-50 text-[8px]">🔒</button>
+                          </div>
+                        </div>
+                        
+                        {/* Position controls */}
+                        <div className="mb-2">
+                          <div className="text-[9px] mb-1">Position</div>
+                          <div className="grid grid-cols-2 gap-1">
+                            <div className="flex items-center">
+                              <span className="text-[8px] w-5">X:</span>
+                              <input type="range" className="w-full h-1.5" value={50} />
+                            </div>
+                            <div className="flex items-center">
+                              <span className="text-[8px] w-5">Y:</span>
+                              <input type="range" className="w-full h-1.5" value={30} />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Shape controls */}
+                        <div>
+                          <div className="text-[9px] mb-1">Shape</div>
+                          <div className="grid grid-cols-3 gap-1">
+                            <div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[8px]">Radius</span>
+                                <span className="text-[8px] text-gray-500">6px</span>
+                              </div>
+                              <input type="range" className="w-full h-1.5" value={25} />
+                            </div>
+                            <div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[8px]">Border</span>
+                                <span className="text-[8px] text-gray-500">1px</span>
+                              </div>
+                              <input type="range" className="w-full h-1.5" value={10} />
+                            </div>
+                            <div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[8px]">Shadow</span>
+                                <span className="text-[8px] text-gray-500">sm</span>
+                              </div>
+                              <input type="range" className="w-full h-1.5" value={20} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Live preview area */}
+                    <div className="border rounded p-1">
+                      <div className="text-[9px] mb-1 text-center">Live Preview</div>
+                      <div className="bg-gray-50 rounded h-16 relative">
+                        {/* Sample UI element with resize handles */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-white border rounded shadow-sm">
+                          {/* Corner resize handles */}
+                          <div className="absolute -top-1 -left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                          
+                          {/* Edge resize handles */}
+                          <div className="absolute top-1/2 -left-1 transform -translate-y-1/2 w-2 h-2 bg-blue-300 rounded-full"></div>
+                          <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 w-2 h-2 bg-blue-300 rounded-full"></div>
+                          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-300 rounded-full"></div>
+                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-300 rounded-full"></div>
+                          
+                          {/* Central drag handle */}
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-100 border border-blue-300 rounded-full flex items-center justify-center">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Advanced UI customization empowers users to tailor the application's interface precisely to their needs and preferences. Rather than being limited to predefined layouts, this approach gives users granular control over every UI element's size, position, and appearance. The implementation requires a comprehensive design system with styled components that accept dimension and position props, along with a specialized editing mode that renders resize/move handles around selected elements. By storing these customizations in user profiles, the system provides a personalized experience that significantly enhances productivity by allowing users to optimize screen real estate for their specific workflows."
+              />
             </div>
           </TabsContent>
           
