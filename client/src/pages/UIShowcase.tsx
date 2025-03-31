@@ -530,13 +530,14 @@ export default function UIShowcase() {
         </p>
         
         <Tabs defaultValue="layout" className="mb-10">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="layout">Layout Structure</TabsTrigger>
             <TabsTrigger value="visual">Visual Space</TabsTrigger>
             <TabsTrigger value="ux">User Experience</TabsTrigger>
             <TabsTrigger value="navigation">Navigation</TabsTrigger>
             <TabsTrigger value="interaction">Interaction Patterns</TabsTrigger>
             <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
+            <TabsTrigger value="mobile">Mobile Experience</TabsTrigger>
           </TabsList>
           
           <TabsContent value="layout" className="mt-6">
@@ -1581,6 +1582,373 @@ export default function UIShowcase() {
                   </div>
                 </div>}
                 explanation="Screen reader optimization makes your application accessible to users who rely on assistive technologies for navigation and information consumption. This involves adding appropriate ARIA attributes, ensuring a logical tab order, providing text alternatives for visual elements, and structuring content in a way that makes sense when read aloud. For graph visualizations specifically, this requires creating alternative text-based representations of the graph structure and relationships that can be navigated non-visually."
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="mobile" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ShowcaseItem
+                title="Responsive Graph Layout"
+                description="Optimize graph layout for small screens with automatic resizing and repositioning"
+                complexity="Medium"
+                impact="High"
+                beforeImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-1">Desktop Layout</div>
+                  <div className="bg-gray-50 p-2 rounded relative" style={{height: '150px'}}>
+                    {/* Desktop graph visualization with many nodes */}
+                    <div className="absolute top-1/4 left-1/4 w-10 h-10 rounded-full bg-blue-100 border border-blue-300 flex items-center justify-center text-xs">Node 1</div>
+                    <div className="absolute top-1/2 left-1/2 w-10 h-10 rounded-full bg-green-100 border border-green-300 flex items-center justify-center text-xs">Node 2</div>
+                    <div className="absolute bottom-1/4 right-1/4 w-10 h-10 rounded-full bg-purple-100 border border-purple-300 flex items-center justify-center text-xs">Node 3</div>
+                    <div className="absolute top-2/3 left-1/3 w-10 h-10 rounded-full bg-yellow-100 border border-yellow-300 flex items-center justify-center text-xs">Node 4</div>
+                    <div className="absolute top-1/3 right-1/3 w-10 h-10 rounded-full bg-red-100 border border-red-300 flex items-center justify-center text-xs">Node 5</div>
+                    {/* Lines connecting nodes */}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                      <line x1="35%" y1="30%" x2="50%" y2="50%" stroke="#999" strokeWidth="1" />
+                      <line x1="50%" y1="50%" x2="75%" y2="75%" stroke="#999" strokeWidth="1" />
+                      <line x1="66%" y1="33%" x2="50%" y2="50%" stroke="#999" strokeWidth="1" />
+                      <line x1="33%" y1="66%" x2="50%" y2="50%" stroke="#999" strokeWidth="1" />
+                    </svg>
+                  </div>
+                  <div className="mt-2 p-2 border rounded bg-gray-50">
+                    <div className="text-xs text-gray-500">Controls panel</div>
+                    <div className="flex mt-1">
+                      <div className="bg-white border rounded p-1 mr-1 text-xs">Zoom</div>
+                      <div className="bg-white border rounded p-1 mr-1 text-xs">Filter</div>
+                      <div className="bg-white border rounded p-1 text-xs">Layout</div>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-1">Mobile-Optimized Layout</div>
+                  <div className="bg-gray-50 p-2 rounded relative" style={{height: '150px'}}>
+                    {/* Mobile graph with fewer visible nodes and larger touch targets */}
+                    <div className="absolute top-1/3 left-1/3 w-12 h-12 rounded-full bg-blue-100 border-2 border-blue-300 flex items-center justify-center text-xs shadow-md">Node 1</div>
+                    <div className="absolute bottom-1/3 right-1/3 w-12 h-12 rounded-full bg-green-100 border-2 border-green-300 flex items-center justify-center text-xs shadow-md">Node 2</div>
+                    {/* Lines connecting nodes */}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                      <line x1="33%" y1="33%" x2="66%" y2="66%" stroke="#999" strokeWidth="2" />
+                    </svg>
+                    {/* Minimap in corner */}
+                    <div className="absolute top-2 right-2 w-16 h-16 bg-white border rounded shadow-sm p-1">
+                      <div className="text-xxs text-center text-gray-400">Overview</div>
+                      <div className="relative h-10 w-full">
+                        <div className="absolute top-1/4 left-1/4 w-2 h-2 rounded-full bg-blue-300"></div>
+                        <div className="absolute bottom-1/4 right-1/4 w-2 h-2 rounded-full bg-green-300"></div>
+                        <div className="absolute top-3/4 left-3/4 w-2 h-2 rounded-full bg-purple-300"></div>
+                        <div className="absolute bottom-1/2 right-1/2 w-2 h-2 rounded-full bg-yellow-300"></div>
+                        <div className="absolute top-1/3 right-2/3 w-2 h-2 rounded-full bg-red-300"></div>
+                        {/* Viewport indicator */}
+                        <div className="absolute inset-0 border border-blue-500 bg-blue-50 bg-opacity-20"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="flex justify-center mb-1">
+                      <div className="inline-flex bg-white border rounded-full shadow-sm">
+                        <button className="p-1 text-xs rounded-l-full px-3 bg-gray-100">-</button>
+                        <button className="p-1 text-xs rounded-r-full px-3">+</button>
+                      </div>
+                    </div>
+                    <div className="flex justify-center">
+                      <button className="bg-white border rounded-full p-1 px-3 text-xs shadow-sm flex items-center">
+                        <span className="mr-1">⚙️</span> More
+                      </button>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Responsive graph layouts are essential for mobile users. This approach includes several optimizations: larger touch targets for nodes, simplified views showing fewer elements at once, a minimap for navigating the full graph, touch-friendly zoom controls, and automatic layout adjustment. The mobile version maintains the same data representation while adapting the presentation to overcome the constraints of small screens and touch interaction. This requires responsive design principles and touch event handling in the graph visualization library."
+              />
+              
+              <ShowcaseItem
+                title="Touch-Optimized Controls"
+                description="Replace mouse-oriented controls with touch-friendly alternatives designed for mobile"
+                complexity="Medium"
+                impact="High"
+                beforeImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-2">Desktop Controls</div>
+                  <div className="bg-gray-50 p-2 rounded mb-2">
+                    <div className="flex mb-2">
+                      <div className="bg-white border rounded p-1 mr-1 text-xs flex items-center">
+                        <span className="inline-block w-3 h-3 mr-1 bg-gray-400 rounded-sm"></span>
+                        Select
+                      </div>
+                      <div className="bg-white border rounded p-1 mr-1 text-xs flex items-center">
+                        <span className="inline-block w-3 h-3 mr-1 bg-gray-400 rounded-sm"></span>
+                        Pan
+                      </div>
+                      <div className="bg-white border rounded p-1 text-xs flex items-center">
+                        <span className="inline-block w-3 h-3 mr-1 bg-gray-400 rounded-sm"></span>
+                        Zoom
+                      </div>
+                    </div>
+                    <div className="flex">
+                      <div className="bg-white border rounded p-1 mr-1 text-xs">
+                        <span className="text-xs text-gray-500">Zoom:</span>
+                        <input type="range" className="w-20 h-2 ml-1" />
+                      </div>
+                      <div className="bg-white border rounded p-1 text-xs">
+                        <span className="text-xs text-gray-500">Filter:</span>
+                        <select className="text-xs border ml-1 w-20">
+                          <option>All</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500 text-center">
+                    Small controls designed for mouse precision
+                  </div>
+                </div>}
+                afterImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-2">Touch-Optimized Controls</div>
+                  <div className="bg-gray-50 p-2 rounded mb-2">
+                    {/* Large buttons with icon + text */}
+                    <div className="grid grid-cols-3 gap-2 mb-2">
+                      <div className="bg-white border rounded-lg p-2 text-center shadow-sm">
+                        <div className="flex justify-center mb-1">
+                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">👆</div>
+                        </div>
+                        <div className="text-xs">Select</div>
+                      </div>
+                      <div className="bg-white border rounded-lg p-2 text-center shadow-sm">
+                        <div className="flex justify-center mb-1">
+                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">👋</div>
+                        </div>
+                        <div className="text-xs">Pan</div>
+                      </div>
+                      <div className="bg-white border rounded-lg p-2 text-center shadow-sm">
+                        <div className="flex justify-center mb-1">
+                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">🔍</div>
+                        </div>
+                        <div className="text-xs">Zoom</div>
+                      </div>
+                    </div>
+                    {/* Floating action buttons */}
+                    <div className="relative h-10">
+                      <div className="absolute right-2 bottom-0 flex">
+                        <div className="w-8 h-8 rounded-full bg-white border shadow-md flex items-center justify-center text-sm mr-2">+</div>
+                        <div className="w-8 h-8 rounded-full bg-white border shadow-md flex items-center justify-center text-sm">-</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500 text-center">
+                    Large, finger-sized buttons with visual affordances
+                  </div>
+                </div>}
+                explanation="Touch interfaces require larger target sizes, simplified controls, and intuitive gesture support. This example transforms the traditional mouse-centric control panel into a touch-optimized interface with finger-sized buttons (minimum 44x44px touch targets), clear visual affordances, and reduced control density. Floating action buttons provide quick access to common functions, while gesture support (pinch to zoom, swipe to pan) replaces traditional control widgets. These changes make the application much more usable on smartphones and tablets while maintaining feature parity."
+              />
+              
+              <ShowcaseItem
+                title="Mobile-First Property Panel"
+                description="Transform property displays into full-screen modal interfaces for mobile"
+                complexity="Medium" 
+                impact="High"
+                beforeImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-2">Desktop Property Panel</div>
+                  <div className="flex">
+                    <div className="bg-gray-50 p-2 rounded mr-2" style={{width: '60%', height: '140px'}}>
+                      {/* Simple graph visualization */}
+                      <div className="flex justify-center items-center h-full text-xs text-gray-400">
+                        Graph Visualization Area
+                      </div>
+                    </div>
+                    <div className="border rounded p-2 bg-white" style={{width: '40%'}}>
+                      <div className="text-xs font-medium mb-1">Node Properties</div>
+                      <div className="text-xs mb-1"><span className="text-gray-500">ID:</span> node-123</div>
+                      <div className="text-xs mb-1"><span className="text-gray-500">Type:</span> Person</div>
+                      <div className="text-xs mb-1"><span className="text-gray-500">Name:</span> John Smith</div>
+                      <div className="text-xs mb-1"><span className="text-gray-500">Age:</span> 42</div>
+                      <div className="text-xs mb-1"><span className="text-gray-500">Connections:</span> 3</div>
+                      <div className="flex mt-2">
+                        <button className="bg-gray-100 rounded text-xs px-2 py-1 mr-1">Edit</button>
+                        <button className="bg-gray-100 rounded text-xs px-2 py-1">Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-2">Mobile Property Panel</div>
+                  {/* Mobile view with full-screen modal */}
+                  <div className="relative bg-gray-50 rounded" style={{height: '140px'}}>
+                    {/* Simple graph visualization */}
+                    <div className="flex justify-center items-center h-full text-xs text-gray-400">
+                      Graph Visualization Area
+                    </div>
+                    {/* Property modal sliding from bottom */}
+                    <div className="absolute inset-x-0 bottom-0 border-t rounded-t-xl bg-white shadow-lg p-3" style={{height: '80%'}}>
+                      {/* Handle for dragging */}
+                      <div className="absolute top-1 left-0 right-0 flex justify-center">
+                        <div className="w-10 h-1 bg-gray-300 rounded"></div>
+                      </div>
+                      <div className="mt-3">
+                        {/* Larger, touch-friendly property display */}
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="text-sm font-medium">Person</div>
+                          <button className="text-xs bg-gray-100 rounded-full w-6 h-6 flex items-center justify-center">×</button>
+                        </div>
+                        <div className="text-sm font-medium mb-1">John Smith</div>
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          <div className="border rounded p-2 bg-gray-50">
+                            <div className="text-xs text-gray-500">Age</div>
+                            <div className="text-sm">42</div>
+                          </div>
+                          <div className="border rounded p-2 bg-gray-50">
+                            <div className="text-xs text-gray-500">Connections</div>
+                            <div className="text-sm">3</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-end mt-2">
+                          <button className="bg-blue-50 border border-blue-200 rounded-lg text-sm px-3 py-1.5 mr-2">Edit</button>
+                          <button className="bg-red-50 border border-red-200 rounded-lg text-sm px-3 py-1.5">Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                explanation="On mobile devices, traditional side panels become impractical due to limited screen width. This design transforms the property panel into a bottom sheet modal that slides up from the bottom of the screen, following mobile UI conventions similar to native apps. The sheet can be dragged to adjust its height, has larger touch targets, and uses a card-based layout for different property groups. This approach maximizes the available space for the graph visualization while providing a rich, touch-friendly interface for viewing and editing node properties."
+              />
+              
+              <ShowcaseItem
+                title="Pinch-to-Zoom Navigation"
+                description="Implement intuitive touch gestures for navigating complex graph visualizations"
+                complexity="Hard"
+                impact="High"
+                beforeImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-2">Traditional Controls</div>
+                  <div className="bg-gray-50 rounded p-2 mb-2" style={{height: '120px'}}>
+                    {/* Graph visualization */}
+                    <div className="flex justify-center items-center h-full text-xs text-gray-400">
+                      Graph Visualization Area
+                    </div>
+                  </div>
+                  <div className="flex justify-center">
+                    <div className="bg-white border rounded-lg p-1 flex items-center">
+                      <button className="text-xs px-2 py-1">-</button>
+                      <div className="border-l border-r px-2 py-1">
+                        <input type="range" className="w-20 h-1" />
+                      </div>
+                      <button className="text-xs px-2 py-1">+</button>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-2">Touch Gesture Navigation</div>
+                  <div className="bg-gray-50 rounded p-2 relative" style={{height: '140px'}}>
+                    {/* Graph visualization */}
+                    <div className="flex justify-center items-center h-full">
+                      <div className="relative">
+                        {/* Visualization with gesture indicators */}
+                        <div className="w-24 h-24 border border-dashed border-gray-300 rounded-full flex items-center justify-center">
+                          <div className="text-xs text-gray-400">Graph Area</div>
+                        </div>
+                        {/* Gesture indicators */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-36 h-36 border border-dashed border-blue-300 rounded-full opacity-50"></div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-blue-400">
+                              <path d="M7 11l5 5 5-5" />
+                              <path d="M7 6l5 5 5-5" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Gesture hint overlay */}
+                    <div className="absolute bottom-2 right-2 bg-white bg-opacity-80 rounded px-2 py-1 text-xs border shadow-sm">
+                      <div className="flex items-center mb-1">
+                        <div className="text-gray-500 mr-1">Pinch:</div>
+                        <div>Zoom</div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="text-gray-500 mr-1">Two-finger drag:</div>
+                        <div>Pan</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Touch-based navigation is essential for mobile users exploring complex graph visualizations. This implementation adds support for standard touch gestures that mobile users already know: pinch to zoom in/out, two-finger pan to move around the graph, double-tap to center on a specific node, and tap to select. The design also includes a gesture hint system that teaches new users the available interactions, gradually fading out as they demonstrate proficiency. This approach requires adding touch event handlers to the visualization layer but creates a much more natural interaction model for mobile users."
+              />
+              
+              <ShowcaseItem
+                title="Context-Aware Toolbars"
+                description="Adapt toolbars and menus to screen size with responsive design patterns"
+                complexity="Medium"
+                impact="Medium"
+                beforeImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-2">Desktop Toolbar</div>
+                  <div className="bg-gray-100 p-2 rounded mb-2">
+                    <div className="flex items-center">
+                      <button className="bg-white border rounded px-2 py-1 text-xs mr-2 flex items-center">
+                        <span className="mr-1">+</span>Add Node
+                      </button>
+                      <button className="bg-white border rounded px-2 py-1 text-xs mr-2 flex items-center">
+                        <span className="mr-1">↔️</span>Add Edge
+                      </button>
+                      <button className="bg-white border rounded px-2 py-1 text-xs mr-2 flex items-center">
+                        <span className="mr-1">🔍</span>Find
+                      </button>
+                      <button className="bg-white border rounded px-2 py-1 text-xs mr-2 flex items-center">
+                        <span className="mr-1">⚙️</span>Settings
+                      </button>
+                      <button className="bg-white border rounded px-2 py-1 text-xs mr-2 flex items-center">
+                        <span className="mr-1">💾</span>Save
+                      </button>
+                      <button className="bg-white border rounded px-2 py-1 text-xs flex items-center">
+                        <span className="mr-1">📤</span>Export
+                      </button>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-2" style={{height: '100px'}}>
+                    <div className="flex justify-center items-center h-full text-xs text-gray-400">
+                      Graph Visualization Area
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="border rounded p-3 bg-white">
+                  <div className="text-center text-xs text-gray-500 mb-2">Mobile-Optimized Toolbar</div>
+                  <div className="bg-gray-100 p-2 rounded mb-2">
+                    <div className="flex items-center justify-between">
+                      {/* Only most important actions visible */}
+                      <button className="bg-white border rounded-full w-8 h-8 flex items-center justify-center shadow-sm text-xs">+</button>
+                      {/* More menu with dropdown */}
+                      <div className="relative">
+                        <button className="bg-white border rounded-lg px-3 py-1 text-xs flex items-center shadow-sm">
+                          <span className="mr-1">⋮</span>More
+                        </button>
+                        {/* Dropdown menu */}
+                        <div className="absolute right-0 top-full mt-1 bg-white border rounded shadow-lg p-1 z-10">
+                          <div className="text-xs px-3 py-1.5 rounded hover:bg-gray-50 flex items-center">
+                            <span className="mr-2">↔️</span>Add Edge
+                          </div>
+                          <div className="text-xs px-3 py-1.5 rounded hover:bg-gray-50 flex items-center">
+                            <span className="mr-2">🔍</span>Find
+                          </div>
+                          <div className="text-xs px-3 py-1.5 rounded hover:bg-gray-50 flex items-center">
+                            <span className="mr-2">⚙️</span>Settings
+                          </div>
+                          <div className="text-xs px-3 py-1.5 rounded hover:bg-gray-50 flex items-center">
+                            <span className="mr-2">💾</span>Save
+                          </div>
+                          <div className="text-xs px-3 py-1.5 rounded hover:bg-gray-50 flex items-center">
+                            <span className="mr-2">📤</span>Export
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-2 relative" style={{height: '100px'}}>
+                    <div className="flex justify-center items-center h-full text-xs text-gray-400">
+                      Graph Visualization Area
+                    </div>
+                    {/* Floating Action Button */}
+                    <div className="absolute right-2 bottom-2">
+                      <button className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg">
+                        <span className="text-lg">+</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>}
+                explanation="Context-aware toolbars adapt their design based on screen size and device capabilities. For mobile devices, this means consolidating less-used actions into menus, prioritizing the most common functions, and using patterns like floating action buttons (FABs) for primary actions. The implementation uses responsive breakpoints to show different UI components based on available screen space. This approach maintains functionality across all devices while optimizing the interface for touch interaction and limited screen real estate, following established mobile UI patterns that users already understand."
               />
             </div>
           </TabsContent>
