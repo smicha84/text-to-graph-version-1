@@ -15,7 +15,10 @@ import {
   XIcon,
   PaintBucketIcon,
   Layers2Icon,
-  PenLineIcon
+  PenLineIcon,
+  Edit2Icon,
+  Move,
+  SaveIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as d3 from "d3";
@@ -42,7 +45,9 @@ export default function GraphPanel({
   const [subgraphIds, setSubgraphIds] = useState<string[]>([]);
   const [activeSubgraphId, setActiveSubgraphId] = useState<string | null>(null);
   const [customNodeColors, setCustomNodeColors] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState<'layout' | 'subgraph' | 'color' | 'style'>('layout');
+  const [activeTab, setActiveTab] = useState<'layout' | 'subgraph' | 'color' | 'style' | 'customize'>('layout');
+  const [editMode, setEditMode] = useState(false);
+  const [selectedPanel, setSelectedPanel] = useState<string | null>(null);
   const [selectedElement, setSelectedElement] = useState<Node | Edge | null>(null);
   const [elementStyle, setElementStyle] = useState<NodeStyle | EdgeStyle | null>(null);
   const [customCenterPoint, setCustomCenterPoint] = useState<CenterPoint | null>(null);
@@ -495,6 +500,21 @@ export default function GraphPanel({
                   </div>
                 </button>
               )}
+              
+              <button
+                className={cn(
+                  "flex-1 py-3 px-4 text-sm font-medium border-b-2",
+                  activeTab === 'customize'
+                    ? "border-blue-500 text-blue-600" 
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                )}
+                onClick={() => setActiveTab('customize')}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Edit2Icon className="w-4 h-4" />
+                  Customize
+                </div>
+              </button>
             </div>
             
             {/* Tab Content */}
@@ -602,6 +622,168 @@ export default function GraphPanel({
                     onStyleChange={handleStyleChange}
                     currentStyle={elementStyle}
                   />
+                </div>
+              )}
+              
+              {/* UI Customization Section */}
+              {activeTab === 'customize' && (
+                <div>
+                  <h3 className="flex items-center gap-2 font-semibold text-gray-700 mb-3">
+                    <Edit2Icon size={16} className="text-gray-500" />
+                    UI Customization
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Customize the layout and appearance of UI elements
+                  </p>
+                  
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Edit Mode</span>
+                      <button
+                        onClick={() => setEditMode(!editMode)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-full shadow-sm flex items-center gap-1.5 
+                        ${editMode 
+                          ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                          : 'bg-white border border-gray-200 hover:bg-gray-50'}`}
+                      >
+                        <Edit2Icon size={14} />
+                        {editMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+                      </button>
+                    </div>
+                    
+                    {editMode && (
+                      <div className="p-2 bg-blue-50 border border-blue-100 rounded-md text-xs text-blue-700 mb-4">
+                        <p className="font-medium mb-1">UI Customization Mode</p>
+                        <ul className="list-disc pl-4 space-y-0.5">
+                          <li>Click any panel to select it</li>
+                          <li>Drag from the center to move elements</li>
+                          <li>Drag from the corners or edges to resize</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium mb-2">Customizable Elements</h4>
+                    <div className="space-y-2">
+                      {['graphPanel', 'controlPanel', 'propertyPanel'].map((panel) => (
+                        <button 
+                          key={panel}
+                          className={`w-full p-2 text-left text-sm border rounded ${
+                            selectedPanel === panel 
+                              ? 'border-blue-500 bg-blue-50' 
+                              : 'border-gray-200'
+                          }`}
+                          onClick={() => setSelectedPanel(selectedPanel === panel ? null : panel)}
+                        >
+                          {panel === 'graphPanel' && 'Graph Visualization Panel'}
+                          {panel === 'controlPanel' && 'Controls Panel'}
+                          {panel === 'propertyPanel' && 'Property Panel'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {selectedPanel && (
+                    <div className="border rounded-md p-3">
+                      <h4 className="text-sm font-medium mb-2">Panel Properties</h4>
+                      
+                      <div className="mb-3">
+                        <label className="text-xs text-gray-500 block mb-1">Size</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-xs block mb-1">Width</span>
+                            <input 
+                              type="range" 
+                              min="20" 
+                              max="100" 
+                              defaultValue="50"
+                              className="w-full" 
+                            />
+                          </div>
+                          <div>
+                            <span className="text-xs block mb-1">Height</span>
+                            <input 
+                              type="range" 
+                              min="20" 
+                              max="100" 
+                              defaultValue="50"
+                              className="w-full" 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <label className="text-xs text-gray-500 block mb-1">Position</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-xs block mb-1">X Position</span>
+                            <input 
+                              type="range" 
+                              min="0" 
+                              max="100" 
+                              defaultValue="50"
+                              className="w-full" 
+                            />
+                          </div>
+                          <div>
+                            <span className="text-xs block mb-1">Y Position</span>
+                            <input 
+                              type="range" 
+                              min="0" 
+                              max="100" 
+                              defaultValue="50"
+                              className="w-full" 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <label className="text-xs text-gray-500 block mb-1">Appearance</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <span className="text-xs block mb-1">Border Radius</span>
+                            <input 
+                              type="range" 
+                              min="0" 
+                              max="20" 
+                              defaultValue="6"
+                              className="w-full" 
+                            />
+                          </div>
+                          <div>
+                            <span className="text-xs block mb-1">Border Width</span>
+                            <input 
+                              type="range" 
+                              min="0" 
+                              max="5" 
+                              defaultValue="1"
+                              className="w-full" 
+                            />
+                          </div>
+                          <div>
+                            <span className="text-xs block mb-1">Shadow</span>
+                            <input 
+                              type="range" 
+                              min="0" 
+                              max="5" 
+                              defaultValue="1"
+                              className="w-full" 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <button
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-md py-1.5 text-sm font-medium"
+                      >
+                        <SaveIcon size={14} className="inline mr-1" />
+                        Save Changes
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
