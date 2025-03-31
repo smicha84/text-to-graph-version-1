@@ -44,21 +44,21 @@ function ShowcaseItem({ title, description, complexity, impact, beforeImage, aft
           <DialogTrigger asChild>
             <Button variant="outline" className="w-full">View Details</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{title}</DialogTitle>
               <DialogDescription>{description}</DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Before</h3>
-                <div className="border rounded-md p-4 bg-gray-50">
+                <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
                   {beforeImage}
                 </div>
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">After</h3>
-                <div className="border rounded-md p-4 bg-gray-50">
+                <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
                   {afterImage}
                 </div>
               </div>
@@ -340,25 +340,27 @@ const AfterHoverExpand = () => {
 };
 
 const BeforeFocusMode = () => (
-  <div className="border p-4 rounded-md grid grid-cols-3 gap-4">
-    <div className="col-span-1 bg-gray-100 p-3 rounded">
-      <h3 className="font-medium">Input</h3>
-      <div className="bg-white p-2 border rounded mt-2 h-32">
-        <p className="text-sm">Text input area...</p>
-      </div>
-    </div>
-    <div className="col-span-1 bg-gray-100 p-3 rounded">
-      <h3 className="font-medium">Graph</h3>
-      <div className="bg-white p-2 border rounded mt-2 h-32">
-        <div className="flex items-center justify-center h-full">
-          <p className="text-sm">Graph view...</p>
+  <div className="p-2 rounded-md">
+    <div className="grid grid-cols-3 gap-2">
+      <div className="col-span-1 bg-gray-100 p-2 rounded">
+        <h3 className="font-medium text-xs">Input</h3>
+        <div className="bg-white p-2 border rounded mt-1 h-20">
+          <p className="text-xs">Text input area...</p>
         </div>
       </div>
-    </div>
-    <div className="col-span-1 bg-gray-100 p-3 rounded">
-      <h3 className="font-medium">Properties</h3>
-      <div className="bg-white p-2 border rounded mt-2 h-32">
-        <p className="text-sm">Node properties...</p>
+      <div className="col-span-1 bg-gray-100 p-2 rounded">
+        <h3 className="font-medium text-xs">Graph</h3>
+        <div className="bg-white p-2 border rounded mt-1 h-20">
+          <div className="flex items-center justify-center h-full">
+            <p className="text-xs">Graph view...</p>
+          </div>
+        </div>
+      </div>
+      <div className="col-span-1 bg-gray-100 p-2 rounded">
+        <h3 className="font-medium text-xs">Properties</h3>
+        <div className="bg-white p-2 border rounded mt-1 h-20">
+          <p className="text-xs">Node properties...</p>
+        </div>
       </div>
     </div>
   </div>
@@ -368,23 +370,23 @@ const AfterFocusMode = () => {
   const [focusArea, setFocusArea] = useState<'all' | 'input' | 'graph' | 'properties'>('all');
   
   return (
-    <div className="border p-4 rounded-md">
-      <div className="mb-2 flex justify-end space-x-2">
-        <Button size="sm" variant={focusArea === 'all' ? 'default' : 'outline'} onClick={() => setFocusArea('all')}>
+    <div className="p-2 rounded-md">
+      <div className="mb-2 flex flex-wrap justify-end gap-1">
+        <Button size="sm" className="text-xs py-1 h-7" variant={focusArea === 'all' ? 'default' : 'outline'} onClick={() => setFocusArea('all')}>
           All Panels
         </Button>
-        <Button size="sm" variant={focusArea === 'input' ? 'default' : 'outline'} onClick={() => setFocusArea('input')}>
+        <Button size="sm" className="text-xs py-1 h-7" variant={focusArea === 'input' ? 'default' : 'outline'} onClick={() => setFocusArea('input')}>
           Focus Input
         </Button>
-        <Button size="sm" variant={focusArea === 'graph' ? 'default' : 'outline'} onClick={() => setFocusArea('graph')}>
+        <Button size="sm" className="text-xs py-1 h-7" variant={focusArea === 'graph' ? 'default' : 'outline'} onClick={() => setFocusArea('graph')}>
           Focus Graph
         </Button>
-        <Button size="sm" variant={focusArea === 'properties' ? 'default' : 'outline'} onClick={() => setFocusArea('properties')}>
+        <Button size="sm" className="text-xs py-1 h-7" variant={focusArea === 'properties' ? 'default' : 'outline'} onClick={() => setFocusArea('properties')}>
           Focus Properties
         </Button>
       </div>
       
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2">
         <div 
           className={`${
             focusArea === 'all' 
@@ -392,11 +394,11 @@ const AfterFocusMode = () => {
               : focusArea === 'input' 
                 ? 'col-span-3' 
                 : 'hidden'
-          } bg-gray-100 p-3 rounded transition-all duration-300`}
+          } bg-gray-100 p-2 rounded transition-all duration-300`}
         >
-          <h3 className="font-medium">Input</h3>
-          <div className="bg-white p-2 border rounded mt-2 h-32">
-            <p className="text-sm">Text input area...</p>
+          <h3 className="font-medium text-xs">Input</h3>
+          <div className="bg-white p-2 border rounded mt-1 h-20">
+            <p className="text-xs">Text input area...</p>
           </div>
         </div>
         
@@ -407,12 +409,12 @@ const AfterFocusMode = () => {
               : focusArea === 'graph' 
                 ? 'col-span-3' 
                 : 'hidden'
-          } bg-gray-100 p-3 rounded transition-all duration-300`}
+          } bg-gray-100 p-2 rounded transition-all duration-300`}
         >
-          <h3 className="font-medium">Graph</h3>
-          <div className="bg-white p-2 border rounded mt-2 h-32">
+          <h3 className="font-medium text-xs">Graph</h3>
+          <div className="bg-white p-2 border rounded mt-1 h-20">
             <div className="flex items-center justify-center h-full">
-              <p className="text-sm">Graph view...</p>
+              <p className="text-xs">Graph view...</p>
             </div>
           </div>
         </div>
@@ -424,11 +426,11 @@ const AfterFocusMode = () => {
               : focusArea === 'properties' 
                 ? 'col-span-3' 
                 : 'hidden'
-          } bg-gray-100 p-3 rounded transition-all duration-300`}
+          } bg-gray-100 p-2 rounded transition-all duration-300`}
         >
-          <h3 className="font-medium">Properties</h3>
-          <div className="bg-white p-2 border rounded mt-2 h-32">
-            <p className="text-sm">Node properties...</p>
+          <h3 className="font-medium text-xs">Properties</h3>
+          <div className="bg-white p-2 border rounded mt-1 h-20">
+            <p className="text-xs">Node properties...</p>
           </div>
         </div>
       </div>
