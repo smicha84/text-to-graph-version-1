@@ -1083,15 +1083,102 @@ export default function UIShowcase() {
                     Menu → Add Edge → Select Source → Select Target
                   </div>
                 </div>}
-                afterImage={<div className="p-4 border rounded bg-gray-50">
-                  <div className="flex justify-around items-center">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center cursor-grab">A</div>
-                    <div className="h-0.5 w-16 bg-gray-400 flex items-center relative">
-                      <div className="absolute text-xs whitespace-nowrap -top-4 text-center w-full">Drag to connect</div>
+                afterImage={(() => {
+                  const [isDragging, setIsDragging] = useState(false);
+                  const [isConnected, setIsConnected] = useState(false);
+                  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+                  
+                  const handleDragStart = () => {
+                    setIsDragging(true);
+                  };
+                  
+                  const handleDragEnd = () => {
+                    if (isDragging) {
+                      // If we released close enough to node B, connect them
+                      if (dragPosition.x > 100) {
+                        setIsConnected(true);
+                      }
+                      setIsDragging(false);
+                    }
+                  };
+                  
+                  const handleMouseMove = (e) => {
+                    if (isDragging) {
+                      // Get position relative to the container
+                      const container = e.currentTarget.getBoundingClientRect();
+                      const x = e.clientX - container.left;
+                      const y = e.clientY - container.top;
+                      setDragPosition({ x, y });
+                    }
+                  };
+                  
+                  const reset = () => {
+                    setIsDragging(false);
+                    setIsConnected(false);
+                  };
+                  
+                  return (
+                    <div 
+                      className="p-4 border rounded bg-gray-50 relative"
+                      onMouseMove={handleMouseMove}
+                      onMouseUp={handleDragEnd}
+                      onMouseLeave={handleDragEnd}
+                    >
+                      <div className="flex justify-around items-center h-24">
+                        <div 
+                          className={`w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                          onMouseDown={handleDragStart}
+                        >
+                          A
+                        </div>
+                        
+                        {isConnected && (
+                          <div className="h-0.5 w-32 bg-blue-500 flex items-center relative">
+                            <div className="absolute text-xs whitespace-nowrap -top-4 text-center w-full text-blue-600">Connected!</div>
+                          </div>
+                        )}
+                        
+                        <div 
+                          className={`w-16 h-16 bg-green-100 rounded-full flex items-center justify-center ${!isConnected && isDragging ? 'border-2 border-dashed border-gray-400' : ''} ${isConnected ? 'border-2 border-blue-500' : ''}`}
+                        >
+                          B
+                        </div>
+                      </div>
+                      
+                      {isDragging && !isConnected && (
+                        <svg 
+                          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                          style={{ zIndex: 10 }}
+                        >
+                          <line 
+                            x1="59" 
+                            y1="48" 
+                            x2={dragPosition.x} 
+                            y2={dragPosition.y} 
+                            stroke="#4299e1" 
+                            strokeWidth="2" 
+                            strokeDasharray="4"
+                          />
+                        </svg>
+                      )}
+                      
+                      <div className="mt-3 text-xs text-center text-gray-500">
+                        {!isConnected ? (
+                          <div>Click and drag node A to node B to connect them</div>
+                        ) : (
+                          <div className="flex justify-center">
+                            <button
+                              className="px-2 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                              onClick={reset}
+                            >
+                              Reset demo
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center border-2 border-dashed border-gray-400">B</div>
-                  </div>
-                </div>}
+                  );
+                })()}
                 explanation="Drag-to-connect functionality creates a more intuitive, direct manipulation interface for building graph relationships compared to traditional multi-step processes. This approach feels more natural and reduces the cognitive load required to understand how nodes relate to each other. Implementation requires more complex event handling for drag operations, visual feedback during the drag state, and logic to validate and create connections between compatible node types."
               />
               
