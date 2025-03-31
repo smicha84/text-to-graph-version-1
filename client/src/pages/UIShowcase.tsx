@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Header from '../components/Header';
+import UICustomizationDemo from '../components/UICustomizationDemo';
 
 interface ShowcaseItemProps {
   title: string;
@@ -530,7 +531,7 @@ export default function UIShowcase() {
         </p>
         
         <Tabs defaultValue="layout" className="mb-10">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="layout">Layout Structure</TabsTrigger>
             <TabsTrigger value="visual">Visual Space</TabsTrigger>
             <TabsTrigger value="ux">User Experience</TabsTrigger>
@@ -538,6 +539,7 @@ export default function UIShowcase() {
             <TabsTrigger value="interaction">Interaction Patterns</TabsTrigger>
             <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
             <TabsTrigger value="mobile">Mobile Experience</TabsTrigger>
+            <TabsTrigger value="customization">UI Customization</TabsTrigger>
           </TabsList>
           
           <TabsContent value="layout" className="mt-6">
@@ -2698,6 +2700,55 @@ export default function UIShowcase() {
                 </div>}
                 explanation="Context-aware toolbars adapt their design based on screen size and device capabilities. For mobile devices, this means consolidating less-used actions into menus, prioritizing the most common functions, and using patterns like floating action buttons (FABs) for primary actions. The implementation uses responsive breakpoints to show different UI components based on available screen space. This approach maintains functionality across all devices while optimizing the interface for touch interaction and limited screen real estate, following established mobile UI patterns that users already understand."
               />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="customization" className="mt-6">
+            <div className="grid grid-cols-1 gap-6">
+              <div className="border rounded-lg p-4 bg-white shadow-sm">
+                <h3 className="text-lg font-medium mb-3">Global UI Element Customization Demo</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  This demo showcases how users can customize UI elements throughout the application. Toggle "Edit Mode" to activate customization controls,
+                  then select panels to resize, reposition, or reshape them according to your preferences.
+                </p>
+                
+                {/* Import and include our UICustomizationDemo component */}
+                <div className="mt-4">
+                  <UICustomizationDemo />
+                </div>
+                
+                <div className="mt-6 bg-blue-50 border border-blue-100 rounded-md p-3">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">Application-Wide Customization Hub</h4>
+                  <p className="text-xs text-blue-700 mb-3">
+                    The UI customization feature allows users to create personalized layouts optimized for their specific workflows.
+                    Changes can be saved in profiles and applied across the entire application.
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-xs">
+                      <h5 className="font-medium mb-1.5">Customization Features:</h5>
+                      <ul className="list-disc ml-4 space-y-1 text-blue-700">
+                        <li>Size controls with aspect ratio locking</li>
+                        <li>Position controls with grid snapping</li>
+                        <li>Shape controls for corners, borders, shadows</li>
+                        <li>Color theme customization per element</li>
+                        <li>Typography customization options</li>
+                        <li>Saved custom layout profiles</li>
+                      </ul>
+                    </div>
+                    <div className="text-xs">
+                      <h5 className="font-medium mb-1.5">Implementation Details:</h5>
+                      <ul className="list-disc ml-4 space-y-1 text-blue-700">
+                        <li>Edit mode with resize/move handles</li>
+                        <li>Style persistence in local storage or user profiles</li>
+                        <li>CSS custom properties for dynamic styling</li>
+                        <li>React context for global customization state</li>
+                        <li>Resize/drag event handlers with constraints</li>
+                        <li>JSON-exportable layout configurations</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
