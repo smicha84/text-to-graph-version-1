@@ -1510,179 +1510,317 @@ export default function UIShowcase() {
               />
               
               <ShowcaseItem
-                title="Element Customization Station"
-                description="Allow users to customize size, shape, color and save configurations"
+                title="Application-Wide Customization Hub"
+                description="Allow users to personalize the entire interface and save configurations"
                 complexity="Hard"
                 impact="High"
                 beforeImage={<div className="p-4 border rounded bg-gray-50">
-                  <div className="bg-white border rounded p-2 mb-3">
-                    <div className="text-xs font-medium mb-2">Node Style</div>
-                    <div className="flex space-x-2 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-300"></div>
-                      <div className="w-8 h-8 rounded-lg bg-green-100 border border-green-300"></div>
-                      <div className="w-8 h-8 rounded-md bg-purple-100 border border-purple-300"></div>
+                  <div className="bg-white border rounded-lg shadow-sm">
+                    <div className="p-2 border-b flex justify-between items-center">
+                      <div className="text-xs font-medium">Knowledge Graph Explorer</div>
+                      <div className="text-xs text-gray-500">Standard Theme</div>
                     </div>
-                    <div className="text-xs font-medium mb-2">Edge Style</div>
-                    <div className="flex flex-col space-y-2">
-                      <div className="w-full h-1 bg-gray-400"></div>
-                      <div className="w-full h-1 bg-gray-400" style={{borderTop: '1px dashed #333'}}></div>
+                    <div className="p-2 grid grid-cols-3 gap-2">
+                      <div className="border rounded col-span-2 p-2 bg-gray-50 text-xs flex items-center justify-center">Graph Visualization Area</div>
+                      <div className="border rounded p-2 bg-gray-50 text-xs flex flex-col">
+                        <div className="text-xs font-medium mb-1">Properties</div>
+                        <div className="space-y-1 text-[10px]">
+                          <div>Type: Person</div>
+                          <div>Label: John Doe</div>
+                          <div>Created: Yesterday</div>
+                        </div>
+                      </div>
+                      <div className="border rounded col-span-3 p-2 bg-gray-50 text-xs">
+                        <div className="text-xs mb-1">Enter text to generate graph:</div>
+                        <div className="w-full h-6 border rounded bg-white"></div>
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-gray-200 rounded p-2 h-20 flex items-center justify-center text-xs">
-                    Graph visualization with limited style options
-                  </div>
+                  <div className="text-xs text-center mt-2 text-gray-500">Limited customization options</div>
                 </div>}
                 afterImage={<div className="p-4 border rounded bg-gray-50">
+                  {/* Top section: App preview with customized theme */}
                   <div className="flex mb-3">
-                    <div className="bg-white border rounded p-2 mr-3" style={{width: '60%'}}>
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="text-xs font-medium">Customization Station</div>
-                        <div className="text-xs text-blue-500">Save Preset</div>
-                      </div>
-                      
-                      {/* Node customization section */}
-                      <div className="mb-3">
-                        <div className="text-xs text-gray-500 mb-1">Node Appearance</div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <div className="text-xs mb-1">Shape</div>
-                            <div className="flex space-x-1 mb-2">
-                              <div className="w-6 h-6 rounded-full bg-gray-100 border border-blue-500 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                              </div>
-                              <div className="w-6 h-6 rounded-md bg-gray-100 border"></div>
-                              <div className="w-6 h-6 bg-gray-100 border hexagon"></div>
-                              <div className="w-6 h-6 bg-gray-100 border" style={{clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'}}></div>
-                            </div>
-                            
-                            <div className="text-xs mb-1">Size</div>
-                            <input type="range" className="w-full h-1 mb-2" />
+                    <div className="w-[65%] mr-3">
+                      <div className="bg-indigo-50 border border-indigo-200 rounded-lg shadow-sm overflow-hidden">
+                        <div className="bg-indigo-600 p-2 border-b flex justify-between items-center">
+                          <div className="text-xs font-semibold text-white">Knowledge Graph Explorer</div>
+                          <div className="flex space-x-1">
+                            <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div className="w-3 h-3 rounded-full bg-green-400"></div>
                           </div>
-                          
-                          <div>
-                            <div className="text-xs mb-1">Color</div>
-                            <div className="grid grid-cols-5 gap-1 mb-2">
-                              <div className="w-4 h-4 rounded-full bg-blue-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-green-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-red-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-purple-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-gray-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-yellow-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-indigo-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-pink-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-teal-400 border"></div>
-                              <div className="w-4 h-4 rounded-full border flex items-center justify-center text-xs">+</div>
+                        </div>
+                        <div className="p-2 grid grid-cols-3 gap-2">
+                          <div className="col-span-2 p-2 bg-indigo-100 rounded border border-indigo-200 text-xs flex items-center justify-center relative">
+                            {/* Customized graph elements */}
+                            <div className="absolute left-1/4 top-1/3 w-5 h-5 bg-yellow-100 border border-yellow-400" style={{clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'}}></div>
+                            <div className="absolute right-1/3 bottom-1/4 w-5 h-5 rounded-full bg-pink-100 border border-pink-400"></div>
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                              <line x1="28%" y1="33%" x2="66%" y2="75%" stroke="#9333ea" strokeWidth="2" strokeDasharray="4" />
+                            </svg>
+                            <span className="text-indigo-800">Custom Graph View</span>
+                          </div>
+                          <div className="p-2 bg-white rounded border border-indigo-200 text-xs flex flex-col">
+                            <div className="text-xs font-medium text-indigo-800 mb-1">Properties</div>
+                            <div className="space-y-1 text-[10px]">
+                              <div className="bg-indigo-50 p-1 rounded">Type: Person</div>
+                              <div className="bg-indigo-50 p-1 rounded">Label: John Doe</div>
+                              <div className="bg-indigo-50 p-1 rounded">Created: Yesterday</div>
                             </div>
-                            
-                            <div className="text-xs mb-1">Border</div>
-                            <div className="flex space-x-1">
-                              <div className="w-6 h-6 rounded-full bg-white border-2 border-blue-400"></div>
-                              <div className="w-6 h-6 rounded-full bg-white border border-dashed border-blue-400"></div>
-                              <div className="w-6 h-6 rounded-full bg-white border border-dotted border-blue-400"></div>
-                            </div>
+                          </div>
+                          <div className="col-span-3 p-2 border border-indigo-200 rounded bg-white text-xs">
+                            <div className="text-xs mb-1 text-indigo-800">Input:</div>
+                            <div className="w-full h-6 border rounded border-indigo-300 bg-indigo-50"></div>
                           </div>
                         </div>
                       </div>
-                      
-                      {/* Edge customization section */}
-                      <div>
-                        <div className="text-xs text-gray-500 mb-1">Edge Appearance</div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <div className="text-xs mb-1">Style</div>
-                            <div className="flex flex-col space-y-2 mb-2">
-                              <div className="w-full h-1 bg-blue-400 rounded"></div>
-                              <div className="w-full h-1 bg-transparent border-t border-dashed border-blue-400"></div>
-                              <div className="w-full h-1 bg-transparent border-t border-dotted border-blue-400"></div>
-                            </div>
-                            
-                            <div className="text-xs mb-1">Thickness</div>
-                            <input type="range" className="w-full h-1" />
-                          </div>
-                          
-                          <div>
-                            <div className="text-xs mb-1">Color</div>
-                            <div className="grid grid-cols-5 gap-1 mb-2">
-                              <div className="w-4 h-4 rounded-full bg-blue-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-green-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-red-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-purple-400 border"></div>
-                              <div className="w-4 h-4 rounded-full bg-gray-400 border"></div>
-                            </div>
-                            
-                            <div className="text-xs mb-1">Arrow</div>
-                            <div className="flex space-x-1">
-                              <div className="w-8 h-6 flex items-center">
-                                <div className="w-6 h-1 bg-blue-400 relative">
-                                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2" style={{width: 0, height: 0, borderTop: '3px solid transparent', borderLeft: '5px solid #60a5fa', borderBottom: '3px solid transparent'}}></div>
-                                </div>
-                              </div>
-                              <div className="w-8 h-6 flex items-center">
-                                <div className="w-6 h-1 bg-blue-400 relative">
-                                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full bg-blue-400"></div>
-                                </div>
-                              </div>
-                              <div className="w-8 h-6 flex items-center">
-                                <div className="w-6 h-1 bg-blue-400"></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <div className="text-xs text-center mt-1 text-indigo-600">Custom "Deep Ocean" Theme</div>
                     </div>
                     
-                    {/* Saved presets panel */}
-                    <div className="bg-white border rounded p-2" style={{width: '40%'}}>
-                      <div className="text-xs font-medium mb-2">Saved Presets</div>
-                      <div className="space-y-2">
-                        <div className="border rounded p-2 bg-gray-50 text-xs">
-                          <div className="font-medium mb-1">Corporate Style</div>
-                          <div className="flex mb-1">
-                            <div className="w-5 h-5 rounded-md bg-blue-100 border border-blue-300 mr-1"></div>
-                            <div className="w-5 h-5 rounded-md bg-gray-100 border border-gray-300 mr-1"></div>
-                            <div className="w-5 h-5 rounded-md bg-green-100 border border-green-300"></div>
-                          </div>
-                          <button className="text-xs bg-blue-50 text-blue-600 rounded px-2 py-0.5">Apply</button>
+                    {/* Theme selection panel */}
+                    <div className="w-[35%] bg-white border rounded p-2">
+                      <div className="text-xs font-medium mb-2 flex justify-between items-center">
+                        <span>Interface Themes</span>
+                        <span className="text-blue-500 text-[10px]">Export Settings</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-2">
+                        <div className="border rounded p-1 text-center text-[9px] bg-gray-50">
+                          <div className="w-full h-6 mb-1 bg-white border rounded"></div>
+                          Light
                         </div>
-                        
-                        <div className="border rounded p-2 bg-gray-50 text-xs">
-                          <div className="font-medium mb-1">Academic Style</div>
-                          <div className="flex mb-1">
-                            <div className="w-5 h-5 rounded-full bg-purple-100 border border-purple-300 mr-1"></div>
-                            <div className="w-5 h-5 rounded-full bg-indigo-100 border border-indigo-300 mr-1"></div>
-                            <div className="w-5 h-5 rounded-full bg-blue-100 border border-blue-300"></div>
-                          </div>
-                          <button className="text-xs bg-blue-50 text-blue-600 rounded px-2 py-0.5">Apply</button>
+                        <div className="border rounded p-1 text-center text-[9px] bg-gray-50">
+                          <div className="w-full h-6 mb-1 bg-gray-800 border rounded"></div>
+                          Dark
                         </div>
-                        
-                        <div className="border rounded p-2 bg-blue-50 text-xs">
-                          <div className="font-medium mb-1">Custom Style</div>
-                          <div className="flex mb-1">
-                            <div className="w-5 h-5 bg-yellow-100 border border-yellow-300 mr-1" style={{clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'}}></div>
-                            <div className="w-5 h-5 rounded-full bg-pink-100 border border-pink-300 mr-1"></div>
-                            <div className="w-5 h-5 rounded-md bg-teal-100 border border-teal-300"></div>
+                        <div className="border rounded p-1 text-center text-[9px] bg-blue-50 border-blue-200">
+                          <div className="w-full h-6 mb-1 bg-indigo-600 border rounded"></div>
+                          Ocean
+                        </div>
+                        <div className="border rounded p-1 text-center text-[9px] bg-gray-50">
+                          <div className="w-full h-6 mb-1 bg-amber-600 border rounded"></div>
+                          Sunset
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs font-medium mb-1">Layout Options</div>
+                      <div className="grid grid-cols-3 gap-1 mb-2">
+                        <div className="border rounded p-1 text-center flex flex-col items-center">
+                          <div className="w-8 h-5 flex flex-col">
+                            <div className="h-1 bg-gray-300 mb-px"></div>
+                            <div className="h-3 flex space-x-px">
+                              <div className="w-3 bg-gray-300"></div>
+                              <div className="flex-1 bg-gray-300"></div>
+                            </div>
                           </div>
-                          <button className="text-xs bg-blue-600 text-white rounded px-2 py-0.5">Current</button>
+                          <div className="text-[8px] mt-px">Default</div>
+                        </div>
+                        <div className="border rounded p-1 text-center flex flex-col items-center border-blue-200 bg-blue-50">
+                          <div className="w-8 h-5 flex space-x-px">
+                            <div className="w-2 bg-gray-300"></div>
+                            <div className="flex-1 flex flex-col">
+                              <div className="h-2 bg-gray-300 mb-px"></div>
+                              <div className="flex-1 bg-gray-300"></div>
+                            </div>
+                          </div>
+                          <div className="text-[8px] mt-px">Sidebar</div>
+                        </div>
+                        <div className="border rounded p-1 text-center flex flex-col items-center">
+                          <div className="w-8 h-5 flex flex-col">
+                            <div className="h-2 bg-gray-300 mb-px"></div>
+                            <div className="flex-1 bg-gray-300"></div>
+                          </div>
+                          <div className="text-[8px] mt-px">Focus</div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs font-medium mb-1">Saved Profiles</div>
+                      <div className="space-y-1">
+                        <div className="border rounded p-1 bg-gray-50 text-[10px] flex justify-between items-center">
+                          <span>Default</span>
+                          <button className="px-1 bg-gray-100 rounded text-[8px]">Apply</button>
+                        </div>
+                        <div className="border rounded p-1 bg-gray-50 text-[10px] flex justify-between items-center">
+                          <span>Presentation Mode</span>
+                          <button className="px-1 bg-gray-100 rounded text-[8px]">Apply</button>
+                        </div>
+                        <div className="border rounded p-1 bg-blue-50 text-[10px] flex justify-between items-center">
+                          <span>My Custom Theme</span>
+                          <button className="px-1 bg-blue-500 text-white rounded text-[8px]">Active</button>
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Graph visualization with custom styles */}
-                  <div className="bg-gray-200 rounded p-2 h-20 flex items-center justify-center text-xs relative">
-                    <div className="absolute left-1/4 top-1/3" style={{clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', width: '25px', height: '25px', background: '#fef3c7', border: '1px solid #fcd34d'}}></div>
-                    <div className="absolute right-1/3 bottom-1/4 w-6 h-6 rounded-full bg-pink-100 border border-pink-300"></div>
-                    <div className="absolute right-1/4 top-1/2 w-6 h-6 rounded-md bg-teal-100 border border-teal-300"></div>
+                  {/* Bottom section: Component styling & spacing controls */}
+                  <div className="bg-white border rounded p-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-xs font-medium">Component Customization</div>
+                      <div className="text-xs text-blue-500">Reset to Default</div>
+                    </div>
                     
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                      <line x1="28%" y1="33%" x2="66%" y2="75%" stroke="#9333ea" strokeWidth="2" strokeDasharray="4" />
-                      <line x1="66%" y1="75%" x2="75%" y2="50%" stroke="#9333ea" strokeWidth="2" />
-                    </svg>
-                    
-                    <div className="text-xs text-gray-500">Graph with custom styling</div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {/* Element styling */}
+                      <div className="col-span-2">
+                        <div className="text-xs text-gray-500 mb-1">Element Styling</div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {/* Node styling */}
+                          <div className="border rounded p-1">
+                            <div className="text-[10px] font-medium mb-1">Nodes</div>
+                            <div className="flex space-x-1 mb-1">
+                              <div className="w-4 h-4 rounded-full bg-pink-100 border border-pink-300"></div>
+                              <div className="w-4 h-4 rounded bg-yellow-100 border border-yellow-300"></div>
+                              <div className="w-4 h-4" style={{clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', background: '#e0f2fe', border: '1px solid #7dd3fc'}}></div>
+                            </div>
+                            <input type="range" className="w-full h-1 mb-1" />
+                            <div className="grid grid-cols-4 gap-px">
+                              <div className="w-3 h-3 rounded-sm bg-blue-100"></div>
+                              <div className="w-3 h-3 rounded-sm bg-green-100"></div>
+                              <div className="w-3 h-3 rounded-sm bg-indigo-100"></div>
+                              <div className="w-3 h-3 rounded-sm bg-gray-100 flex items-center justify-center text-[6px]">+</div>
+                            </div>
+                          </div>
+                          
+                          {/* Edge styling */}
+                          <div className="border rounded p-1">
+                            <div className="text-[10px] font-medium mb-1">Edges</div>
+                            <div className="flex flex-col space-y-1 mb-1">
+                              <div className="h-px bg-indigo-400"></div>
+                              <div className="h-px border-t border-dashed border-indigo-400"></div>
+                            </div>
+                            <input type="range" className="w-full h-1 mb-1" />
+                            <div className="flex justify-between">
+                              <div className="text-[8px]">Arrow</div>
+                              <div className="flex space-x-px">
+                                <div className="w-3 h-3 rounded-sm bg-blue-100 flex items-center justify-center text-[6px]">→</div>
+                                <div className="w-3 h-3 rounded-sm bg-blue-100 flex items-center justify-center text-[6px]">●</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Text styling */}
+                          <div className="border rounded p-1">
+                            <div className="text-[10px] font-medium mb-1">Text</div>
+                            <div className="space-y-1 mb-1">
+                              <div className="h-2 bg-gray-200 rounded-sm w-full"></div>
+                              <div className="h-2 bg-gray-200 rounded-sm w-3/4"></div>
+                            </div>
+                            <div className="flex text-[8px] justify-between">
+                              <div>Font</div>
+                              <select className="border text-[7px] w-12 rounded">
+                                <option>Sans</option>
+                              </select>
+                            </div>
+                            <div className="flex justify-between mt-1">
+                              <div className="text-[8px]">Size</div>
+                              <div className="flex space-x-px">
+                                <div className="w-3 h-3 rounded-sm bg-blue-100 flex items-center justify-center text-[6px]">-</div>
+                                <div className="w-3 h-3 rounded-sm bg-blue-100 flex items-center justify-center text-[6px]">+</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Spacing & Animations */}
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <div className="border rounded p-1">
+                            <div className="text-[10px] font-medium mb-1">Spacing</div>
+                            <div className="flex justify-between">
+                              <div className="space-y-1">
+                                <div className="flex items-center">
+                                  <span className="text-[8px] w-10">Compact</span>
+                                  <input type="radio" className="w-2 h-2" />
+                                </div>
+                                <div className="flex items-center">
+                                  <span className="text-[8px] w-10">Normal</span>
+                                  <input type="radio" className="w-2 h-2" checked />
+                                </div>
+                                <div className="flex items-center">
+                                  <span className="text-[8px] w-10">Spacious</span>
+                                  <input type="radio" className="w-2 h-2" />
+                                </div>
+                              </div>
+                              <div className="border w-12 h-10 rounded flex items-center justify-center p-1">
+                                <div className="border w-full h-full rounded bg-gray-50"></div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="border rounded p-1">
+                            <div className="text-[10px] font-medium mb-1">Animations</div>
+                            <div className="flex justify-between">
+                              <div className="space-y-1">
+                                <div className="flex items-center">
+                                  <span className="text-[8px] w-12">Minimal</span>
+                                  <input type="radio" className="w-2 h-2" />
+                                </div>
+                                <div className="flex items-center">
+                                  <span className="text-[8px] w-12">Standard</span>
+                                  <input type="radio" className="w-2 h-2" checked />
+                                </div>
+                                <div className="flex items-center">
+                                  <span className="text-[8px] w-12">Rich</span>
+                                  <input type="radio" className="w-2 h-2" />
+                                </div>
+                              </div>
+                              <div className="relative w-10 h-10">
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-6 h-6 bg-indigo-100 rounded-full animate-pulse flex items-center justify-center">
+                                    <div className="w-3 h-3 bg-indigo-300 rounded-full"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Component selection & presets */}
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Components & Presets</div>
+                        <div className="border rounded p-2 h-[98px] overflow-y-auto space-y-1">
+                          <div className="text-[10px] px-1 font-medium">Core Components</div>
+                          <div className="flex items-center bg-blue-50 rounded p-1">
+                            <input type="checkbox" className="w-2 h-2 mr-1" checked />
+                            <div className="text-[8px]">Graph Canvas</div>
+                          </div>
+                          <div className="flex items-center rounded p-1">
+                            <input type="checkbox" className="w-2 h-2 mr-1" checked />
+                            <div className="text-[8px]">Property Panel</div>
+                          </div>
+                          <div className="flex items-center rounded p-1">
+                            <input type="checkbox" className="w-2 h-2 mr-1" checked />
+                            <div className="text-[8px]">Text Input</div>
+                          </div>
+                          <div className="text-[10px] px-1 font-medium mt-1">Optional Components</div>
+                          <div className="flex items-center rounded p-1">
+                            <input type="checkbox" className="w-2 h-2 mr-1" checked />
+                            <div className="text-[8px]">History Panel</div>
+                          </div>
+                          <div className="flex items-center rounded p-1">
+                            <input type="checkbox" className="w-2 h-2 mr-1" />
+                            <div className="text-[8px]">Analytics Dashboard</div>
+                          </div>
+                          <div className="flex items-center rounded p-1">
+                            <input type="checkbox" className="w-2 h-2 mr-1" checked />
+                            <div className="text-[8px]">Search Tools</div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-2 border rounded p-1">
+                          <div className="text-[10px] font-medium mb-1">Quick Presets</div>
+                          <div className="grid grid-cols-2 gap-1">
+                            <button className="text-[8px] p-px border rounded bg-gray-50">Data Analysis</button>
+                            <button className="text-[8px] p-px border rounded bg-blue-50 border-blue-200">Knowledge Map</button>
+                            <button className="text-[8px] p-px border rounded bg-gray-50">Minimal View</button>
+                            <button className="text-[8px] p-px border rounded bg-gray-50">Full Features</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>}
-                explanation="Element customization allows users to personalize their graph visualizations according to their preferences or domain-specific needs. This feature includes options to adjust node shapes, sizes, colors, and border styles; edge thickness, patterns, and arrow types; and the ability to save configurations as reusable presets. Advanced implementations can tie styling to data attributes, enabling automatic visual encoding of semantic information. This greatly enhances both the aesthetic appeal and information density of graph visualizations, making patterns and relationships more immediately apparent."
+                explanation="This comprehensive customization system allows users to personalize the entire application interface to suit their preferences and workflow needs. It includes theme selection (light/dark/custom), layout options (default/sidebar/focus), component styling (nodes, edges, text), spacing controls, animation settings, and the ability to show/hide optional components. Users can save their configurations as named profiles for quick switching between different setups. This level of customization not only improves user satisfaction but also enhances productivity by allowing the interface to be optimized for specific use cases, such as data analysis, knowledge mapping, or presentations."
               />
             </div>
           </TabsContent>
