@@ -177,50 +177,64 @@ const AfterTabPanel = () => {
   return (
     <div className="border p-4 rounded-md">
       <div className="w-full">
-        <div className="flex border-b mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-4">
           <button 
-            className={`px-4 py-2 text-sm font-medium ${activeTab === "summary" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600"}`}
+            className={`py-2 text-sm font-medium rounded-t-md transition-colors ${
+              activeTab === "summary" 
+                ? "bg-blue-500 text-white" 
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
             onClick={() => setActiveTab("summary")}
           >
             Graph Summary
           </button>
           <button 
-            className={`px-4 py-2 text-sm font-medium ${activeTab === "context" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600"}`}
+            className={`py-2 text-sm font-medium rounded-t-md transition-colors ${
+              activeTab === "context" 
+                ? "bg-blue-500 text-white" 
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
             onClick={() => setActiveTab("context")}
           >
             Node Context
           </button>
           <button 
-            className={`px-4 py-2 text-sm font-medium ${activeTab === "ontology" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600"}`}
+            className={`py-2 text-sm font-medium rounded-t-md transition-colors ${
+              activeTab === "ontology" 
+                ? "bg-blue-500 text-white" 
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
             onClick={() => setActiveTab("ontology")}
           >
             Ontology Patterns
           </button>
         </div>
         
-        {activeTab === "summary" && (
-          <div className="bg-gray-50 p-3 rounded">
-            <div className="bg-white p-2 border rounded">
+        <div className="bg-gray-50 p-3 rounded min-h-[100px]">
+          {activeTab === "summary" && (
+            <div className="bg-white p-3 border rounded">
+              <h4 className="text-sm font-medium mb-2 text-blue-600">Graph Summary</h4>
               <p className="text-sm">10 nodes, 15 edges, 4 types</p>
+              <p className="text-xs text-gray-500 mt-2">Overview of your current graph structure</p>
             </div>
-          </div>
-        )}
-        
-        {activeTab === "context" && (
-          <div className="bg-gray-50 p-3 rounded">
-            <div className="bg-white p-2 border rounded">
+          )}
+          
+          {activeTab === "context" && (
+            <div className="bg-white p-3 border rounded">
+              <h4 className="text-sm font-medium mb-2 text-blue-600">Node Context</h4>
               <p className="text-sm">Selected: Person (Employee)</p>
+              <p className="text-xs text-gray-500 mt-2">Details about the currently selected node</p>
             </div>
-          </div>
-        )}
-        
-        {activeTab === "ontology" && (
-          <div className="bg-gray-50 p-3 rounded">
-            <div className="bg-white p-2 border rounded">
+          )}
+          
+          {activeTab === "ontology" && (
+            <div className="bg-white p-3 border rounded">
+              <h4 className="text-sm font-medium mb-2 text-blue-600">Ontology Patterns</h4>
               <p className="text-sm">Person → Works At → Company</p>
+              <p className="text-xs text-gray-500 mt-2">Common relationship patterns in your graph</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -664,15 +678,25 @@ export default function UIShowcase() {
                   </div>
                 </div>}
                 afterImage={<div className="border rounded grid grid-cols-2 gap-4 p-4">
-                  <div className="bg-white p-3 border rounded max-h-32 overflow-auto">
+                  <div style={{maxHeight: '140px'}} className="bg-white p-3 border rounded overflow-auto relative">
                     <h4 className="text-sm font-medium mb-2">Card with scrolling</h4>
                     <p className="text-xs mb-1">This content won't get cut off because the card has scrolling enabled when content exceeds the maximum height.</p>
                     <p className="text-xs mb-1">Additional content is accessible via scrolling.</p>
-                    <p className="text-xs">This line remains accessible through scrolling.</p>
+                    <p className="text-xs mb-1">This line remains accessible through scrolling.</p>
+                    <p className="text-xs mb-1">You can continue scrolling to see everything!</p>
+                    <p className="text-xs mb-1">Nothing is lost or hidden from view.</p>
+                    <p className="text-xs mb-1">All content is available with a simple scroll.</p>
+                    <p className="text-xs mb-1">The scroll indicator shows more content is available.</p>
+                    <p className="text-xs">User has complete control over content visibility!</p>
+                    <div className="absolute bottom-0 right-0 left-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                   </div>
                   <div className="bg-white p-3 border rounded">
                     <h4 className="text-sm font-medium mb-2">Auto-height card</h4>
-                    <p className="text-xs">This card automatically adjusts to its content height.</p>
+                    <p className="text-xs mb-1">This card automatically adjusts to its content height.</p>
+                    <p className="text-xs mb-1">No matter how much content there is.</p>
+                    <p className="text-xs mb-1">The container grows as needed.</p>
+                    <p className="text-xs mb-1">Every line is always visible.</p>
+                    <p className="text-xs">The card fits its content perfectly!</p>
                   </div>
                 </div>}
                 explanation="Fixed-height containers can lead to content being cut off or create awkward empty spaces. Adaptive height management ensures all content is accessible while maintaining a clean layout. This can be implemented either by allowing containers to expand based on their content (auto-height) or by adding scrolling to containers that exceed a maximum height. Both approaches ensure users can access all information without disrupting the overall layout consistency."
