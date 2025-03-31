@@ -9,6 +9,7 @@ import GraphV2 from "@/pages/GraphV2";
 import LogTest from "@/pages/LogTest";
 import TextToGraphAnatomy from "@/pages/TextToGraphAnatomy";
 import WebSearchAnatomy from "@/pages/WebSearchAnatomy";
+import UIShowcase from "@/pages/UIShowcase";
 import Header from "@/components/Header";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
           <Route path="/log-test" component={LogTest} />
           <Route path="/text-to-graph-anatomy" component={TextToGraphAnatomy} />
           <Route path="/web-search-anatomy" component={WebSearchAnatomy} />
+          <Route path="/ui-showcase" component={UIShowcase} />
           <Route component={NotFound} />
         </Switch>
       </div>

@@ -60,6 +60,17 @@ export default function Header() {
           </div>
         </Link>
         
+        <Link href="/ui-showcase">
+          <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
+            location === "/ui-showcase" 
+              ? "bg-primary/10 text-primary" 
+              : "text-gray-600 hover:text-primary"
+          } transition-colors`}>
+            <i className="fas fa-palette mr-2"></i>
+            <span>UI Showcase</span>
+          </div>
+        </Link>
+        
         <button className="text-gray-600 hover:text-primary transition-colors">
           <i className="fas fa-question-circle"></i>
         </button>
