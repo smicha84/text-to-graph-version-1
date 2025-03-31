@@ -171,32 +171,60 @@ const BeforeTabPanel = () => (
   </div>
 );
 
-const AfterTabPanel = () => (
-  <div className="border p-4 rounded-md">
-    <Tabs defaultValue="summary" className="w-full">
-      <TabsList className="grid grid-cols-3 mb-2">
-        <TabsTrigger value="summary">Graph Summary</TabsTrigger>
-        <TabsTrigger value="context">Node Context</TabsTrigger>
-        <TabsTrigger value="ontology">Ontology Patterns</TabsTrigger>
-      </TabsList>
-      <TabsContent value="summary" className="bg-gray-50 p-3 rounded">
-        <div className="bg-white p-2 border rounded">
-          <p className="text-sm">10 nodes, 15 edges, 4 types</p>
+const AfterTabPanel = () => {
+  const [activeTab, setActiveTab] = useState("summary");
+  
+  return (
+    <div className="border p-4 rounded-md">
+      <div className="w-full">
+        <div className="flex border-b mb-4">
+          <button 
+            className={`px-4 py-2 text-sm font-medium ${activeTab === "summary" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600"}`}
+            onClick={() => setActiveTab("summary")}
+          >
+            Graph Summary
+          </button>
+          <button 
+            className={`px-4 py-2 text-sm font-medium ${activeTab === "context" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600"}`}
+            onClick={() => setActiveTab("context")}
+          >
+            Node Context
+          </button>
+          <button 
+            className={`px-4 py-2 text-sm font-medium ${activeTab === "ontology" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600"}`}
+            onClick={() => setActiveTab("ontology")}
+          >
+            Ontology Patterns
+          </button>
         </div>
-      </TabsContent>
-      <TabsContent value="context" className="bg-gray-50 p-3 rounded">
-        <div className="bg-white p-2 border rounded">
-          <p className="text-sm">Selected: Person (Employee)</p>
-        </div>
-      </TabsContent>
-      <TabsContent value="ontology" className="bg-gray-50 p-3 rounded">
-        <div className="bg-white p-2 border rounded">
-          <p className="text-sm">Person → Works At → Company</p>
-        </div>
-      </TabsContent>
-    </Tabs>
-  </div>
-);
+        
+        {activeTab === "summary" && (
+          <div className="bg-gray-50 p-3 rounded">
+            <div className="bg-white p-2 border rounded">
+              <p className="text-sm">10 nodes, 15 edges, 4 types</p>
+            </div>
+          </div>
+        )}
+        
+        {activeTab === "context" && (
+          <div className="bg-gray-50 p-3 rounded">
+            <div className="bg-white p-2 border rounded">
+              <p className="text-sm">Selected: Person (Employee)</p>
+            </div>
+          </div>
+        )}
+        
+        {activeTab === "ontology" && (
+          <div className="bg-gray-50 p-3 rounded">
+            <div className="bg-white p-2 border rounded">
+              <p className="text-sm">Person → Works At → Company</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const BeforeSidebar = () => (
   <div className="border p-4 rounded-md flex">
