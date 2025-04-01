@@ -1,4 +1,4 @@
-import { useState, MouseEvent as ReactMouseEvent } from "react";
+import { useState, useEffect, MouseEvent as ReactMouseEvent } from "react";
 import Header from "@/components/Header";
 import InputPanel from "@/components/InputPanel";
 import GraphPanel from "@/components/GraphPanel";
@@ -17,10 +17,37 @@ export default function Home() {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedElement, setSelectedElement] = useState<(Node | Edge) | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [explorerCollapsed, setExplorerCollapsed] = useState(false);
-  const [inputPanelWidth, setInputPanelWidth] = useState(384); // Default width (w-96 = 24rem = 384px)
+  
+  // Initialize UI preferences with default values
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('uiPrefs.sidebarCollapsed');
+    return saved ? JSON.parse(saved) : true; // Default to collapsed
+  });
+  
+  const [explorerCollapsed, setExplorerCollapsed] = useState(() => {
+    const saved = localStorage.getItem('uiPrefs.explorerCollapsed');
+    return saved ? JSON.parse(saved) : true; // Default to collapsed
+  });
+  
+  const [inputPanelWidth, setInputPanelWidth] = useState(() => {
+    const saved = localStorage.getItem('uiPrefs.inputPanelWidth');
+    return saved ? parseInt(saved, 10) : 384; // Default width (w-96 = 24rem = 384px)
+  });
+  
   const { toast } = useToast();
+  
+  // Persist UI preference changes to localStorage
+  useEffect(() => {
+    localStorage.setItem('uiPrefs.sidebarCollapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+  
+  useEffect(() => {
+    localStorage.setItem('uiPrefs.explorerCollapsed', JSON.stringify(explorerCollapsed));
+  }, [explorerCollapsed]);
+  
+  useEffect(() => {
+    localStorage.setItem('uiPrefs.inputPanelWidth', inputPanelWidth.toString());
+  }, [inputPanelWidth]);
 
   // Generate graph mutation
   const generateMutation = useMutation({
