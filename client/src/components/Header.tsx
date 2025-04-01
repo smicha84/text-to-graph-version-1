@@ -17,9 +17,16 @@ interface ElementStyle {
   height?: string;
   padding?: string;
   margin?: string;
+  marginTop?: string;
+  marginBottom?: string;
+  marginLeft?: string;
+  marginRight?: string;
   borderRadius?: string;
   borderWidth?: string;
   borderColor?: string;
+  borderBottom?: string;
+  borderTop?: string;
+  border?: string;
   backgroundColor?: string;
   color?: string;
   fontSize?: string;
@@ -33,9 +40,18 @@ interface ElementStyle {
   transform?: string;
   display?: string;
   alignItems?: string;
+  justifyContent?: string;
   gap?: string;
-  border?: string;
   minHeight?: string;
+  minWidth?: string;
+  maxHeight?: string;
+  maxWidth?: string;
+  overflow?: string;
+  textAlign?: string;
+  flexDirection?: string;
+  flex?: string;
+  cursor?: string;
+  transition?: string;
 }
 
 interface ElementData {
@@ -94,7 +110,24 @@ export default function Header() {
       selector: 'header .logo-area',
       type: 'container',
       style: { display: 'flex', alignItems: 'center' },
-      parentId: 'header'
+      parentId: 'header',
+      children: ['app-logo', 'app-title']
+    },
+    {
+      id: 'app-logo',
+      name: 'Application Logo',
+      selector: 'header .logo-area i',
+      type: 'control',
+      style: { fontSize: '1.5rem', color: '#4f46e5', marginRight: '0.75rem' },
+      parentId: 'logo-area'
+    },
+    {
+      id: 'app-title',
+      name: 'Application Title',
+      selector: 'header .logo-area h1',
+      type: 'text',
+      style: { fontSize: '1.25rem', fontWeight: '600', color: '#111827' },
+      parentId: 'logo-area'
     },
     {
       id: 'navigation',
@@ -111,7 +144,24 @@ export default function Header() {
       selector: 'header .nav-menu a[href="/graph-v2"]',
       type: 'control',
       style: { padding: '0.5rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem' },
-      parentId: 'navigation'
+      parentId: 'navigation',
+      children: ['nav-item-1-icon', 'nav-item-1-text']
+    },
+    {
+      id: 'nav-item-1-icon',
+      name: 'Graph V2 Icon',
+      selector: 'header .nav-menu a[href="/graph-v2"] i',
+      type: 'control',
+      style: { color: 'inherit', marginRight: '0.5rem', fontSize: '0.875rem' },
+      parentId: 'nav-item-1'
+    },
+    {
+      id: 'nav-item-1-text',
+      name: 'Graph V2 Text',
+      selector: 'header .nav-menu a[href="/graph-v2"] span',
+      type: 'text',
+      style: { fontSize: '0.875rem', fontWeight: '500' },
+      parentId: 'nav-item-1'
     },
     {
       id: 'nav-item-2',
@@ -119,7 +169,24 @@ export default function Header() {
       selector: 'header .nav-menu a[href="/text-to-graph-anatomy"]',
       type: 'control',
       style: { padding: '0.5rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem' },
-      parentId: 'navigation'
+      parentId: 'navigation',
+      children: ['nav-item-2-icon', 'nav-item-2-text']
+    },
+    {
+      id: 'nav-item-2-icon',
+      name: 'T2G Anatomy Icon',
+      selector: 'header .nav-menu a[href="/text-to-graph-anatomy"] i',
+      type: 'control',
+      style: { color: 'inherit', marginRight: '0.5rem', fontSize: '0.875rem' },
+      parentId: 'nav-item-2'
+    },
+    {
+      id: 'nav-item-2-text',
+      name: 'T2G Anatomy Text',
+      selector: 'header .nav-menu a[href="/text-to-graph-anatomy"] span',
+      type: 'text',
+      style: { fontSize: '0.875rem', fontWeight: '500' },
+      parentId: 'nav-item-2'
     },
     {
       id: 'nav-item-3',
@@ -127,7 +194,24 @@ export default function Header() {
       selector: 'header .nav-menu a[href="/web-search-anatomy"]',
       type: 'control',
       style: { padding: '0.5rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem' },
-      parentId: 'navigation'
+      parentId: 'navigation',
+      children: ['nav-item-3-icon', 'nav-item-3-text']
+    },
+    {
+      id: 'nav-item-3-icon',
+      name: 'Web Search Icon',
+      selector: 'header .nav-menu a[href="/web-search-anatomy"] i',
+      type: 'control',
+      style: { color: 'inherit', marginRight: '0.5rem', fontSize: '0.875rem' },
+      parentId: 'nav-item-3'
+    },
+    {
+      id: 'nav-item-3-text',
+      name: 'Web Search Text',
+      selector: 'header .nav-menu a[href="/web-search-anatomy"] span',
+      type: 'text',
+      style: { fontSize: '0.875rem', fontWeight: '500' },
+      parentId: 'nav-item-3'
     },
     {
       id: 'nav-item-4',
@@ -135,7 +219,24 @@ export default function Header() {
       selector: 'header .nav-menu a[href="/logs"]',
       type: 'control',
       style: { padding: '0.5rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem' },
-      parentId: 'navigation'
+      parentId: 'navigation',
+      children: ['nav-item-4-icon', 'nav-item-4-text']
+    },
+    {
+      id: 'nav-item-4-icon',
+      name: 'API Logs Icon',
+      selector: 'header .nav-menu a[href="/logs"] i',
+      type: 'control',
+      style: { color: 'inherit', marginRight: '0.5rem', fontSize: '0.875rem' },
+      parentId: 'nav-item-4'
+    },
+    {
+      id: 'nav-item-4-text',
+      name: 'API Logs Text',
+      selector: 'header .nav-menu a[href="/logs"] span',
+      type: 'text',
+      style: { fontSize: '0.875rem', fontWeight: '500' },
+      parentId: 'nav-item-4'
     },
     {
       id: 'nav-item-5',
@@ -143,7 +244,24 @@ export default function Header() {
       selector: 'header .nav-menu a[href="/ui-showcase"]',
       type: 'control',
       style: { padding: '0.5rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.875rem' },
-      parentId: 'navigation'
+      parentId: 'navigation',
+      children: ['nav-item-5-icon', 'nav-item-5-text']
+    },
+    {
+      id: 'nav-item-5-icon',
+      name: 'UI Showcase Icon',
+      selector: 'header .nav-menu a[href="/ui-showcase"] i',
+      type: 'control',
+      style: { color: 'inherit', marginRight: '0.5rem', fontSize: '0.875rem' },
+      parentId: 'nav-item-5'
+    },
+    {
+      id: 'nav-item-5-text',
+      name: 'UI Showcase Text',
+      selector: 'header .nav-menu a[href="/ui-showcase"] span',
+      type: 'text',
+      style: { fontSize: '0.875rem', fontWeight: '500' },
+      parentId: 'nav-item-5'
     },
     {
       id: 'actions',
@@ -160,7 +278,16 @@ export default function Header() {
       selector: 'header .actions button:first-child',
       type: 'control',
       style: { padding: '0.5rem', borderRadius: '0.375rem', color: '#4B5563' },
-      parentId: 'actions'
+      parentId: 'actions',
+      children: ['help-button-icon']
+    },
+    {
+      id: 'help-button-icon',
+      name: 'Help Button Icon',
+      selector: 'header .actions button:first-child svg',
+      type: 'control',
+      style: { width: '1.25rem', height: '1.25rem' },
+      parentId: 'help-button'
     },
     {
       id: 'customize-button',
@@ -168,7 +295,24 @@ export default function Header() {
       selector: 'header .actions button:last-child',
       type: 'control',
       style: { padding: '0.5rem 0.75rem', borderRadius: '0.375rem', color: '#4B5563', display: 'flex', alignItems: 'center' },
-      parentId: 'actions'
+      parentId: 'actions',
+      children: ['customize-button-icon', 'customize-button-text']
+    },
+    {
+      id: 'customize-button-icon',
+      name: 'Customize Button Icon',
+      selector: 'header .actions button:last-child svg',
+      type: 'control',
+      style: { width: '1rem', height: '1rem', marginRight: '0.375rem' },
+      parentId: 'customize-button'
+    },
+    {
+      id: 'customize-button-text',
+      name: 'Customize Button Text',
+      selector: 'header .actions button:last-child span',
+      type: 'text',
+      style: { fontSize: '0.875rem', fontWeight: '500' },
+      parentId: 'customize-button'
     },
     {
       id: 'content-area',
@@ -185,7 +329,49 @@ export default function Header() {
       selector: '.graph-view',
       type: 'panel',
       style: { width: '100%', height: '500px', backgroundColor: '#f9fafb', borderRadius: '0.5rem', border: '1px solid #e5e7eb' },
-      parentId: 'content-area'
+      parentId: 'content-area',
+      children: ['graph-header', 'graph-canvas', 'graph-controls']
+    },
+    {
+      id: 'graph-header',
+      name: 'Graph Header',
+      selector: '.graph-view .graph-header',
+      type: 'container',
+      style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid #e5e7eb' },
+      parentId: 'graph-view',
+      children: ['graph-title', 'graph-actions']
+    },
+    {
+      id: 'graph-title',
+      name: 'Graph Title',
+      selector: '.graph-view .graph-header h3',
+      type: 'text',
+      style: { fontSize: '1rem', fontWeight: '600', color: '#111827' },
+      parentId: 'graph-header'
+    },
+    {
+      id: 'graph-actions',
+      name: 'Graph Actions',
+      selector: '.graph-view .graph-header .actions',
+      type: 'container',
+      style: { display: 'flex', gap: '0.5rem' },
+      parentId: 'graph-header'
+    },
+    {
+      id: 'graph-canvas',
+      name: 'Graph Canvas',
+      selector: '.graph-view .graph-canvas',
+      type: 'panel',
+      style: { width: '100%', height: 'calc(500px - 3.5rem)', position: 'relative', overflow: 'hidden' },
+      parentId: 'graph-view'
+    },
+    {
+      id: 'graph-controls',
+      name: 'Graph Controls',
+      selector: '.graph-view .graph-controls',
+      type: 'container',
+      style: { display: 'flex', padding: '0.5rem', borderTop: '1px solid #e5e7eb', justifyContent: 'space-between' },
+      parentId: 'graph-view'
     },
     {
       id: 'property-panel',
@@ -193,7 +379,24 @@ export default function Header() {
       selector: '.property-panel',
       type: 'panel',
       style: { width: '100%', height: 'auto', backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e5e7eb', padding: '1rem' },
-      parentId: 'content-area'
+      parentId: 'content-area',
+      children: ['property-header', 'property-content']
+    },
+    {
+      id: 'property-header',
+      name: 'Property Panel Header',
+      selector: '.property-panel .panel-header',
+      type: 'container',
+      style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' },
+      parentId: 'property-panel'
+    },
+    {
+      id: 'property-content',
+      name: 'Property Panel Content',
+      selector: '.property-panel .panel-content',
+      type: 'container',
+      style: { width: '100%' },
+      parentId: 'property-panel'
     },
     {
       id: 'input-panel',
@@ -201,7 +404,32 @@ export default function Header() {
       selector: '.input-panel',
       type: 'panel',
       style: { width: '100%', height: 'auto', backgroundColor: '#ffffff', borderRadius: '0.5rem', border: '1px solid #e5e7eb', padding: '1rem' },
-      parentId: 'content-area'
+      parentId: 'content-area',
+      children: ['input-header', 'input-textarea', 'input-actions']
+    },
+    {
+      id: 'input-header',
+      name: 'Input Panel Header',
+      selector: '.input-panel .panel-header',
+      type: 'container',
+      style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' },
+      parentId: 'input-panel'
+    },
+    {
+      id: 'input-textarea',
+      name: 'Input Text Area',
+      selector: '.input-panel textarea',
+      type: 'control',
+      style: { width: '100%', minHeight: '8rem', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid #d1d5db', fontSize: '0.875rem' },
+      parentId: 'input-panel'
+    },
+    {
+      id: 'input-actions',
+      name: 'Input Panel Actions',
+      selector: '.input-panel .panel-actions',
+      type: 'container',
+      style: { display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', gap: '0.5rem' },
+      parentId: 'input-panel'
     }
   ];
   
