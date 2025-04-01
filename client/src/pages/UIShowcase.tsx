@@ -13,7 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Header from '../components/Header';
-import UICustomizationDemo from '../components/UICustomizationDemo';
+// We no longer need to import UICustomizationDemo as it's now integrated directly in the Header
 
 interface ShowcaseItemProps {
   title: string;
@@ -2951,9 +2951,74 @@ export default function UIShowcase() {
                   then select panels to resize, reposition, or reshape them according to your preferences.
                 </p>
                 
-                {/* Import and include our UICustomizationDemo component */}
+                {/* Simple UI customization demo to show concept in showcase */}
                 <div className="mt-4">
-                  <UICustomizationDemo />
+                  <div className="border rounded-lg p-4 bg-white">
+                    <div className="mb-3 flex justify-between items-center">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center mr-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </div>
+                        <h3 className="font-medium">UI Customization</h3>
+                      </div>
+                      <button className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm font-medium">
+                        Save Layout
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-gray-50 p-4 rounded border">
+                        <div className="flex items-center mb-2">
+                          <span className="text-sm font-medium">Theme</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs">Dark Mode</span>
+                          <div className="relative inline-flex h-5 w-10 items-center rounded-full bg-gray-200">
+                            <span className="inline-block h-3 w-3 transform rounded-full bg-white translate-x-1"></span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 rounded border">
+                        <div className="flex items-center mb-2">
+                          <span className="text-sm font-medium">Layout</span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center p-1.5 rounded bg-blue-50 border border-blue-200">
+                            <div className="w-3 h-3 rounded-full mr-2 bg-blue-500 opacity-60"></div>
+                            <span className="text-xs">Side by Side</span>
+                          </div>
+                          <div className="flex items-center p-1.5 rounded hover:bg-gray-100">
+                            <div className="w-3 h-3 rounded-full mr-2 bg-blue-500 opacity-60"></div>
+                            <span className="text-xs">Stacked</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 rounded border">
+                        <div className="flex items-center mb-2">
+                          <span className="text-sm font-medium">Density</span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center p-1.5 rounded hover:bg-gray-100">
+                            <div className="w-3 h-3 rounded-full mr-2 bg-blue-500 opacity-60"></div>
+                            <span className="text-xs">Compact</span>
+                          </div>
+                          <div className="flex items-center p-1.5 rounded bg-blue-50 border border-blue-200">
+                            <div className="w-3 h-3 rounded-full mr-2 bg-blue-500 opacity-60"></div>
+                            <span className="text-xs">Comfortable</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-gray-500 mt-4 italic">
+                      This is a simplified demo. The actual UI customization is accessible from the "Customize UI" button in the header.
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mt-6 bg-blue-50 border border-blue-100 rounded-md p-3">
