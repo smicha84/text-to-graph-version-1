@@ -813,12 +813,56 @@ export default function GraphPanel({
                     
                     {editMode && (
                       <div className="p-2 bg-blue-50 border border-blue-100 rounded-md text-xs text-blue-700 mb-4">
-                        <p className="font-medium mb-1">UI Customization Mode</p>
-                        <ul className="list-disc pl-4 space-y-0.5">
-                          <li>Click any panel to select it</li>
-                          <li>Drag from the center to move elements</li>
-                          <li>Drag from the corners or edges to resize</li>
-                        </ul>
+                        <p className="font-medium mb-1">Graph Edit Mode</p>
+                        <div className="flex flex-col gap-2 mt-3">
+                          <button 
+                            className={`flex items-center gap-2 p-2 text-xs rounded border ${
+                              visualizer && visualizer.getInteractionMode() === 'select'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => visualizer?.setInteractionMode('select')}
+                          >
+                            <Move size={14} />
+                            Select Mode
+                          </button>
+                          
+                          <button 
+                            className={`flex items-center gap-2 p-2 text-xs rounded border ${
+                              visualizer && visualizer.getInteractionMode() === 'addNode'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => visualizer?.setInteractionMode('addNode')}
+                          >
+                            <PlusIcon size={14} />
+                            Add Node Mode
+                          </button>
+                          
+                          <button 
+                            className={`flex items-center gap-2 p-2 text-xs rounded border ${
+                              visualizer && visualizer.getInteractionMode() === 'addEdge'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                            }`}
+                            onClick={() => visualizer?.setInteractionMode('addEdge')}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                            Add Connection Mode
+                          </button>
+                        </div>
+                        
+                        <div className="mt-4 border-t border-blue-200 pt-2">
+                          <p className="text-xs mb-1">Instructions:</p>
+                          <ul className="list-disc pl-4 space-y-0.5 text-xs">
+                            <li>Double-click anywhere to create a new node</li>
+                            <li>Click a node and use Add Connection to link nodes</li>
+                            <li>Drag nodes to reposition them</li>
+                          </ul>
+                        </div>
                       </div>
                     )}
                   </div>

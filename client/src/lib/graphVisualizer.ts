@@ -108,6 +108,13 @@ export class GraphVisualizer {
   private edgeStyles: Map<string, EdgeStyle> = new Map();
   private simulation: d3.Simulation<SimulationNode, SimulationLink> | null = null;
   private nodeTooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
+  
+  // Mode for interactive creation
+  private interactionMode: 'select' | 'addNode' | 'addEdge' = 'select';
+  private sourceNodeForEdge: SimulationNode | null = null;
+  private tempEdge: d3.Selection<SVGLineElement, unknown, null, undefined> | null = null;
+  private nodeCounter: number = 0;
+  private edgeCounter: number = 0;
 
   constructor(
     svgElement: SVGSVGElement,
@@ -134,7 +141,27 @@ export class GraphVisualizer {
       .attr("height", height)
       .attr("fill", "transparent")
       .attr("class", "background")
-      .style("cursor", "move");
+      .style("cursor", "move")
+      .on("click", (event: MouseEvent) => {
+        event.stopPropagation();
+        
+        if (this.interactionMode === 'addNode') {
+          // Create a new node at the clicked position
+          const [x, y] = d3.pointer(event, this.container.node());
+          this.createNewNode(x, y);
+        } else if (this.interactionMode === 'addEdge') {
+          // Cancel edge creation if in progress
+          this.cancelEdgeCreation();
+        } else {
+          // Standard selection mode - deselect
+          this.onSelectElement(null);
+        }
+      })
+      .on("dblclick", (event) => {
+        // Double-click on background always creates a new node
+        const [x, y] = d3.pointer(event, this.container.node());
+        this.createNewNode(x, y);
+      });
       
     // Step 2: Add definitions
     const defs = this.svg.append("defs");
@@ -251,12 +278,7 @@ export class GraphVisualizer {
     // Apply zoom to the SVG element
     this.svg.call(this.zoom);
     
-    // Add a click handler for the background that doesn't interfere with zoom
-    this.svg.select(".background").on("click", (event) => {
-      // Prevent propagation to avoid conflict with zoom
-      event.stopPropagation();
-      this.onSelectElement(null);
-    });
+    // Event handlers for click and double-click are already registered on the background rect above
     
     // Add mousemove handler to show coordinates
     this.svg.on("mousemove", (event) => {
@@ -454,6 +476,163 @@ export class GraphVisualizer {
       const node = this.graph.nodes.find(n => n.id === nodeId);
       return node ? `${getNodeDisplayLabel(node)} ${node.type}` : "";
     }
+  }
+  
+  /**
+   * Create a new node at the specified coordinates
+   * @param x The x coordinate
+   * @param y The y coordinate
+   */
+  private createNewNode(x: number, y: number): void {
+    if (!this.graph) {
+      // If there's no graph, create a new one
+      this.graph = { nodes: [], edges: [], subgraphCounter: 1 };
+    }
+    
+    // Generate a unique ID for the new node
+    this.nodeCounter++;
+    const nodeId = `n_${Date.now().toString(36)}_${this.nodeCounter}`;
+    
+    // Create a new node with default values
+    const newNode: Node = {
+      id: nodeId,
+      type: "Custom", // Default type
+      properties: {
+        name: "New Node",
+        description: "Double-click to edit properties",
+        createdManually: true,
+        creationDate: new Date().toISOString()
+      },
+      x: x,
+      y: y,
+      subgraphIds: ["sg_manual"]
+    };
+    
+    // Add the node to the graph
+    this.graph.nodes.push(newNode);
+    
+    // If we're in edge creation mode, connect this node to the source node
+    if (this.interactionMode === 'addEdge' && this.sourceNodeForEdge) {
+      this.createNewEdge(this.sourceNodeForEdge.id, nodeId);
+      this.cancelEdgeCreation();
+    }
+    
+    // Update the visualization with the new node
+    this.render(this.graph);
+    
+    // Select the new node
+    this.onSelectElement(newNode);
+  }
+  
+  /**
+   * Start the process of creating a new edge from a source node
+   * @param sourceNodeId The ID of the source node
+   */
+  private startEdgeCreation(sourceNodeId: string): void {
+    if (!this.graph) return;
+    
+    // Find the source node
+    const sourceNode = this.graph.nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+    
+    // Convert to a simulation node
+    const simulationNode = {
+      ...sourceNode,
+      id: sourceNode.id,
+      type: sourceNode.type,
+      properties: sourceNode.properties,
+      x: sourceNode.x,
+      y: sourceNode.y
+    } as SimulationNode;
+    
+    // Set as the source node for the edge
+    this.sourceNodeForEdge = simulationNode;
+    
+    // Set the interaction mode
+    this.interactionMode = 'addEdge';
+    
+    // Create a temporary line to visualize the edge being created
+    this.tempEdge = this.container.append("line")
+      .attr("class", "temp-edge")
+      .attr("x1", sourceNode.x || 0)
+      .attr("y1", sourceNode.y || 0)
+      .attr("x2", sourceNode.x || 0)
+      .attr("y2", sourceNode.y || 0)
+      .attr("stroke", "#2563EB")
+      .attr("stroke-width", 2)
+      .attr("stroke-dasharray", "5,5")
+      .attr("marker-end", "url(#arrowhead-highlighted)");
+    
+    // Add a mousemove handler to update the temporary edge
+    this.svg.on("mousemove.edgecreation", (event) => {
+      if (!this.tempEdge) return;
+      
+      // Get the cursor position in the container coordinates
+      const [x, y] = d3.pointer(event, this.container.node());
+      
+      // Update the end point of the temporary edge
+      this.tempEdge
+        .attr("x2", x)
+        .attr("y2", y);
+    });
+  }
+  
+  /**
+   * Create a new edge between two nodes
+   * @param sourceNodeId The ID of the source node
+   * @param targetNodeId The ID of the target node
+   */
+  private createNewEdge(sourceNodeId: string, targetNodeId: string): void {
+    if (!this.graph) return;
+    
+    // Don't create self-loops
+    if (sourceNodeId === targetNodeId) return;
+    
+    // Generate a unique ID for the new edge
+    this.edgeCounter++;
+    const edgeId = `e_${Date.now().toString(36)}_${this.edgeCounter}`;
+    
+    // Create a new edge with default values
+    const newEdge: Edge = {
+      id: edgeId,
+      source: sourceNodeId,
+      target: targetNodeId,
+      label: "RELATED_TO", // Default label
+      properties: {
+        createdManually: true,
+        creationDate: new Date().toISOString()
+      },
+      subgraphIds: ["sg_manual"]
+    };
+    
+    // Add the edge to the graph
+    this.graph.edges.push(newEdge);
+    
+    // Update the visualization with the new edge
+    this.render(this.graph);
+    
+    // Select the new edge
+    this.onSelectElement(newEdge);
+  }
+  
+  /**
+   * Cancel the edge creation process
+   */
+  private cancelEdgeCreation(): void {
+    // Remove the temporary edge
+    if (this.tempEdge) {
+      this.tempEdge.remove();
+      this.tempEdge = null;
+    }
+    
+    // Clear the source node
+    this.sourceNodeForEdge = null;
+    
+    // Remove the mousemove handler
+    this.svg.on("mousemove.edgecreation", null);
+    
+    // Reset the interaction mode
+    this.interactionMode = 'select';
   }
   
   // Hide node tooltip
@@ -753,8 +932,25 @@ export class GraphVisualizer {
       .on("click", (event: MouseEvent, d: SimulationNode) => {
         // Prevent the click from propagating to the background
         event.stopPropagation();
-        // Select this node
-        this.onSelectElement(d as unknown as Node);
+        
+        // Handle based on the current interaction mode
+        if (this.interactionMode === 'addEdge') {
+          // If we already have a source node, create an edge to this target node
+          if (this.sourceNodeForEdge) {
+            // Don't create self-loops
+            if (this.sourceNodeForEdge.id !== d.id) {
+              this.createNewEdge(this.sourceNodeForEdge.id, d.id);
+            }
+            // Reset the edge creation state
+            this.cancelEdgeCreation();
+          } else {
+            // Start creating an edge from this node
+            this.startEdgeCreation(d.id);
+          }
+        } else if (this.interactionMode === 'select') {
+          // Standard selection mode - select this node
+          this.onSelectElement(d as unknown as Node);
+        }
       })
       .call(d3.drag<SVGGElement, SimulationNode>()
         // Use subject parameter to prevent interference with panning
@@ -1340,6 +1536,48 @@ export class GraphVisualizer {
    */
   public getEdgeStyle(edgeId: string): EdgeStyle | null {
     return this.edgeStyles.get(edgeId) || null;
+  }
+  
+  /**
+   * Set the interaction mode for the graph visualizer
+   * @param mode The interaction mode to set ('select', 'addNode', or 'addEdge')
+   */
+  public setInteractionMode(mode: 'select' | 'addNode' | 'addEdge'): void {
+    // Cancel any in-progress edge creation
+    if (this.interactionMode === 'addEdge') {
+      this.cancelEdgeCreation();
+    }
+    
+    // Set the new mode
+    this.interactionMode = mode;
+    
+    // Update the cursor style based on the mode
+    if (this.svg) {
+      if (mode === 'addNode') {
+        this.svg.style("cursor", "crosshair");
+      } else if (mode === 'addEdge') {
+        this.svg.style("cursor", "alias");
+      } else {
+        this.svg.style("cursor", "default");
+      }
+    }
+  }
+  
+  /**
+   * Get the current interaction mode
+   * @returns The current interaction mode
+   */
+  public getInteractionMode(): 'select' | 'addNode' | 'addEdge' {
+    return this.interactionMode;
+  }
+  
+  /**
+   * Start edge creation from a specific node
+   * @param nodeId The ID of the source node to start the edge from
+   */
+  public startEdgeFromNode(nodeId: string): void {
+    this.setInteractionMode('addEdge');
+    this.startEdgeCreation(nodeId);
   }
   
   /**
