@@ -11,11 +11,13 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Home() {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedElement, setSelectedElement] = useState<(Node | Edge) | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { toast } = useToast();
 
   // Generate graph mutation
@@ -150,14 +152,42 @@ export default function Home() {
   return (
     <div className="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col">
       <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar with always-visible prompt station - fixed width, non-resizable */}
-        <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col">
-          <SidebarPromptStation 
-            onWebSearch={handleWebSearch}
-            isSearching={webSearchMutation.isPending}
-            selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
-            graph={graph}
-          />
+        {/* Left sidebar with collapsible prompt station */}
+        <div className={`${sidebarCollapsed ? 'w-12' : 'w-80'} bg-white border-r border-gray-200 flex-shrink-0 flex flex-col relative transition-all duration-300 ease-in-out`}>
+          {/* Toggle button */}
+          <button 
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="absolute -right-3 top-4 z-20 bg-white p-1 rounded-full border border-gray-200 shadow-md hover:bg-gray-50 transition-colors"
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight size={16} className="text-gray-600" />
+            ) : (
+              <ChevronLeft size={16} className="text-gray-600" />
+            )}
+          </button>
+          
+          {/* Show full sidebar or collapsed version based on state */}
+          <div className={`${sidebarCollapsed ? 'opacity-0 invisible' : 'opacity-100 visible'} flex-1 transition-opacity duration-200 ease-in-out`}>
+            <SidebarPromptStation 
+              onWebSearch={handleWebSearch}
+              isSearching={webSearchMutation.isPending}
+              selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
+              graph={graph}
+            />
+          </div>
+          
+          {/* Show icon only when collapsed */}
+          {sidebarCollapsed && (
+            <div className="flex flex-col items-center p-2 mt-10">
+              <div className="p-2 mb-4 rounded-full bg-blue-50 text-blue-600">
+                <ChevronRight size={20} />
+              </div>
+              <span className="writing-mode-vertical text-xs text-gray-500 font-medium tracking-wide mt-2 transform rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                PROMPT STATION
+              </span>
+            </div>
+          )}
         </div>
         
         {/* Input panel with fixed width - no dynamic resizing for proper layout */}
