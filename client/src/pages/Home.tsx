@@ -268,7 +268,8 @@ export default function Home() {
           </Dialog>
           
           <div className="flex flex-col h-full">
-            <div className="h-[60vh] overflow-auto">
+            {/* Graph area that expands when explorer is collapsed */}
+            <div className={`flex-1 overflow-auto transition-all duration-300 ease-in-out ${explorerCollapsed ? 'h-[calc(100%-60px)]' : 'h-[60vh]'}`}>
               <GraphPanel 
                 graph={graph}
                 isLoading={generateMutation.isPending || webSearchMutation.isPending}
@@ -278,7 +279,8 @@ export default function Home() {
               />
             </div>
             
-            <div className="mt-4 bg-white border rounded-lg shadow-sm relative">
+            {/* Explorer always at bottom */}
+            <div className="bg-white border rounded-lg shadow-sm relative mt-auto">
               {/* Toggle button */}
               <button 
                 onClick={() => setExplorerCollapsed(!explorerCollapsed)}
@@ -302,7 +304,7 @@ export default function Home() {
               </div>
               
               {/* Content that can be collapsed */}
-              <div className={`${explorerCollapsed ? 'h-0 overflow-hidden' : 'h-auto'} transition-all duration-300 ease-in-out`}>
+              <div className={`${explorerCollapsed ? 'h-0 opacity-0 pointer-events-none' : 'h-auto opacity-100'} transition-all duration-300 ease-in-out overflow-hidden`}>
                 <SimpleStrategyPrompt
                   graph={graph || {nodes: [], edges: []}}
                   selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
