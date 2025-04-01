@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { useState, useEffect, useRef } from "react";
-import { Edit2, X, Save, Moon, Sun, Layout, Grid, Sliders, Type, Layers, Target, Move, Plus, Minus, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Edit2, X, Save, Moon, Sun, Layout, Grid, Sliders, Type, Layers, Target, Move, Plus, Minus, Eye, EyeOff, ExternalLink, CornerRightDown, ArrowRight, Maximize2, Minimize2, RotateCcw, ChevronsUpDown, ChevronsLeftRight } from "lucide-react";
 
 // Define UI customization settings
 interface UISettings {
@@ -64,6 +64,100 @@ interface ElementData {
   children?: string[];
 }
 
+// ResizeHandle component for direct manipulation
+interface ResizeHandleProps {
+  position: 'top' | 'right' | 'bottom' | 'left' | 'topRight' | 'bottomRight' | 'bottomLeft' | 'topLeft';
+  onResize: (direction: string, delta: {x: number, y: number}) => void;
+}
+
+function ResizeHandle({ position, onResize }: ResizeHandleProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  
+  let cursor = 'nwse-resize';
+  let icon = <CornerRightDown size={8} />;
+  
+  switch(position) {
+    case 'top':
+      cursor = 'ns-resize';
+      icon = <ChevronsUpDown size={8} />;
+      break;
+    case 'right':
+      cursor = 'ew-resize';
+      icon = <ChevronsLeftRight size={8} />;
+      break;
+    case 'bottom':
+      cursor = 'ns-resize';
+      icon = <ChevronsUpDown size={8} />;
+      break;
+    case 'left':
+      cursor = 'ew-resize';
+      icon = <ChevronsLeftRight size={8} />;
+      break;
+    case 'topRight':
+      cursor = 'nesw-resize';
+      icon = <CornerRightDown size={8} style={{ transform: 'rotate(-90deg)' }} />;
+      break;
+    case 'bottomRight':
+      cursor = 'nwse-resize';
+      icon = <CornerRightDown size={8} />;
+      break;
+    case 'bottomLeft':
+      cursor = 'nesw-resize';
+      icon = <CornerRightDown size={8} style={{ transform: 'rotate(180deg)' }} />;
+      break;
+    case 'topLeft':
+      cursor = 'nwse-resize';
+      icon = <CornerRightDown size={8} style={{ transform: 'rotate(90deg)' }} />;
+      break;
+  }
+  
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsDragging(true);
+    setStartPos({ x: e.clientX, y: e.clientY });
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startPos.x;
+      const deltaY = moveEvent.clientY - startPos.y;
+      onResize(position, { x: deltaX, y: deltaY });
+      setStartPos({ x: moveEvent.clientX, y: moveEvent.clientY });
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [position, onResize, startPos]);
+  
+  const positionStyles: Record<string, React.CSSProperties> = {
+    top: { top: '-4px', left: '50%', transform: 'translateX(-50%)', cursor: 'ns-resize' },
+    right: { top: '50%', right: '-4px', transform: 'translateY(-50%)', cursor: 'ew-resize' },
+    bottom: { bottom: '-4px', left: '50%', transform: 'translateX(-50%)', cursor: 'ns-resize' },
+    left: { top: '50%', left: '-4px', transform: 'translateY(-50%)', cursor: 'ew-resize' },
+    topRight: { top: '-4px', right: '-4px', cursor: 'nesw-resize' },
+    bottomRight: { bottom: '-4px', right: '-4px', cursor: 'nwse-resize' },
+    bottomLeft: { bottom: '-4px', left: '-4px', cursor: 'nesw-resize' },
+    topLeft: { top: '-4px', left: '-4px', cursor: 'nwse-resize' }
+  };
+  
+  return (
+    <div
+      className="absolute w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center z-10"
+      style={{ ...positionStyles[position], cursor }}
+      onMouseDown={handleMouseDown}
+    >
+      <div className="text-white">{icon}</div>
+    </div>
+  );
+}
+
 export default function Header() {
   const [location] = useLocation();
   const [showCustomization, setShowCustomization] = useState(false);
@@ -73,6 +167,13 @@ export default function Header() {
   const [elementHierarchy, setElementHierarchy] = useState<ElementData[]>([]);
   const [hoveredElement, setHoveredElement] = useState<string | null>(null);
   const [expandedElements, setExpandedElements] = useState<string[]>([]);
+  
+  // Direct manipulation states
+  const [directEditMode, setDirectEditMode] = useState(false);
+  const [elementDimensions, setElementDimensions] = useState({ width: 0, height: 0 });
+  const [elementPosition, setElementPosition] = useState({ x: 0, y: 0 });
+  const [isDraggingElement, setIsDraggingElement] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   
   // Global settings state
   const [settings, setSettings] = useState<UISettings>({
@@ -523,6 +624,113 @@ export default function Header() {
       });
     });
   };
+  
+  // Handle direct manipulation resize
+  const handleElementResize = useCallback((direction: string, delta: {x: number, y: number}) => {
+    if (!selectedElement) return;
+    
+    const element = elementHierarchy.find(el => el.id === selectedElement);
+    if (!element) return;
+    
+    const style = { ...element.style };
+    
+    // Parse current dimensions, defaulting to reasonable values if not set
+    const currentWidth = style.width ? parseInt(style.width, 10) : 100;
+    const currentHeight = style.height ? parseInt(style.height, 10) : 100;
+    
+    let newWidth = currentWidth;
+    let newHeight = currentHeight;
+    
+    // Adjust dimensions based on resize direction
+    switch (direction) {
+      case 'right':
+        newWidth = Math.max(20, currentWidth + delta.x);
+        break;
+      case 'left':
+        newWidth = Math.max(20, currentWidth - delta.x);
+        break;
+      case 'bottom':
+        newHeight = Math.max(20, currentHeight + delta.y);
+        break;
+      case 'top':
+        newHeight = Math.max(20, currentHeight - delta.y);
+        break;
+      case 'topRight':
+        newWidth = Math.max(20, currentWidth + delta.x);
+        newHeight = Math.max(20, currentHeight - delta.y);
+        break;
+      case 'bottomRight':
+        newWidth = Math.max(20, currentWidth + delta.x);
+        newHeight = Math.max(20, currentHeight + delta.y);
+        break;
+      case 'bottomLeft':
+        newWidth = Math.max(20, currentWidth - delta.x);
+        newHeight = Math.max(20, currentHeight + delta.y);
+        break;
+      case 'topLeft':
+        newWidth = Math.max(20, currentWidth - delta.x);
+        newHeight = Math.max(20, currentHeight - delta.y);
+        break;
+    }
+    
+    // Convert dimensions to CSS units
+    const hasPixelWidth = style.width ? style.width.includes('px') : true;
+    const hasPixelHeight = style.height ? style.height.includes('px') : true;
+    
+    const newWidthStr = hasPixelWidth ? `${newWidth}px` : `${newWidth}%`;
+    const newHeightStr = hasPixelHeight ? `${newHeight}px` : `${newHeight}%`;
+    
+    // Update element dimensions
+    updateElementStyle(element.id, 'width', newWidthStr);
+    updateElementStyle(element.id, 'height', newHeightStr);
+    
+    // Update state for the preview
+    setElementDimensions({ width: newWidth, height: newHeight });
+  }, [selectedElement, elementHierarchy]);
+  
+  // Handle direct element dragging
+  const handleElementDragStart = useCallback((e: React.MouseEvent) => {
+    if (!directEditMode || !selectedElement) return;
+    
+    e.preventDefault();
+    setIsDraggingElement(true);
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      moveEvent.preventDefault();
+      
+      const deltaX = moveEvent.clientX - dragStartPos.x;
+      const deltaY = moveEvent.clientY - dragStartPos.y;
+      
+      setElementPosition(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setDragStartPos({ x: moveEvent.clientX, y: moveEvent.clientY });
+    };
+    
+    const handleMouseUp = () => {
+      setIsDraggingElement(false);
+      
+      // If we were dragging, update the element's position
+      if (selectedElement) {
+        const element = elementHierarchy.find(el => el.id === selectedElement);
+        if (element) {
+          // Update the element's position based on the drag
+          // This could involve setting margin, position, transform, etc.
+          // For this example, we'll use transform
+          updateElementStyle(element.id, 'transform', `translate(${elementPosition.x}px, ${elementPosition.y}px)`);
+        }
+      }
+      
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [directEditMode, selectedElement, dragStartPos, elementPosition, elementHierarchy]);
   
   // Toggle element expansion in hierarchy tree
   const toggleElementExpansion = (elementId: string) => {
@@ -1139,15 +1347,58 @@ export default function Header() {
                 
                 {/* Preview / Help */}
                 <div className="bg-white p-4 rounded-lg border shadow-sm">
-                  <div className="flex items-center mb-3">
+                  <div className="flex items-center mb-3 justify-between">
                     <h3 className="font-medium">Element Preview</h3>
+                    <div className="flex space-x-1">
+                      <button 
+                        title="Reset changes" 
+                        className="text-gray-500 hover:text-gray-700 p-1 rounded"
+                        onClick={() => {
+                          // Reset to original element style
+                          setDirectEditMode(false);
+                          setElementPosition({ x: 0, y: 0 });
+                          // Find the original element in the sample data
+                          const originalElement = sampleElements.find(e => e.id === selectedElement);
+                          if (originalElement) {
+                            const element = elementHierarchy.find(e => e.id === selectedElement);
+                            if (element) {
+                              // Reset the element to its original style
+                              setElementHierarchy(prev => 
+                                prev.map(e => e.id === selectedElement ? {...e, style: {...originalElement.style}} : e)
+                              );
+                            }
+                          }
+                        }}
+                      >
+                        <RotateCcw size={14} />
+                      </button>
+                      <button 
+                        title="Toggle direct manipulation mode" 
+                        className={`p-1 rounded ${directEditMode ? 'bg-blue-500 text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                        onClick={() => {
+                          setDirectEditMode(!directEditMode);
+                          // Initialize dimensions for the selected element
+                          if (selectedElementData) {
+                            const width = selectedElementData.style.width 
+                              ? parseInt(selectedElementData.style.width as string, 10) 
+                              : 100;
+                            const height = selectedElementData.style.height 
+                              ? parseInt(selectedElementData.style.height as string, 10) 
+                              : 100;
+                            setElementDimensions({ width, height });
+                          }
+                        }}
+                      >
+                        <Move size={14} />
+                      </button>
+                    </div>
                   </div>
                   
                   {selectedElementData ? (
                     <div>
-                      <div className="border rounded-md p-3 bg-gray-50 mb-3 aspect-video flex items-center justify-center">
+                      <div className="border rounded-md p-3 bg-gray-50 mb-3 aspect-video flex items-center justify-center relative">
                         <div 
-                          className="border border-dashed border-gray-300 rounded flex items-center justify-center text-center p-3"
+                          className={`border ${directEditMode ? 'border-blue-500' : 'border-dashed border-gray-300'} rounded flex items-center justify-center text-center p-3 ${directEditMode ? 'cursor-move' : ''}`}
                           style={{
                             width: selectedElementData.style.width || '80%',
                             height: selectedElementData.style.height || '80%',
@@ -1159,11 +1410,84 @@ export default function Header() {
                             color: selectedElementData.style.color,
                             fontSize: selectedElementData.style.fontSize,
                             boxShadow: selectedElementData.style.boxShadow,
+                            position: directEditMode ? 'relative' : undefined,
+                            transform: directEditMode ? `translate(${elementPosition.x}px, ${elementPosition.y}px)` : undefined,
+                            transition: directEditMode ? 'none' : 'all 0.2s ease-in-out',
                           }}
+                          onMouseDown={directEditMode ? handleElementDragStart : undefined}
                         >
                           <div className="text-xs">{selectedElementData.name}</div>
+                          
+                          {/* Direct manipulation resize handles */}
+                          {directEditMode && (
+                            <>
+                              <ResizeHandle position="top" onResize={handleElementResize} />
+                              <ResizeHandle position="right" onResize={handleElementResize} />
+                              <ResizeHandle position="bottom" onResize={handleElementResize} />
+                              <ResizeHandle position="left" onResize={handleElementResize} />
+                              <ResizeHandle position="topRight" onResize={handleElementResize} />
+                              <ResizeHandle position="bottomRight" onResize={handleElementResize} />
+                              <ResizeHandle position="bottomLeft" onResize={handleElementResize} />
+                              <ResizeHandle position="topLeft" onResize={handleElementResize} />
+                            </>
+                          )}
                         </div>
                       </div>
+                      
+                      {/* Visual manipulation controls */}
+                      {directEditMode && (
+                        <div className="flex flex-wrap gap-2 mb-3 p-2 bg-gray-100 rounded border border-gray-200">
+                          <div className="flex gap-1 items-center">
+                            <button 
+                              className="p-1 bg-white rounded text-gray-700 hover:bg-gray-50 border border-gray-300"
+                              title="Center horizontally"
+                              onClick={() => setElementPosition(prev => ({ ...prev, x: 0 }))}
+                            >
+                              <ChevronsLeftRight size={14} />
+                            </button>
+                            <button 
+                              className="p-1 bg-white rounded text-gray-700 hover:bg-gray-50 border border-gray-300"
+                              title="Center vertically"
+                              onClick={() => setElementPosition(prev => ({ ...prev, y: 0 }))}
+                            >
+                              <ChevronsUpDown size={14} />
+                            </button>
+                          </div>
+                          
+                          <div className="flex gap-1 items-center">
+                            <button 
+                              className="p-1 bg-white rounded text-gray-700 hover:bg-gray-50 border border-gray-300"
+                              title="Increase size"
+                              onClick={() => {
+                                // Increase both width and height proportionally
+                                handleElementResize('bottomRight', { x: 10, y: 10 });
+                              }}
+                            >
+                              <Maximize2 size={14} />
+                            </button>
+                            <button 
+                              className="p-1 bg-white rounded text-gray-700 hover:bg-gray-50 border border-gray-300"
+                              title="Decrease size"
+                              onClick={() => {
+                                // Decrease both width and height proportionally
+                                handleElementResize('bottomRight', { x: -10, y: -10 });
+                              }}
+                            >
+                              <Minimize2 size={14} />
+                            </button>
+                          </div>
+                          
+                          <div className="ml-auto text-xs text-gray-600">
+                            <span>W: {elementDimensions.width}px</span>
+                            <span className="mx-1">×</span>
+                            <span>H: {elementDimensions.height}px</span>
+                            <span className="mx-1">|</span>
+                            <span>X: {elementPosition.x}px</span>
+                            <span className="mx-1">Y: {elementPosition.y}px</span>
+                          </div>
+                        </div>
+                      )}
+                      
                       
                       <div className="text-xs text-gray-500 mb-2">Element Path:</div>
                       <div className="flex flex-wrap items-center text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-200">
