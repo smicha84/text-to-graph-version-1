@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, MouseEvent as ReactMouseEvent } from "react";
 import Header from "@/components/Header";
 import InputPanel from "@/components/InputPanel";
 import GraphPanel from "@/components/GraphPanel";
@@ -18,6 +18,7 @@ export default function Home() {
   const [selectedElement, setSelectedElement] = useState<(Node | Edge) | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [inputPanelWidth, setInputPanelWidth] = useState(384); // Default width (w-96 = 24rem = 384px)
   const { toast } = useToast();
 
   // Generate graph mutation
@@ -148,6 +149,30 @@ export default function Home() {
     });
     webSearchMutation.mutate({ nodeId, query });
   };
+  
+  // Handle the resizing of the input panel
+  const handleInputPanelResize = (event: ReactMouseEvent<HTMLDivElement>) => {
+    const initialX = event.clientX;
+    const initialWidth = inputPanelWidth;
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - initialX;
+      const newWidth = Math.max(280, Math.min(600, initialWidth + deltaX));
+      setInputPanelWidth(newWidth);
+    };
+    
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+  };
 
   return (
     <div className="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col">
@@ -190,8 +215,21 @@ export default function Home() {
           )}
         </div>
         
-        {/* Input panel with fixed width - no dynamic resizing for proper layout */}
-        <div className="w-96 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
+        {/* Input panel with resizable width */}
+        <div 
+          style={{ width: `${inputPanelWidth}px` }} 
+          className="flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-hidden relative transition-all duration-100"
+        >
+          {/* Resize handle */}
+          <div 
+            className="absolute top-0 right-0 w-1 h-full bg-gray-300 hover:bg-blue-400 cursor-ew-resize z-30 group"
+            onMouseDown={handleInputPanelResize}
+          >
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 bg-gray-100 rounded p-1 shadow-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
+              <span className="text-xs text-gray-700 whitespace-nowrap">{inputPanelWidth}px</span>
+            </div>
+          </div>
+          
           <InputPanel 
             onGenerateGraph={handleGenerateGraph}
             onWebSearch={handleWebSearch}
