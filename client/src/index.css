@@ -2,6 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
+/* UI Element Highlight for direct manipulation */
+.ui-element-highlight {
+  position: relative;
+  outline: 2px solid #3b82f6 !important; /* Blue outline */
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3) !important; /* Blue glow */
+  z-index: 1000;
+}
+
+.ui-element-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(59, 130, 246, 0.1); /* Light blue overlay */
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Temporary highlight while hovering in selection mode */
+.ui-element-temp-highlight {
+  position: relative;
+  outline: 2px dashed #f97316 !important; /* Orange dashed outline */
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2) !important; /* Orange glow */
+  z-index: 990; /* Lower than the permanent highlight */
+}
+
+.ui-element-temp-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(249, 115, 22, 0.05); /* Light orange overlay */
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* CSS for direct element selection mode */
+body.element-select-mode * {
+  cursor: crosshair !important;
+}
+
 /* Custom styles for graph visualization */
 .node circle {
   transition: fill 0.3s ease, stroke 0.3s ease, stroke-width 0.3s ease;

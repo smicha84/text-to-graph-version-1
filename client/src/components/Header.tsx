@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Edit2, X, Save, Moon, Sun, Layout, Grid, Sliders, Type, Layers, Target, Move, Plus, Minus, Eye, EyeOff, ExternalLink, CornerRightDown, ArrowRight, Maximize2, Minimize2, RotateCcw, ChevronsUpDown, ChevronsLeftRight } from "lucide-react";
+import { Edit2, X, Save, Moon, Sun, Layout, Grid, Sliders, Type, Layers, Target, Move, Plus, Minus, Eye, EyeOff, ExternalLink, CornerRightDown, ArrowRight, Maximize2, Minimize2, RotateCcw, ChevronsUpDown, ChevronsLeftRight, Crosshair } from "lucide-react";
 
 // Define UI customization settings
 interface UISettings {
@@ -174,6 +174,10 @@ export default function Header() {
   const [elementPosition, setElementPosition] = useState({ x: 0, y: 0 });
   const [isDraggingElement, setIsDraggingElement] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  
+  // Element selection mode - like browser dev tools
+  const [elementSelectionMode, setElementSelectionMode] = useState(false);
+  const [hoveredDOMElement, setHoveredDOMElement] = useState<Element | null>(null);
   
   // Global settings state
   const [settings, setSettings] = useState<UISettings>({
@@ -557,6 +561,127 @@ export default function Header() {
     }
   }, []);
   
+  // Event handlers for element selection mode
+  const handleElementHover = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+    
+    // Remove any existing highlight
+    document.querySelectorAll('.ui-element-temp-highlight').forEach(el => {
+      el.classList.remove('ui-element-temp-highlight');
+    });
+    
+    // Add temporary highlight to the hovered element
+    const target = e.target as Element;
+    if (target) {
+      target.classList.add('ui-element-temp-highlight');
+      setHoveredDOMElement(target);
+    }
+  }, []);
+  
+  const handleElementSelect = useCallback((e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const target = e.target as Element;
+    if (target) {
+      // Remove temp highlight class
+      document.querySelectorAll('.ui-element-temp-highlight').forEach(el => {
+        el.classList.remove('ui-element-temp-highlight');
+      });
+      
+      // Remove existing highlights
+      document.querySelectorAll('.ui-element-highlight').forEach(el => {
+        el.classList.remove('ui-element-highlight');
+      });
+      
+      // Add highlight class to the selected element
+      target.classList.add('ui-element-highlight');
+      
+      // Find the element in our hierarchy by matching selectors
+      const findElementByDOMMatch = (element: HTMLElement): string | null => {
+        for (const hierarchyElement of elementHierarchy) {
+          try {
+            const matchedElements = document.querySelectorAll(hierarchyElement.selector);
+            // Convert NodeList to Array for iteration
+            const elementsArray = Array.from(matchedElements);
+            for (const matchedElement of elementsArray) {
+              if (matchedElement === element || matchedElement.contains(element)) {
+                return hierarchyElement.id;
+              }
+            }
+          } catch (error) {
+            console.error(`Invalid selector: ${hierarchyElement.selector}`);
+          }
+        }
+        return null;
+      };
+      
+      // Find and set the selected element in state
+      const elementId = findElementByDOMMatch(target as HTMLElement);
+      if (elementId) {
+        setSelectedElement(elementId);
+        
+        // Expand parent elements in hierarchy
+        const expandParents = (id: string) => {
+          const element = elementHierarchy.find(el => el.id === id);
+          if (element && element.parentId) {
+            setExpandedElements(prev => {
+              if (!prev.includes(element.parentId!)) {
+                return [...prev, element.parentId!];
+              }
+              return prev;
+            });
+            expandParents(element.parentId);
+          }
+        };
+        
+        expandParents(elementId);
+      }
+      
+      // Exit selection mode after selecting an element
+      setElementSelectionMode(false);
+    }
+  }, [elementHierarchy, setSelectedElement, setExpandedElements, setElementSelectionMode]);
+  
+  // Set up element selection mode
+  useEffect(() => {
+    if (!elementSelectionMode) {
+      // Remove highlighting classes when not in selection mode
+      document.querySelectorAll('.ui-element-highlight').forEach(el => {
+        el.classList.remove('ui-element-highlight');
+      });
+      document.body.classList.remove('element-select-mode');
+      
+      if (hoveredDOMElement) {
+        setHoveredDOMElement(null);
+      }
+      
+      // Remove event listeners
+      document.removeEventListener('mouseover', handleElementHover);
+      document.removeEventListener('click', handleElementSelect);
+      return;
+    }
+    
+    // Add the element-select-mode class to body
+    document.body.classList.add('element-select-mode');
+    
+    // Add event listeners
+    document.addEventListener('mouseover', handleElementHover);
+    document.addEventListener('click', handleElementSelect);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('mouseover', handleElementHover);
+      document.removeEventListener('click', handleElementSelect);
+      document.body.classList.remove('element-select-mode');
+      
+      // Remove any temporary highlights
+      document.querySelectorAll('.ui-element-temp-highlight').forEach(el => {
+        el.classList.remove('ui-element-temp-highlight');
+      });
+    };
+  }, [elementSelectionMode, handleElementHover, handleElementSelect, hoveredDOMElement]);
+  
   // Apply settings to the document
   const applySettings = (newSettings: UISettings) => {
     // Apply dark mode
@@ -824,7 +949,25 @@ export default function Header() {
                   onClick={(e) => {
                     e.stopPropagation();
                     console.log(`Highlight element in DOM: ${element.selector}`);
-                    // In a real app, this would highlight the actual element
+                    
+                    // Actually highlight the element in the DOM
+                    try {
+                      // Remove any existing highlight
+                      document.querySelectorAll('.ui-element-highlight').forEach(el => {
+                        el.classList.remove('ui-element-highlight');
+                      });
+                      
+                      // Find and highlight the selected element
+                      const domElement = document.querySelector(element.selector);
+                      if (domElement) {
+                        domElement.classList.add('ui-element-highlight');
+                        
+                        // Scroll the element into view if needed
+                        domElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    } catch (error) {
+                      console.error('Error highlighting element:', error);
+                    }
                   }}
                 >
                   <ExternalLink size={12} />
@@ -1151,6 +1294,14 @@ export default function Header() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Element Customization</h2>
                 <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={() => setElementSelectionMode(true)}
+                    className="px-3 py-1.5 bg-indigo-500 text-white rounded-md text-sm font-medium flex items-center"
+                    title="Click to select an element directly in the UI"
+                  >
+                    <Crosshair size={15} className="mr-1.5" />
+                    Select Element
+                  </button>
                   <button 
                     onClick={() => setEditMode(!editMode)}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center ${
