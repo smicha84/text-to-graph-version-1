@@ -11,13 +11,14 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 
 export default function Home() {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedElement, setSelectedElement] = useState<(Node | Edge) | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [explorerCollapsed, setExplorerCollapsed] = useState(false);
   const [inputPanelWidth, setInputPanelWidth] = useState(384); // Default width (w-96 = 24rem = 384px)
   const { toast } = useToast();
 
@@ -277,19 +278,38 @@ export default function Home() {
               />
             </div>
             
-            <div className="mt-4 bg-white border rounded-lg shadow-sm">
-              <div className="p-4 border-b">
-                <h2 className="text-lg font-semibold">Strategic Graph Explorer</h2>
-                <p className="text-sm text-gray-500">
-                  Analyze your graph and discover strategic insights for exploration
-                </p>
+            <div className="mt-4 bg-white border rounded-lg shadow-sm relative">
+              {/* Toggle button */}
+              <button 
+                onClick={() => setExplorerCollapsed(!explorerCollapsed)}
+                className="absolute right-4 top-4 z-20 bg-gray-100 p-1 rounded-full border border-gray-200 shadow-sm hover:bg-gray-200 transition-colors"
+                aria-label={explorerCollapsed ? "Expand explorer" : "Collapse explorer"}
+              >
+                {explorerCollapsed ? (
+                  <ChevronDown size={16} className="text-gray-600" />
+                ) : (
+                  <ChevronUp size={16} className="text-gray-600" />
+                )}
+              </button>
+              
+              <div className="p-4 border-b flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-semibold">Strategic Graph Explorer</h2>
+                  <p className="text-sm text-gray-500">
+                    Analyze your graph and discover strategic insights for exploration
+                  </p>
+                </div>
               </div>
-              <SimpleStrategyPrompt
-                graph={graph || {nodes: [], edges: []}}
-                selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
-                onWebSearch={handleWebSearch}
-                isSearching={webSearchMutation.isPending}
-              />
+              
+              {/* Content that can be collapsed */}
+              <div className={`${explorerCollapsed ? 'h-0 overflow-hidden' : 'h-auto'} transition-all duration-300 ease-in-out`}>
+                <SimpleStrategyPrompt
+                  graph={graph || {nodes: [], edges: []}}
+                  selectedNodeId={selectedElement && 'type' in selectedElement ? selectedElement.id : undefined}
+                  onWebSearch={handleWebSearch}
+                  isSearching={webSearchMutation.isPending}
+                />
+              </div>
             </div>
           </div>
         </div>
