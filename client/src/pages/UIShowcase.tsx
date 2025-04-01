@@ -844,6 +844,121 @@ export default function UIShowcase() {
                 </div>}
                 explanation="Placing UI customization controls in the global header allows users to modify the entire application layout in a consistent way from anywhere in the application. This enhanced approach includes a dedicated customization panel where users can adjust layout type, theme, and content density without entering a special 'edit mode'. The changes apply globally across all screens, ensuring a unified experience. By including preset configurations alongside granular controls, this implementation balances simplicity and power - giving users quick access to common arrangements while still allowing detailed customization where needed. The panel's persistent position in the header makes UI customization a first-class feature rather than a hidden setting."
               />
+
+              <ShowcaseItem
+                title="Element-Level UI Customization"
+                description="Individual control over UI elements with complete hierarchy visualization"
+                complexity="Hard"
+                impact="High"
+                beforeImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="bg-white p-2 border rounded">
+                    <div className="text-xs font-medium mb-2">Global UI Settings</div>
+                    <div className="flex space-x-2 mb-3">
+                      <div className="w-6 h-6 bg-blue-600 rounded-full border-2 border-white shadow-sm"></div>
+                      <div className="w-6 h-6 bg-purple-600 rounded-full"></div>
+                      <div className="w-6 h-6 bg-green-600 rounded-full"></div>
+                      <div className="w-6 h-6 bg-amber-600 rounded-full"></div>
+                    </div>
+                    <div className="text-xs font-medium mb-2">Layout Options</div>
+                    <div className="flex space-x-2">
+                      <div className="w-16 h-8 border rounded flex items-center justify-center bg-gray-100">
+                        <span className="text-[8px]">Default</span>
+                      </div>
+                      <div className="w-16 h-8 border rounded flex items-center justify-center">
+                        <span className="text-[8px]">Compact</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>}
+                afterImage={<div className="p-4 border rounded bg-gray-50">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="text-xs font-medium">UI Customization</div>
+                    <div className="flex space-x-1">
+                      <button className="text-xs bg-gray-200 px-1.5 py-0.5 rounded text-gray-700">Edit Mode</button>
+                      <button className="text-xs bg-blue-500 px-1.5 py-0.5 rounded text-white">Save</button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white p-1.5 border rounded">
+                      <div className="text-[8px] font-medium mb-1">Element Hierarchy</div>
+                      <div className="border border-gray-100 rounded bg-gray-50 p-1.5 h-14 overflow-hidden">
+                        <div className="flex items-center mb-1">
+                          <svg className="w-2 h-2 text-gray-500 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                          </svg>
+                          <div className="w-3 h-3 bg-blue-100 rounded-sm flex items-center justify-center ml-1 mr-1">
+                            <svg className="w-2 h-2 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            </svg>
+                          </div>
+                          <span className="text-[7px] font-medium">Main Container</span>
+                        </div>
+                        <div className="ml-3">
+                          <div className="flex items-center mb-1">
+                            <svg className="w-2 h-2 text-gray-500 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                            <div className="w-3 h-3 bg-purple-100 rounded-sm flex items-center justify-center ml-1 mr-1">
+                              <svg className="w-2 h-2 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                              </svg>
+                            </div>
+                            <span className="text-[7px] font-medium text-blue-700">Header</span>
+                          </div>
+                          <div className="ml-3">
+                            <div className="flex items-center mb-1">
+                              <div className="w-3 h-3 bg-green-100 rounded-sm flex items-center justify-center ml-3 mr-1">
+                                <svg className="w-2 h-2 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <circle cx="12" cy="12" r="8" />
+                                </svg>
+                              </div>
+                              <span className="text-[7px]">Navigation Menu</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-white p-1.5 border rounded flex flex-col">
+                      <div className="text-[8px] font-medium mb-1">Element Properties</div>
+                      <div className="bg-blue-50 p-1 rounded mb-1 flex items-center">
+                        <div className="w-3 h-3 bg-purple-100 rounded-sm flex items-center justify-center mr-1">
+                          <svg className="w-2 h-2 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          </svg>
+                        </div>
+                        <span className="text-[7px] font-medium">Header</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1">
+                        <div>
+                          <div className="text-[6px] text-gray-500">Width</div>
+                          <div className="border border-gray-200 rounded-sm h-2 flex items-center pl-1">
+                            <span className="text-[6px]">100%</span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[6px] text-gray-500">Background</div>
+                          <div className="flex h-2">
+                            <div className="w-2 h-2 bg-white border border-gray-200 rounded-l-sm"></div>
+                            <div className="flex-1 border-t border-r border-b border-gray-200 rounded-r-sm"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 bg-white p-1.5 border rounded flex flex-col">
+                    <div className="text-[8px] font-medium mb-1">Element Preview</div>
+                    <div className="border border-gray-100 rounded bg-gray-50 p-1 h-8 flex items-center justify-center">
+                      <div className="w-full h-3 border border-dashed border-blue-300 rounded-sm bg-white">
+                        <div className="text-[6px] text-center">Header Element</div>
+                      </div>
+                    </div>
+                    <div className="mt-1 text-[6px] text-gray-500">
+                      Path: Root / Main Container / <span className="text-blue-600">Header</span>
+                    </div>
+                  </div>
+                </div>}
+                explanation="This advanced customization system provides granular control over every UI element in the application by visualizing the complete element hierarchy. Users can select any component from a tree view - from containers down to individual controls - and customize its properties including dimensions, spacing, appearance, and position. The system shows live previews of changes and maintains awareness of the component's place in the DOM through visual path indicators. The edit mode toggle provides a safe way to make changes, with a dedicated save function to apply them across the application. This approach gives power users unprecedented control over their interface while maintaining the application's core functionality."
+              />
               
               <ShowcaseItem
                 title="Graph-Specific Appearance Controls"

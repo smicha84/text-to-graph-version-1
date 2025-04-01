@@ -31,6 +31,11 @@ interface ElementStyle {
   top?: string;
   left?: string;
   transform?: string;
+  display?: string;
+  alignItems?: string;
+  gap?: string;
+  border?: string;
+  minHeight?: string;
 }
 
 interface ElementData {
