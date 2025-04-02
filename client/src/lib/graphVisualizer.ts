@@ -388,6 +388,10 @@ export class GraphVisualizer {
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
           Basic Search
         </button>
+        <button class="taxonomy-btn" style="margin-top: 4px;" data-node-id="${d.id}" data-node-type="${d.type}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9V3H12"></path><path d="M13 13V8h5"></path><circle cx="7" cy="8" r="1"></circle><circle cx="11" cy="13" r="1"></circle><circle cx="7" cy="18" r="1"></circle></svg>
+          Create Taxonomy
+        </button>
       </div>
     ` : '';
     
@@ -459,6 +463,14 @@ export class GraphVisualizer {
         .on('click', (event: MouseEvent) => {
           event.stopPropagation();
           this.onWebSearch!(d.id, getNodeDisplayLabel(d) + " " + d.type);
+          this.hideNodeTooltip(); // Hide tooltip after clicking
+        });
+      
+      // Add event listener for taxonomy button
+      this.nodeTooltip.select('.taxonomy-btn')
+        .on('click', (event: MouseEvent) => {
+          event.stopPropagation();
+          this.createTaxonomyForNode(d);
           this.hideNodeTooltip(); // Hide tooltip after clicking
         });
     }
@@ -1876,5 +1888,210 @@ export class GraphVisualizer {
         .transition().duration(300)
         .attr("fill", (d: any) => this.customNodeColors[d.type] || NODE_COLORS[d.type] || NODE_COLORS.default);
     }
+  }
+  
+  /**
+   * Create a taxonomy hierarchy for a given node
+   * @param node The node to create a taxonomy hierarchy for
+   */
+  private createTaxonomyForNode(node: SimulationNode): void {
+    if (!this.graph) return;
+    
+    // Get the node type to create a taxonomy for
+    const nodeType = node.type;
+    if (!nodeType) {
+      console.error("Cannot create taxonomy for node with no type");
+      return;
+    }
+    
+    // Create a unique subgraph ID for this taxonomy
+    const taxonomyId = `taxonomy_${nodeType}_${Date.now().toString(36)}`;
+    
+    // Define a hierarchy of taxonomic levels
+    // This would typically come from an API call to a knowledge base like Wikipedia
+    // For now, we'll use a simple predefined hierarchy based on the node type
+    const taxonomyLevels = this.generateTaxonomyForType(nodeType);
+    
+    if (!taxonomyLevels || taxonomyLevels.length === 0) {
+      console.error(`No taxonomy levels generated for type: ${nodeType}`);
+      return;
+    }
+    
+    console.log(`Creating taxonomy for ${nodeType} with ${taxonomyLevels.length} levels`);
+    
+    // Calculate the layout for the taxonomy nodes
+    // Place them in a vertical arrangement above the source node
+    const sourceX = node.x || 0;
+    const sourceY = node.y || 0;
+    const verticalSpacing = 80; // Space between levels
+    
+    // Create nodes for each level of the taxonomy
+    const taxonomyNodes: Node[] = [];
+    const taxonomyEdges: Edge[] = [];
+    
+    // Track the previous node ID to connect the levels
+    let previousNodeId = node.id;
+    
+    // Create nodes from most specific to most general (bottom up)
+    taxonomyLevels.forEach((level, index) => {
+      // Generate a unique ID for this taxonomy node
+      this.nodeCounter++;
+      const nodeId = `tax_${nodeType}_${level.type}_${Date.now().toString(36)}_${this.nodeCounter}`;
+      
+      // Create the taxonomy node
+      const taxonomyNode: Node = {
+        id: nodeId,
+        type: "Taxonomy",
+        properties: {
+          name: level.name,
+          description: level.description || `Taxonomic classification for ${nodeType}`,
+          taxonomyLevel: level.type,
+          source: "taxonomy"
+        },
+        x: sourceX + (index * 30) - 60, // Offset horizontally to create a diagonal arrangement
+        y: sourceY - ((index + 1) * verticalSpacing), // Place each level above the previous one
+        subgraphIds: [taxonomyId]
+      };
+      
+      // Add the node to our collection
+      taxonomyNodes.push(taxonomyNode);
+      
+      // Create an edge from this node to the previous node
+      this.edgeCounter++;
+      const edgeId = `tax_edge_${Date.now().toString(36)}_${this.edgeCounter}`;
+      
+      const edge: Edge = {
+        id: edgeId,
+        source: nodeId, // Parent
+        target: previousNodeId, // Child
+        label: "IS_PARENT_TO",
+        properties: {
+          taxonomyRelation: true,
+          creationDate: new Date().toISOString()
+        },
+        subgraphIds: [taxonomyId]
+      };
+      
+      // Add the edge to our collection
+      taxonomyEdges.push(edge);
+      
+      // Update the previous node ID for the next iteration
+      previousNodeId = nodeId;
+    });
+    
+    // Add the taxonomy nodes and edges to the graph
+    this.graph.nodes.push(...taxonomyNodes);
+    this.graph.edges.push(...taxonomyEdges);
+    
+    // Add the taxonomy subgraph ID to the original node
+    if (!node.subgraphIds) {
+      node.subgraphIds = [];
+    }
+    node.subgraphIds.push(taxonomyId);
+    
+    // Update the visualization
+    this.render(this.graph);
+    
+    // Highlight the taxonomy subgraph
+    this.highlightSubgraph(taxonomyId);
+  }
+  
+  /**
+   * Generate a taxonomy hierarchy for a given node type
+   * @param nodeType The type of node to generate a taxonomy for
+   * @returns An array of taxonomy levels from specific to general
+   */
+  private generateTaxonomyForType(nodeType: string): Array<{type: string, name: string, description?: string}> {
+    // In a real implementation, this would call a knowledge base API
+    // For now, use predefined taxonomies based on common types
+    
+    // Define some common taxonomies
+    const taxonomies: Record<string, Array<{type: string, name: string, description?: string}>> = {
+      // Person taxonomy
+      Person: [
+        { type: "species", name: "Homo Sapiens", description: "Modern humans" },
+        { type: "genus", name: "Homo", description: "The genus that includes modern humans" },
+        { type: "family", name: "Hominidae", description: "Great apes" },
+        { type: "order", name: "Primates", description: "Order of mammals including monkeys, apes, and humans" },
+        { type: "class", name: "Mammalia", description: "Class of vertebrate animals" }
+      ],
+      
+      // Organization taxonomy
+      Organization: [
+        { type: "organization_type", name: "Company", description: "A business organization" },
+        { type: "legal_entity", name: "Corporation", description: "A legal entity separate from its owners" },
+        { type: "institution", name: "Business Institution", description: "An established organization in society" },
+        { type: "social_structure", name: "Social Structure", description: "A pattern of social arrangements" }
+      ],
+      
+      // Location taxonomy
+      Location: [
+        { type: "site", name: "Geographical Site", description: "A specific place or position" },
+        { type: "area", name: "Geographical Area", description: "A region or part of the Earth's surface" },
+        { type: "feature", name: "Geographical Feature", description: "A component of the Earth's surface" },
+        { type: "concept", name: "Spatial Concept", description: "An abstract idea relating to space" }
+      ],
+      
+      // Product taxonomy
+      Product: [
+        { type: "product", name: "Commercial Product", description: "An item offered for sale" },
+        { type: "artifact", name: "Human Artifact", description: "Something made by humans" },
+        { type: "object", name: "Physical Object", description: "A material thing" },
+        { type: "entity", name: "Entity", description: "Something that exists independently" }
+      ],
+      
+      // Event taxonomy
+      Event: [
+        { type: "occurrence", name: "Temporal Occurrence", description: "Something that happens at a particular time" },
+        { type: "phenomenon", name: "Temporal Phenomenon", description: "An observable event" },
+        { type: "concept", name: "Temporal Concept", description: "An abstract idea relating to time" }
+      ],
+      
+      // Concept taxonomy
+      Concept: [
+        { type: "concept", name: "Abstract Concept", description: "An abstract idea or notion" },
+        { type: "mental_construct", name: "Mental Construct", description: "A concept formed in the mind" },
+        { type: "abstraction", name: "Abstraction", description: "The process of forming abstract concepts" },
+        { type: "knowledge", name: "Knowledge Unit", description: "A unit of understanding" }
+      ],
+      
+      // Technology taxonomy
+      Technology: [
+        { type: "application", name: "Technological Application", description: "Practical use of scientific knowledge" },
+        { type: "system", name: "Technological System", description: "An integrated set of techniques and knowledge" },
+        { type: "domain", name: "Knowledge Domain", description: "A field of specialized knowledge" },
+        { type: "practice", name: "Human Practice", description: "An established way of doing something" }
+      ],
+      
+      // Document taxonomy
+      Document: [
+        { type: "record", name: "Written Record", description: "A recorded piece of information" },
+        { type: "artifact", name: "Informational Artifact", description: "A human-created information container" },
+        { type: "object", name: "Physical Object", description: "A material thing" }
+      ]
+    };
+    
+    // Try to match the node type to a taxonomy
+    // First try an exact match
+    if (taxonomies[nodeType]) {
+      return taxonomies[nodeType];
+    }
+    
+    // Then try to match with any of the known types (case insensitive)
+    const lowerType = nodeType.toLowerCase();
+    for (const [key, value] of Object.entries(taxonomies)) {
+      if (lowerType.includes(key.toLowerCase()) || 
+          key.toLowerCase().includes(lowerType)) {
+        return value;
+      }
+    }
+    
+    // If no matching taxonomy is found, use a generic taxonomy
+    return [
+      { type: "entity", name: nodeType, description: `A specific ${nodeType}` },
+      { type: "class", name: "Class", description: "A category or classification" },
+      { type: "concept", name: "Abstract Concept", description: "An abstract idea or notion" },
+      { type: "entity", name: "Entity", description: "Something that exists independently" }
+    ];
   }
 }
