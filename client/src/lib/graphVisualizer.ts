@@ -1895,7 +1895,7 @@ export class GraphVisualizer {
    * @param node The node to create a taxonomy hierarchy for
    */
   private createTaxonomyForNode(node: SimulationNode): void {
-    if (!this.graph) return;
+    if (!this.graph || !node) return;
     
     // Get the node type to create a taxonomy for
     const nodeType = node.type;
@@ -1991,7 +1991,7 @@ export class GraphVisualizer {
       const edgeId = `tax_edge_${Date.now().toString(36)}_${this.edgeCounter}`;
       
       // Check if an edge already exists between these nodes
-      const existingEdge = this.graph.edges.find(e => 
+      const existingEdge = this.graph?.edges.find(e => 
         e.source === nodeId && e.target === previousNodeId && e.label === "IS_PARENT_TO"
       );
       

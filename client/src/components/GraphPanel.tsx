@@ -19,7 +19,8 @@ import {
   PenLineIcon,
   Edit2Icon,
   Move,
-  SaveIcon
+  SaveIcon,
+  EyeIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as d3 from "d3";
@@ -374,6 +375,18 @@ export default function GraphPanel({
           >
             <DownloadIcon size={14} /> Export
           </Button>
+          
+          {/* Clear Highlighting Button - only show when there's an active subgraph */}
+          {activeSubgraphId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleSubgraphSelect(null)}
+              className="text-sm px-3 py-1 bg-yellow-50 hover:bg-yellow-100 text-amber-700 border-amber-200 rounded flex items-center gap-1"
+            >
+              <EyeIcon size={14} /> Clear Highlighting
+            </Button>
+          )}
         </div>
       </div>
       
