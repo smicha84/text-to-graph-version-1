@@ -1114,6 +1114,35 @@ export default function UIShowcase() {
           <TabsContent value="visual" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ShowcaseItem
+                title="Enhanced Node Visualization"
+                description="Larger nodes with improved labeling, type pill display, and better spacing"
+                complexity="Medium"
+                impact="High"
+                beforeImage={
+                  <div className="p-4 border rounded bg-gray-50 flex justify-center">
+                    <div className="relative">
+                      {/* Small node (20px radius) */}
+                      <div className="w-10 h-10 rounded-full bg-blue-100 border border-blue-300 flex items-center justify-center">
+                        <div className="absolute w-full text-center text-xs font-medium" style={{top: '-18px'}}>Person</div>
+                      </div>
+                    </div>
+                  </div>
+                }
+                afterImage={
+                  <div className="p-4 border rounded bg-gray-50 flex justify-center">
+                    <div className="relative">
+                      {/* Larger node (40px radius) */}
+                      <div className="w-20 h-20 rounded-full bg-blue-100 border border-blue-300 flex items-center justify-center">
+                        <div className="absolute w-full text-center text-sm font-medium" style={{top: '-22px'}}>Person</div>
+                        <div className="absolute px-2 py-0.5 bg-white text-xs rounded-full shadow-sm" style={{bottom: '-12px'}}>Employee</div>
+                      </div>
+                    </div>
+                  </div>
+                }
+                explanation="Node visualization has been significantly improved with several key changes. The node radius was increased from 20px to 40px, providing more space for labels and visual elements. Layout settings were adjusted with higher node repulsion (300 from 200), increased link distance (140px from 100px), and larger collision radius (50px from 30px) to prevent overlap. Node labels are now positioned more clearly above the node, while type pills appear below the node on a white background for better readability. The taxonomy relationship label was changed from 'IS_PARENT_TO' to 'IS_PARENT_OF' for improved clarity. These changes work together to create a more readable and information-rich visualization that better accommodates both primary node labels and taxonomic type information."
+              />
+              
+              <ShowcaseItem
                 title="Hover-Expandable Elements"
                 description="Show minimal information by default, revealing more details on hover"
                 complexity="Easy" 
