@@ -1932,54 +1932,102 @@ export class GraphVisualizer {
     // Track the previous node ID to connect the levels
     let previousNodeId = node.id;
     
+    // Helper to find matching taxonomy nodes to avoid duplicates
+    const findExistingTaxonomyNode = (taxonomyLevel: string, taxonomyName: string): Node | null => {
+      if (!this.graph) return null;
+      
+      return this.graph.nodes.find(n => 
+        n.type === "Taxonomy" && 
+        n.properties.taxonomyLevel === taxonomyLevel &&
+        n.properties.name === taxonomyName
+      ) || null;
+    };
+    
     // Create nodes from most specific to most general (bottom up)
     taxonomyLevels.forEach((level, index) => {
-      // Generate a unique ID for this taxonomy node
-      this.nodeCounter++;
-      const nodeId = `tax_${nodeType}_${level.type}_${Date.now().toString(36)}_${this.nodeCounter}`;
+      // Check if a matching taxonomy node already exists
+      const existingNode = findExistingTaxonomyNode(level.type, level.name);
       
-      // Create the taxonomy node
-      const taxonomyNode: Node = {
-        id: nodeId,
-        type: "Taxonomy",
-        properties: {
-          name: level.name,
-          description: level.description || `Taxonomic classification for ${nodeType}`,
-          taxonomyLevel: level.type,
-          source: "taxonomy"
-        },
-        x: sourceX + (index * 30) - 60, // Offset horizontally to create a diagonal arrangement
-        y: sourceY - ((index + 1) * verticalSpacing), // Place each level above the previous one
-        subgraphIds: [taxonomyId]
-      };
+      let nodeId: string;
       
-      // Add the node to our collection
-      taxonomyNodes.push(taxonomyNode);
+      // If a matching node exists, use it; otherwise create a new one
+      if (existingNode) {
+        console.log(`Reusing existing taxonomy node: ${existingNode.id} (${level.name})`);
+        nodeId = existingNode.id;
+        
+        // Add this taxonomy subgraph to the existing node's subgraphs
+        if (!existingNode.subgraphIds) {
+          existingNode.subgraphIds = [];
+        }
+        if (!existingNode.subgraphIds.includes(taxonomyId)) {
+          existingNode.subgraphIds.push(taxonomyId);
+        }
+      } else {
+        // Generate a unique ID for this taxonomy node
+        this.nodeCounter++;
+        nodeId = `tax_${nodeType}_${level.type}_${Date.now().toString(36)}_${this.nodeCounter}`;
+        
+        // Create the taxonomy node
+        const taxonomyNode: Node = {
+          id: nodeId,
+          type: "Taxonomy",
+          properties: {
+            name: level.name,
+            description: level.description || `Taxonomic classification for ${nodeType}`,
+            taxonomyLevel: level.type,
+            source: "taxonomy"
+          },
+          x: sourceX + (index * 30) - 60, // Offset horizontally to create a diagonal arrangement
+          y: sourceY - ((index + 1) * verticalSpacing), // Place each level above the previous one
+          subgraphIds: [taxonomyId]
+        };
+        
+        // Add the node to our collection
+        taxonomyNodes.push(taxonomyNode);
+      }
       
       // Create an edge from this node to the previous node
       this.edgeCounter++;
       const edgeId = `tax_edge_${Date.now().toString(36)}_${this.edgeCounter}`;
       
-      const edge: Edge = {
-        id: edgeId,
-        source: nodeId, // Parent
-        target: previousNodeId, // Child
-        label: "IS_PARENT_TO",
-        properties: {
-          taxonomyRelation: true,
-          creationDate: new Date().toISOString()
-        },
-        subgraphIds: [taxonomyId]
-      };
+      // Check if an edge already exists between these nodes
+      const existingEdge = this.graph.edges.find(e => 
+        e.source === nodeId && e.target === previousNodeId && e.label === "IS_PARENT_TO"
+      );
       
-      // Add the edge to our collection
-      taxonomyEdges.push(edge);
+      // Only create an edge if one doesn't already exist
+      if (!existingEdge) {
+        const edge: Edge = {
+          id: edgeId,
+          source: nodeId, // Parent
+          target: previousNodeId, // Child
+          label: "IS_PARENT_TO",
+          properties: {
+            taxonomyRelation: true,
+            creationDate: new Date().toISOString()
+          },
+          subgraphIds: [taxonomyId]
+        };
+        
+        // Add the edge to our collection
+        taxonomyEdges.push(edge);
+      } else {
+        console.log(`Reusing existing edge from ${nodeId} to ${previousNodeId}`);
+        
+        // Add this taxonomy subgraph to the existing edge's subgraphs
+        if (!existingEdge.subgraphIds) {
+          existingEdge.subgraphIds = [];
+        }
+        if (!existingEdge.subgraphIds.includes(taxonomyId)) {
+          existingEdge.subgraphIds.push(taxonomyId);
+        }
+      }
       
       // Update the previous node ID for the next iteration
       previousNodeId = nodeId;
     });
     
-    // Add the taxonomy nodes and edges to the graph
+    // Add the new taxonomy nodes and edges to the graph
     this.graph.nodes.push(...taxonomyNodes);
     this.graph.edges.push(...taxonomyEdges);
     
