@@ -99,10 +99,10 @@ export class GraphVisualizer {
   private customNodeColors: Record<string, string> = {};
   private customCenterPoint: CenterPoint | null = null;
   private layoutSettings: LayoutSettings = {
-    nodeRepulsion: 200,
-    linkDistance: 100,
+    nodeRepulsion: 300, // Increased from 200 to 300
+    linkDistance: 140, // Increased from 100 to 140
     centerStrength: 0.05,
-    collisionRadius: 30
+    collisionRadius: 50 // Increased from 30 to 50
   };
   private nodeStyles: Map<string, NodeStyle> = new Map();
   private edgeStyles: Map<string, EdgeStyle> = new Map();
@@ -1018,7 +1018,7 @@ export class GraphVisualizer {
     
     // Node circles with cursor styling to indicate draggable
     nodes.append("circle")
-      .attr("r", 20)
+      .attr("r", 40) // Increased from 30 to 40
       .attr("fill", (d: SimulationNode) => {
         // Use custom color if available, otherwise fall back to default color map
         return this.customNodeColors[d.type] || NODE_COLORS[d.type] || NODE_COLORS.default;
@@ -1086,11 +1086,37 @@ export class GraphVisualizer {
     // Node labels (name property inside circle)
     nodes.append("text")
       .attr("text-anchor", "middle")
-      .attr("dy", ".3em")
+      .attr("dy", "-5")
       .attr("fill", "black")
       .attr("font-weight", "bold")
-      .attr("font-size", "12px")
+      .attr("font-size", "14px") // Increased from 12px to 14px
       .text((d: SimulationNode) => getNodeDisplayLabel(d));
+      
+    // Add type pill below the node label
+    nodes.append("rect")
+      .attr("rx", 10)
+      .attr("ry", 10)
+      .attr("width", (d: SimulationNode) => {
+        // Calculate width based on text length (approximate)
+        return Math.max(d.type.length * 6 + 12, 40); // Increased width calculation
+      })
+      .attr("height", 18) // Increased from 16 to 18
+      .attr("x", (d: SimulationNode) => {
+        // Center the pill
+        return -(Math.max(d.type.length * 6 + 12, 40)) / 2;
+      })
+      .attr("y", 10) // Increased from 5 to 10
+      .attr("fill", "white")
+      .attr("stroke", "#ccc")
+      .attr("stroke-width", 1);
+      
+    // Add type text in the pill
+    nodes.append("text")
+      .attr("text-anchor", "middle")
+      .attr("dy", 22) // Increased from 15 to 22
+      .attr("fill", "#666")
+      .attr("font-size", "11px") // Increased from 9px to 11px
+      .text((d: SimulationNode) => d.type?.toLowerCase());
     
     // Create force simulation with layout settings
     this.simulation = d3.forceSimulation<SimulationNode, SimulationLink>(nodeData)
@@ -1112,7 +1138,7 @@ export class GraphVisualizer {
           .attr("d", (d: SimulationLink) => {
             const sourceNode = d.source as SimulationNode;
             const targetNode = d.target as SimulationNode;
-            const nodeRadius = 20; // Same as the circle radius
+            const nodeRadius = 40; // Same as the circle radius
             
             // Get source and target positions
             const sourceX = sourceNode.x || 0;
@@ -1992,7 +2018,7 @@ export class GraphVisualizer {
       
       // Check if an edge already exists between these nodes
       const existingEdge = this.graph?.edges.find(e => 
-        e.source === nodeId && e.target === previousNodeId && e.label === "IS_PARENT_TO"
+        e.source === nodeId && e.target === previousNodeId && (e.label === "IS_PARENT_TO" || e.label === "IS_PARENT_OF")
       );
       
       // Only create an edge if one doesn't already exist
@@ -2001,7 +2027,7 @@ export class GraphVisualizer {
           id: edgeId,
           source: nodeId, // Parent
           target: previousNodeId, // Child
-          label: "IS_PARENT_TO",
+          label: "IS_PARENT_OF",
           properties: {
             taxonomyRelation: true,
             creationDate: new Date().toISOString()
