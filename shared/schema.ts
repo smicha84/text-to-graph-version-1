@@ -71,11 +71,13 @@ export type ExportGraphInput = z.infer<typeof exportGraphSchema>;
 // In-memory graph representation
 export interface Node {
   id: string;
+  label: string;
   type: string;
   properties: Record<string, any>;
   x?: number;
   y?: number;
   subgraphIds?: string[];
+  labelDetail?: string;
 }
 
 export interface Edge {

@@ -479,8 +479,13 @@ ${options.generateOntology ? 'Next' : 'First'}, create hierarchical taxonomies f
 - Each taxonomy node should have a descriptive name and connect to its parent with IS_PARENT_OF relationship
 - For example, Organization → Company → Tech Company → Software Company → AI Company
 - Create these taxonomy nodes as additional nodes in the graph with proper properties
+- IMPORTANT: Use IDs with the "tax_" prefix for all taxonomy nodes (e.g., tax_1, tax_2, tax_3)
 - Taxonomy nodes should use labels like "OrganizationType", "PersonType", etc.
-- The taxonomy should be domain-specific and relevant to the content of the text` : ''}
+- Taxonomy nodes should have "Taxonomy" as their type
+- Connect taxonomy nodes with IS_PARENT_OF relationships
+- Connect regular entities to their taxonomy categories with IS_A relationships
+- The taxonomy should be domain-specific and relevant to the content of the text
+- Each taxonomy node must include properties: name, level (1-5, with 1 being most general), and description` : ''}
 
 For each category, identify specific subtypes and typical properties.
 
@@ -493,6 +498,7 @@ RESPONSE FORMAT:
 Respond with a JSON object that has the following structure:
 {
   "nodes": [
+    // Regular entity nodes
     {
       "id": "n1",  // A unique string identifier starting with 'n' followed by a number
       "label": "Person",  // IMPORTANT: Use ONLY these high-level categories: Person, Organization, Location, Event, Document, Project, Technology, Concept
@@ -505,9 +511,22 @@ Respond with a JSON object that has the following structure:
         "description": "Founder of the company"
       }
     },
+    
+    // FOR TAXONOMY GENERATION: Include taxonomy nodes with tax_ prefix IDs when generateTaxonomies is enabled
+    {
+      "id": "tax_1",  // A unique string identifier starting with 'tax_' followed by a number
+      "label": "PersonType",  // Use the pattern [CategoryName]Type for taxonomy nodes
+      "type": "Taxonomy",   // All taxonomy nodes should have "Taxonomy" type
+      "properties": {
+        "name": "Professional",  // The name of this taxonomy level
+        "level": 2,  // The level in the taxonomy hierarchy (1 is highest, 5 is lowest)
+        "description": "People who work in professional occupations"
+      }
+    },
     // More nodes...
   ],
   "edges": [
+    // Regular relationship edges
     {
       "id": "e1",  // A unique string identifier starting with 'e' followed by a number
       "source": "n1",  // The id of the source node
@@ -518,6 +537,28 @@ Respond with a JSON object that has the following structure:
         "since": 2020,
         "position": "Executive",
         "department": "Management"
+      }
+    },
+    
+    // FOR TAXONOMY GENERATION: Include IS_PARENT_OF relationships between taxonomy nodes
+    {
+      "id": "tax_e1",  // A unique string identifier starting with 'tax_e' followed by a number
+      "source": "tax_1",  // ID of the parent taxonomy node
+      "target": "tax_2",  // ID of the child taxonomy node
+      "label": "IS_PARENT_OF",  // Always use IS_PARENT_OF for taxonomy relationships
+      "properties": {
+        "relation_type": "taxonomy"
+      }
+    },
+    
+    // FOR TAXONOMY GENERATION: Include IS_A relationships connecting entities to taxonomy
+    {
+      "id": "tax_e2",  // Another unique identifier for taxonomy edges
+      "source": "n1",  // ID of the entity node
+      "target": "tax_3",  // ID of the relevant taxonomy node
+      "label": "IS_A",  // Always use IS_A to connect entities to their taxonomy categories
+      "properties": {
+        "relation_type": "instance_of"
       }
     },
     // More edges...
@@ -535,6 +576,14 @@ QUALITY REQUIREMENTS:
 - Create relationship labels that clearly describe the nature of the connection
 - Ensure each relationship flows in the logical direction (e.g., PERSON WORKS_FOR COMPANY, not the reverse)
 - Verify that all entities and relationships reflect information from the original text
+
+FOR TAXONOMY GENERATION:
+- When generateTaxonomies is enabled, create a multi-level taxonomy with at least 3-5 levels
+- Use the "tax_" prefix for all taxonomy node IDs (e.g., tax_1, tax_2)
+- Use "IS_PARENT_OF" relationship labels between taxonomy nodes to create the hierarchy
+- Use "IS_A" relationship labels to connect regular entity nodes to their taxonomy types
+- Make taxonomy nodes have a "Taxonomy" type and a label ending in "Type" (e.g., "PersonType")
+- Each taxonomy node should have properties including: name, level, and description
 
 Only respond with the JSON object for the final graph, no explanations or other text.`;
 }
