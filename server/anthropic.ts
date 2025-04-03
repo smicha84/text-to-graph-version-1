@@ -419,28 +419,41 @@ ${options.extractEntities ? '- Extract entities (people, organizations, location
 ${options.extractRelations ? '- Extract relationships between entities' : '- Skip relationship extraction'}
 ${options.inferProperties ? '- Infer additional properties for entities and relationships based on context' : '- Only extract explicitly mentioned properties'}
 ${options.mergeEntities ? '- Merge similar or duplicate entities into single nodes' : '- Keep entities separate even if they might be the same'}
+${options.generateOntology ? '- Generate domain-specific ontology before extraction' : '- Skip ontology generation'}
+${options.generateTaxonomies ? '- Generate hierarchical taxonomies for entity types (create IS_PARENT_OF relationships)' : '- Skip taxonomy generation'}
 
 TASK BREAKDOWN:
-1. FIRST STEP - ONTOLOGY CREATION: Create an ontology based on the text that defines:
+${options.generateOntology ? `1. FIRST STEP - ONTOLOGY CREATION: Create an ontology based on the text that defines:
    - The main entity types that exist in this domain
    - The possible relationship types between these entities
    - The hierarchical organization of entity types (parent-child relationships)
-   - Key properties that typically belong to each entity type
+   - Key properties that typically belong to each entity type` : ''}
 
-2. SECOND STEP - ENTITY EXTRACTION: Using the ontology created in step 1, identify all key entities in the text.
+${options.generateTaxonomies ? `${options.generateOntology ? '2' : '1'}. ${options.generateOntology ? 'SECOND' : 'FIRST'} STEP - TAXONOMY GENERATION: Create hierarchical taxonomies for the entity types:
+   - For each entity type, identify broader categories and specialized subcategories
+   - Create explicit IS_PARENT_OF relationships between these categories
+   - Organize into at least 3-5 levels deep where possible
+   - Ensure that each taxonomy node has properties like "name" and "description"` : ''}
+
+${options.generateOntology || options.generateTaxonomies ? (options.generateOntology && options.generateTaxonomies ? '3' : '2') : '1'}. ${options.generateOntology && options.generateTaxonomies ? 'THIRD' : options.generateOntology || options.generateTaxonomies ? 'SECOND' : 'FIRST'} STEP - ENTITY EXTRACTION: ${options.generateOntology ? 'Using the ontology created earlier' : 'Analyze the text'}, identify all key entities in the text.
    For each entity, determine:
    - High-level category from the ontology (Person, Organization, Location, etc.) - This will be the "label"
    - Specific subtype within that category - This will be stored in the "type" field
    - Unique properties (name, age, date, description, etc.)
    - Any identifiers that would help distinguish it
 
-3. THIRD STEP - RELATIONSHIP MAPPING: Looking at both the ontology, the list of extracted entities, and the original text,
+${options.generateOntology || options.generateTaxonomies ? (options.generateOntology && options.generateTaxonomies ? '4' : '3') : '2'}. ${options.generateOntology && options.generateTaxonomies ? 'FOURTH' : options.generateOntology || options.generateTaxonomies ? 'THIRD' : 'SECOND'} STEP - RELATIONSHIP MAPPING: Looking at ${options.generateOntology ? 'the ontology, ' : ''}the list of extracted entities, and the original text,
    map the relationships between the entities.
    - Ensure each relationship has a clear direction and descriptive label.
-   - Use relationship types defined in your ontology
+   - ${options.generateOntology ? 'Use relationship types defined in your ontology' : 'Create descriptive relationship types in ALL_CAPS'}
    - Verify that relationships are supported by the text
 
-STEP 1: ONTOLOGY CREATION
+${options.generateTaxonomies ? `${options.generateOntology || options.generateTaxonomies ? (options.generateOntology && options.generateTaxonomies ? '5' : '4') : '3'}. ${options.generateOntology && options.generateTaxonomies ? 'FIFTH' : options.generateOntology || options.generateTaxonomies ? 'FOURTH' : 'THIRD'} STEP - TAXONOMY INTEGRATION: Connect entities to the taxonomy hierarchy:
+   - For each entity, identify its appropriate place in the taxonomy
+   - Create IS_A relationships to connect instances to their types
+   - Ensure that taxonomy nodes have IS_PARENT_OF relationships creating a proper hierarchy` : ''}
+
+${options.generateOntology ? `STEP 1: ONTOLOGY CREATION
 -------------------------
 First, create a domain ontology by analyzing the text and identifying:
 - Main entity types (classes)
@@ -456,7 +469,18 @@ Your ontology should use these high-level categories:
 - Document
 - Project
 - Technology
-- Concept
+- Concept` : ''}
+
+${options.generateTaxonomies ? `
+${options.generateOntology ? 'STEP 2' : 'STEP 1'}: TAXONOMY GENERATION
+--------------------------
+${options.generateOntology ? 'Next' : 'First'}, create hierarchical taxonomies for entity types:
+- For each entity type identified in the text, create a taxonomy with at least 3-5 levels deep
+- Each taxonomy node should have a descriptive name and connect to its parent with IS_PARENT_OF relationship
+- For example, Organization → Company → Tech Company → Software Company → AI Company
+- Create these taxonomy nodes as additional nodes in the graph with proper properties
+- Taxonomy nodes should use labels like "OrganizationType", "PersonType", etc.
+- The taxonomy should be domain-specific and relevant to the content of the text` : ''}
 
 For each category, identify specific subtypes and typical properties.
 

@@ -38,6 +38,8 @@ export const graphOptionsSchema = z.object({
   extractRelations: z.boolean().default(true),
   inferProperties: z.boolean().default(true),
   mergeEntities: z.boolean().default(true),
+  generateOntology: z.boolean().optional().default(true), // Whether to generate domain ontology before extraction
+  generateTaxonomies: z.boolean().optional().default(true), // Whether to generate entity taxonomies for hierarchical categorization
   model: z.literal("claude").default("claude"),
   appendMode: z.boolean().optional().default(false), // Whether to append to existing graph
 });

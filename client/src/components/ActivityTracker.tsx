@@ -54,25 +54,39 @@ export default function ActivityTracker({
   // Simulate step completion (in a real implementation, these would come from the backend)
   useEffect(() => {
     if (isProcessing) {
-      // Define steps based on whether ontology generation is enabled
-      const steps = options.generateOntology 
-        ? [
-            "Analyzing text content",
-            "Creating domain ontology",
-            "Extracting entities using ontology",
-            "Processing entity types",
-            "Inferring relationships",
-            "Merging similar entities",
-            "Creating graph structure"
-          ]
-        : [
-            "Analyzing text content",
-            "Extracting entities and relationships",
-            "Processing entity types",
-            "Inferring relationships",
-            "Merging similar entities",
-            "Creating graph structure"
-          ];
+      // Define steps based on options enabled for processing
+      let steps = [];
+      
+      if (options.generateOntology) {
+        // Start with ontology generation
+        steps = [
+          "Analyzing text content",
+          "Creating domain ontology",
+          "Extracting entities using ontology",
+          "Processing entity types",
+          "Inferring relationships",
+          "Merging similar entities"
+        ];
+      } else {
+        // Standard entity extraction
+        steps = [
+          "Analyzing text content",
+          "Extracting entities and relationships",
+          "Processing entity types",
+          "Inferring relationships",
+          "Merging similar entities"
+        ];
+      }
+      
+      // Add taxonomy generation steps if enabled
+      if (options.generateTaxonomies) {
+        steps.push("Creating entity type taxonomies");
+        steps.push("Establishing hierarchical relationships");
+        steps.push("Consolidating taxonomy nodes");
+      }
+      
+      // Always finish with graph structure creation
+      steps.push("Creating graph structure");
       
       let index = 0;
       const interval = setInterval(() => {
@@ -86,7 +100,7 @@ export default function ActivityTracker({
       
       return () => clearInterval(interval);
     }
-  }, [isProcessing]);
+  }, [isProcessing, options.generateOntology, options.generateTaxonomies]);
   
   return (
     <Card className="w-full mt-4 border-blue-200 shadow-sm">
@@ -206,10 +220,34 @@ export default function ActivityTracker({
                     </Badge>
                   </div>
                 </div>
+                
+                <div className="p-3 bg-purple-50 border border-purple-100 rounded-md mt-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1">
+                      <Checkbox
+                        id="generateTaxonomies"
+                        checked={options.generateTaxonomies ?? false}
+                        onCheckedChange={(checked) => 
+                          handleOptionChange("generateTaxonomies", checked === true)
+                        }
+                        className="h-4 w-4 text-purple-600 border-purple-300 rounded flex-shrink-0"
+                      />
+                      <Label htmlFor="generateTaxonomies" className="text-sm font-medium text-purple-800 cursor-pointer">
+                        Generate Entity Taxonomies
+                      </Label>
+                    </div>
+                    <Badge 
+                      variant={(options.generateTaxonomies ?? false) ? "default" : "outline"} 
+                      className={`text-xs px-2 ${(options.generateTaxonomies ?? false) ? "bg-purple-600" : "border-purple-300 text-purple-600"}`}
+                    >
+                      {(options.generateTaxonomies ?? false) ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                </div>
               </div>
               
               <div className="mt-3 text-xs text-gray-600 px-1 bg-gray-50 p-2 rounded border border-gray-100">
-                <span className="font-medium">Note:</span> By default, all processing uses Claude AI for best results. Generating an ontology first creates a more coherent graph structure but takes slightly longer.
+                <span className="font-medium">Note:</span> By default, all processing uses Claude AI for best results. Generating an ontology creates a more coherent graph structure, and enabling entity taxonomies creates hierarchical relationships (IS_PARENT_OF) for entity types, providing enhanced categorical organization.
               </div>
             </div>
           </div>
