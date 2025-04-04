@@ -1,0 +1,1628 @@
+I'll provide a detailed implementation plan for transforming your graph application into a multi-user connected experience with individual and combined graphs, along with graph data science capabilities.
+Multi-User Graph Application Implementation Plan
+Overview
+This plan outlines how to transform your existing graph application into a collaborative, multi-user experience with robust graph data science capabilities. The implementation will enable:
+1.	User authentication and accounts
+2.	Individual user graphs
+3.	Ability to share and combine graphs
+4.	Real-time graph collaboration
+5.	Graph data science and analytics for both individual and combined graphs
+Phase 1: User Authentication System
+Step 1: Create Authentication Store
+Create a client-side authentication store using Zustand:
+// client/src/stores/auth.ts
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+interface User {
+  id: string;
+  username: string;
+  email: string;
+}
+interface AuthState {
+  token: string | null;
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (token: string, user: User) => void;
+  logout: () => void;
+}
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+      login: (token, user) => set({ token, user, isAuthenticated: true }),
+      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+    }),
+    { name: 'auth-storage' }
+  )
+);
+Step 2: Create Authentication API Endpoints
+Implement server-side authentication:
+// server/auth.ts
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { db } from './database';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+export async function registerUser(username: string, email: string, password: string) {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  
+  const user = await db.query(
+    'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email',
+    [username, email, hashedPassword]
+  );
+  
+  const token = jwt.sign({ userId: user.rows[0].id }, JWT_SECRET, { expiresIn: '7d' });
+  
+  return { user: user.rows[0], token };
+}
+export async function loginUser(email: string, password: string) {
+  const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+  
+  if (result.rows.length === 0) {
+    throw new Error('Invalid credentials');
+  }
+  
+  const user = result.rows[0];
+  const validPassword = await bcrypt.compare(password, user.password);
+  
+  if (!validPassword) {
+    throw new Error('Invalid credentials');
+  }
+  
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+  
+  return { 
+    user: { id: user.id, username: user.username, email: user.email },
+    token 
+  };
+}
+export function authenticateToken(token: string) {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded;
+  } catch (err) {
+    throw new Error('Invalid token');
+  }
+}
+Step 3: Create Authentication Routes
+Add routes for login/register:
+// Update server/routes.ts to include these routes
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const result = await registerUser(username, email, password);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const result = await loginUser(email, password);
+    res.json(result);
+  } catch (error) {
+    res.status(401).json({ message: error.message });
+  }
+});
+Step 4: Create Authentication Components
+Create authentication UI components:
+// client/src/pages/Auth.tsx
+import React, { useState } from 'react';
+import { useAuthStore } from '@/stores/auth';
+import { useLocation } from 'wouter';
+export default function Auth() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  
+  const { login } = useAuthStore();
+  const [, navigate] = useLocation();
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    try {
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const body = isLogin 
+        ? { email, password } 
+        : { username, email, password };
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Authentication failed');
+      }
+      
+      login(data.token, data.user);
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow">
+        <h1 className="text-2xl font-bold text-center">
+          {isLogin ? 'Login' : 'Create an Account'}
+        </h1>
+        
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-100 rounded">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-3 py-2 mt-1 border rounded-md"
+                required
+              />
+            </div>
+          )}
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 mt-1 border rounded-md"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 mt-1 border rounded-md"
+              required
+            />
+          </div>
+          
+          <button
+            type="submit"
+            className="w-full py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          >
+            {isLogin ? 'Login' : 'Register'}
+          </button>
+        </form>
+        
+        <div className="text-center">
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-sm text-blue-600 hover:underline"
+          >
+            {isLogin ? 'Need an account? Register' : 'Already have an account? Login'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+Phase 2: Database Schema for Multi-User Graphs
+Step 1: Create Multi-User Schema
+Update your database schema:
+// shared/schema.ts - Add these new schema types
+// User schemas
+export const userSchema = z.object({
+  id: z.string().uuid(),
+  username: z.string().min(3).max(50),
+  email: z.string().email(),
+  createdAt: z.date()
+});
+// Individual user graph schema
+export const userGraphSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string().uuid(),
+  name: z.string(),
+  description: z.string().optional(),
+  isPublic: z.boolean().default(false),
+  nodes: z.array(nodeSchema),
+  edges: z.array(edgeSchema),
+  createdAt: z.date(),
+  updatedAt: z.date()
+});
+// Combined multi-user graph schema
+export const multiUserGraphSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  description: z.string().optional(),
+  ownerUserId: z.string().uuid(),
+  isPublic: z.boolean().default(false),
+  contributorIds: z.array(z.string().uuid()),
+  nodes: z.array(nodeSchema.extend({
+    contributorId: z.string().uuid().optional(),
+    sourceGraphId: z.string().uuid().optional()
+  })),
+  edges: z.array(edgeSchema.extend({
+    contributorId: z.string().uuid().optional(),
+    sourceGraphId: z.string().uuid().optional()
+  })),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  analyticsEnabled: z.boolean().default(true)
+});
+Step 2: Create Database Functions
+Add functions to manage user graphs:
+// server/database.ts - Add these functions
+// User graphs
+export async function createUserGraph(userId: string, name: string, description: string, graph: Graph) {
+  const result = await db.query(
+    'INSERT INTO user_graphs (user_id, name, description, nodes, edges) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [userId, name, description, JSON.stringify(graph.nodes), JSON.stringify(graph.edges)]
+  );
+  return result.rows[0];
+}
+export async function getUserGraphs(userId: string) {
+  const result = await db.query(
+    'SELECT * FROM user_graphs WHERE user_id = $1 ORDER BY updated_at DESC',
+    [userId]
+  );
+  return result.rows;
+}
+export async function getGraphById(graphId: string) {
+  const result = await db.query('SELECT * FROM user_graphs WHERE id = $1', [graphId]);
+  if (result.rows.length === 0) {
+    throw new Error('Graph not found');
+  }
+  return result.rows[0];
+}
+// Multi-user graphs
+export async function createMultiUserGraph(ownerUserId: string, name: string, description: string) {
+  const result = await db.query(
+    'INSERT INTO multi_user_graphs (owner_user_id, name, description, nodes, edges, contributor_ids) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+    [ownerUserId, name, description, '[]', '[]', JSON.stringify([ownerUserId])]
+  );
+  return result.rows[0];
+}
+export async function getMultiUserGraphs(userId: string) {
+  const result = await db.query(
+    `SELECT * FROM multi_user_graphs 
+     WHERE owner_user_id = $1 OR contributor_ids @> $2
+     ORDER BY updated_at DESC`,
+    [userId, JSON.stringify([userId])]
+  );
+  return result.rows;
+}
+export async function addGraphToMultiUserGraph(multiUserGraphId: string, userGraphId: string, userId: string) {
+  // Get the multi-user graph
+  const multiUserGraph = await getMultiUserGraphById(multiUserGraphId);
+  
+  // Check if user is authorized
+  if (!multiUserGraph.contributor_ids.includes(userId)) {
+    throw new Error('User not authorized to modify this graph');
+  }
+  
+  // Get the user graph
+  const userGraph = await getGraphById(userGraphId);
+  
+  // Add contributor ID to nodes and edges
+  const nodesWithContributor = userGraph.nodes.map(node => ({
+    ...node,
+    contributorId: userId,
+    sourceGraphId: userGraphId
+  }));
+  
+  const edgesWithContributor = userGraph.edges.map(edge => ({
+    ...edge,
+    contributorId: userId,
+    sourceGraphId: userGraphId
+  }));
+  
+  // Merge the graphs
+  const mergedNodes = [...multiUserGraph.nodes, ...nodesWithContributor];
+  const mergedEdges = [...multiUserGraph.edges, ...edgesWithContributor];
+  
+  // Update the multi-user graph
+  const result = await db.query(
+    'UPDATE multi_user_graphs SET nodes = $1, edges = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
+    [JSON.stringify(mergedNodes), JSON.stringify(mergedEdges), multiUserGraphId]
+  );
+  
+  return result.rows[0];
+}
+Phase 3: Real-Time Communication with Socket.io
+Step 1: Configure Socket.io Server
+Set up the Socket.io server:
+// server/socket.ts
+import { Server } from 'socket.io';
+import http from 'http';
+import { authenticateToken } from './auth';
+export function setupSocketServer(server: http.Server) {
+  const io = new Server(server, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST']
+    }
+  });
+  
+  // Authentication middleware
+  io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (!token) {
+      return next(new Error('Authentication error'));
+    }
+    
+    try {
+      const decoded = authenticateToken(token);
+      socket.data.user = decoded;
+      next();
+    } catch (err) {
+      next(new Error('Authentication error'));
+    }
+  });
+  
+  // Connection handler
+  io.on('connection', (socket) => {
+    console.log(`User connected: ${socket.data.user.userId}`);
+    
+    // Join personal room
+    socket.join(`user:${socket.data.user.userId}`);
+    
+    // Join graph rooms
+    socket.on('join-graph', (graphId) => {
+      socket.join(`graph:${graphId}`);
+      console.log(`User ${socket.data.user.userId} joined graph ${graphId}`);
+    });
+    
+    // Leave graph room
+    socket.on('leave-graph', (graphId) => {
+      socket.leave(`graph:${graphId}`);
+      console.log(`User ${socket.data.user.userId} left graph ${graphId}`);
+    });
+    
+    // Handle graph updates
+    socket.on('graph-update', (data) => {
+      // Broadcast to all users in the graph room except sender
+      socket.to(`graph:${data.graphId}`).emit('graph-updated', {
+        graphId: data.graphId,
+        update: data.update,
+        userId: socket.data.user.userId
+      });
+    });
+    
+    // Handle node addition
+    socket.on('add-node', (data) => {
+      socket.to(`graph:${data.graphId}`).emit('node-added', {
+        graphId: data.graphId,
+        node: data.node,
+        userId: socket.data.user.userId
+      });
+    });
+    
+    // Handle edge addition
+    socket.on('add-edge', (data) => {
+      socket.to(`graph:${data.graphId}`).emit('edge-added', {
+        graphId: data.graphId,
+        edge: data.edge,
+        userId: socket.data.user.userId
+      });
+    });
+    
+    // Handle disconnection
+    socket.on('disconnect', () => {
+      console.log(`User disconnected: ${socket.data.user.userId}`);
+    });
+  });
+  
+  return io;
+}
+Step 2: Update Server Index
+Update server/index.ts to use Socket.io:
+// Update server/index.ts
+import { setupSocketServer } from './socket';
+// Add after creating the HTTP server:
+const io = setupSocketServer(server);
+Step 3: Create Socket.io Client Hook
+Create a React hook for client-side Socket.io:
+// client/src/hooks/use-socket.ts
+import { useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { useAuthStore } from '@/stores/auth';
+export function useSocket() {
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const { token, isAuthenticated } = useAuthStore();
+  
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      return;
+    }
+    
+    // Create socket connection
+    const socketInstance = io('/', {
+      auth: { token }
+    });
+    
+    socketInstance.on('connect', () => {
+      console.log('Socket connected');
+    });
+    
+    socketInstance.on('connect_error', (err) => {
+      console.error('Socket connection error:', err.message);
+    });
+    
+    setSocket(socketInstance);
+    
+    // Cleanup on unmount
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, [isAuthenticated, token]);
+  
+  return socket;
+}
+Phase 4: Graph Data Science & Analytics Service
+Step 1: Create Analytics Service
+Create a service for graph analytics:
+// server/analytics.ts
+import { Graph, Node, Edge } from '@shared/schema';
+// Centrality measures
+export function calculateDegreeCentrality(graph: Graph) {
+  const centrality: Record<string, number> = {};
+  
+  // Initialize with zero degrees
+  graph.nodes.forEach(node => {
+    centrality[node.id] = 0;
+  });
+  
+  // Count degrees
+  graph.edges.forEach(edge => {
+    centrality[edge.source] = (centrality[edge.source] || 0) + 1;
+    centrality[edge.target] = (centrality[edge.target] || 0) + 1;
+  });
+  
+  return centrality;
+}
+export function calculateBetweennessCentrality(graph: Graph) {
+  // Placeholder for a more complex betweenness centrality algorithm
+  // In a real implementation, this would use a proper graph algorithm library
+  const centrality: Record<string, number> = {};
+  
+  // Initialize
+  graph.nodes.forEach(node => {
+    centrality[node.id] = 0;
+  });
+  
+  // Simple approximation based on shortest paths
+  // (This is a simplified placeholder - real implementation would be more complex)
+  graph.nodes.forEach((source) => {
+    graph.nodes.forEach((target) => {
+      if (source.id !== target.id) {
+        const shortestPath = findShortestPath(graph, source.id, target.id);
+        if (shortestPath) {
+          // Increment centrality for nodes on the path (excluding endpoints)
+          shortestPath.slice(1, -1).forEach(nodeId => {
+            centrality[nodeId] = (centrality[nodeId] || 0) + 1;
+          });
+        }
+      }
+    });
+  });
+  
+  return centrality;
+}
+export function findCommunities(graph: Graph) {
+  // Placeholder for community detection algorithm
+  // In a real implementation, this would use a proper graph algorithm library
+  // Simple approximation based on connected components
+  const visited = new Set<string>();
+  const communities: string[][] = [];
+  
+  graph.nodes.forEach(node => {
+    if (!visited.has(node.id)) {
+      const community: string[] = [];
+      dfs(graph, node.id, visited, community);
+      communities.push(community);
+    }
+  });
+  
+  return communities;
+}
+function dfs(graph: Graph, nodeId: string, visited: Set<string>, community: string[]) {
+  visited.add(nodeId);
+  community.push(nodeId);
+  
+  // Find all adjacent nodes
+  graph.edges.forEach(edge => {
+    if (edge.source === nodeId && !visited.has(edge.target)) {
+      dfs(graph, edge.target, visited, community);
+    }
+    if (edge.target === nodeId && !visited.has(edge.source)) {
+      dfs(graph, edge.source, visited, community);
+    }
+  });
+}
+function findShortestPath(graph: Graph, startId: string, endId: string): string[] | null {
+  const queue: {nodeId: string, path: string[]}[] = [{nodeId: startId, path: [startId]}];
+  const visited = new Set<string>([startId]);
+  
+  while (queue.length > 0) {
+    const {nodeId, path} = queue.shift()!;
+    
+    if (nodeId === endId) {
+      return path;
+    }
+    
+    // Find all adjacent nodes
+    const adjacentNodes = graph.edges
+      .filter(edge => edge.source === nodeId || edge.target === nodeId)
+      .map(edge => edge.source === nodeId ? edge.target : edge.source);
+    
+    for (const adjNode of adjacentNodes) {
+      if (!visited.has(adjNode)) {
+        visited.add(adjNode);
+        queue.push({
+          nodeId: adjNode,
+          path: [...path, adjNode]
+        });
+      }
+    }
+  }
+  
+  return null; // No path found
+}
+// Graph statistics
+export function calculateGraphStatistics(graph: Graph) {
+  const nodeCount = graph.nodes.length;
+  const edgeCount = graph.edges.length;
+  
+  // Calculate density
+  const density = nodeCount > 1 ? (2 * edgeCount) / (nodeCount * (nodeCount - 1)) : 0;
+  
+  // Calculate average degree
+  const degreeCentrality = calculateDegreeCentrality(graph);
+  const degrees = Object.values(degreeCentrality);
+  const avgDegree = degrees.reduce((sum, val) => sum + val, 0) / nodeCount;
+  
+  // Calculate node type distribution
+  const nodeTypeDistribution: Record<string, number> = {};
+  graph.nodes.forEach(node => {
+    const type = node.type || 'unknown';
+    nodeTypeDistribution[type] = (nodeTypeDistribution[type] || 0) + 1;
+  });
+  
+  // Calculate edge label distribution
+  const edgeLabelDistribution: Record<string, number> = {};
+  graph.edges.forEach(edge => {
+    const label = edge.label || 'unknown';
+    edgeLabelDistribution[label] = (edgeLabelDistribution[label] || 0) + 1;
+  });
+  
+  // Find communities/clusters
+  const communities = findCommunities(graph);
+  
+  return {
+    nodeCount,
+    edgeCount,
+    density,
+    avgDegree,
+    nodeTypeDistribution,
+    edgeLabelDistribution,
+    communityCount: communities.length,
+    communities: communities.map(c => ({ size: c.length, nodes: c })),
+  };
+}
+// Time-based analytics for multi-user graphs
+export function analyzeGraphEvolution(graphSnapshots: Graph[]) {
+  if (graphSnapshots.length < 2) {
+    return { 
+      growthRate: 0,
+      nodeAdditions: [],
+      edgeAdditions: [],
+      evolution: []
+    };
+  }
+  
+  const evolution = graphSnapshots.map((snapshot, index) => {
+    return {
+      timestamp: new Date().toISOString(), // This would be the actual timestamp in a real implementation
+      nodeCount: snapshot.nodes.length,
+      edgeCount: snapshot.edges.length,
+      density: snapshot.nodes.length > 1 
+        ? (2 * snapshot.edges.length) / (snapshot.nodes.length * (snapshot.nodes.length - 1)) 
+        : 0
+    };
+  });
+  
+  // Calculate growth rate
+  const firstSnapshot = graphSnapshots[0];
+  const lastSnapshot = graphSnapshots[graphSnapshots.length - 1];
+  const nodeGrowth = lastSnapshot.nodes.length - firstSnapshot.nodes.length;
+  const edgeGrowth = lastSnapshot.edges.length - firstSnapshot.edges.length;
+  
+  // Track node and edge additions
+  const nodeAdditions = graphSnapshots.map((snapshot, index) => {
+    if (index === 0) return 0;
+    return snapshot.nodes.length - graphSnapshots[index - 1].nodes.length;
+  }).slice(1);
+  
+  const edgeAdditions = graphSnapshots.map((snapshot, index) => {
+    if (index === 0) return 0;
+    return snapshot.edges.length - graphSnapshots[index - 1].edges.length;
+  }).slice(1);
+  
+  return {
+    growthRate: {
+      nodes: nodeGrowth,
+      edges: edgeGrowth
+    },
+    nodeAdditions,
+    edgeAdditions,
+    evolution
+  };
+}
+Step 2: Create Analytics API Endpoints
+Add endpoints for analytics:
+// Add to server/routes.ts
+// Graph analytics endpoints
+app.post('/api/graph/analytics', async (req, res) => {
+  try {
+    const { graph } = req.body;
+    
+    if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+      return res.status(400).json({ message: 'Invalid graph structure' });
+    }
+    
+    const analytics = calculateGraphStatistics(graph);
+    const centrality = calculateDegreeCentrality(graph);
+    
+    res.json({
+      statistics: analytics,
+      centrality
+    });
+  } catch (error) {
+    console.error('Error calculating graph analytics:', error);
+    res.status(500).json({ message: 'Failed to calculate graph analytics' });
+  }
+});
+app.post('/api/graph/centrality', async (req, res) => {
+  try {
+    const { graph, type } = req.body;
+    
+    if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+      return res.status(400).json({ message: 'Invalid graph structure' });
+    }
+    
+    let result;
+    switch (type) {
+      case 'degree':
+        result = calculateDegreeCentrality(graph);
+        break;
+      case 'betweenness':
+        result = calculateBetweennessCentrality(graph);
+        break;
+      default:
+        result = calculateDegreeCentrality(graph);
+    }
+    
+    res.json({ centrality: result });
+  } catch (error) {
+    console.error('Error calculating centrality:', error);
+    res.status(500).json({ message: 'Failed to calculate centrality' });
+  }
+});
+app.post('/api/graph/communities', async (req, res) => {
+  try {
+    const { graph } = req.body;
+    
+    if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+      return res.status(400).json({ message: 'Invalid graph structure' });
+    }
+    
+    const communities = findCommunities(graph);
+    
+    res.json({ communities });
+  } catch (error) {
+    console.error('Error detecting communities:', error);
+    res.status(500).json({ message: 'Failed to detect communities' });
+  }
+});
+// Multi-user graph analytics endpoints
+app.get('/api/multi-graph/:id/analytics', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const multiUserGraph = await getMultiUserGraphById(id);
+    
+    const analytics = calculateGraphStatistics(multiUserGraph);
+    const contributorStats = getContributorStatistics(multiUserGraph);
+    
+    res.json({
+      graphStats: analytics,
+      contributorStats
+    });
+  } catch (error) {
+    console.error('Error calculating multi-user graph analytics:', error);
+    res.status(500).json({ message: 'Failed to calculate multi-user graph analytics' });
+  }
+});
+Phase 5: Multi-User Graph Management
+Step 1: Create Management API
+Add endpoints for multi-user graph management:
+// Add to server/routes.ts
+// Multi-user graph management endpoints
+app.get('/api/multi-graph', async (req, res) => {
+  try {
+    // Get user ID from auth token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    const decoded = authenticateToken(token);
+    const userId = decoded.userId;
+    
+    // Get all multi-user graphs the user has access to
+    const graphs = await getMultiUserGraphs(userId);
+    
+    res.json(graphs);
+  } catch (error) {
+    console.error('Error fetching multi-user graphs:', error);
+    res.status(500).json({ message: 'Failed to fetch multi-user graphs' });
+  }
+});
+app.post('/api/multi-graph', async (req, res) => {
+  try {
+    // Get user ID from auth token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    const decoded = authenticateToken(token);
+    const userId = decoded.userId;
+    
+    // Create a new multi-user graph
+    const { name, description } = req.body;
+    const graph = await createMultiUserGraph(userId, name, description);
+    
+    res.json(graph);
+  } catch (error) {
+    console.error('Error creating multi-user graph:', error);
+    res.status(500).json({ message: 'Failed to create multi-user graph' });
+  }
+});
+app.post('/api/multi-graph/:id/add-user-graph', async (req, res) => {
+  try {
+    // Get user ID from auth token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    const decoded = authenticateToken(token);
+    const userId = decoded.userId;
+    
+    // Add a user graph to a multi-user graph
+    const { id } = req.params;
+    const { userGraphId } = req.body;
+    
+    const updatedGraph = await addGraphToMultiUserGraph(id, userGraphId, userId);
+    
+    // Notify all users in the graph room about the update
+    const io = req.app.get('io');
+    io.to(`graph:${id}`).emit('graph-updated', {
+      graphId: id,
+      type: 'add-user-graph',
+      userId
+    });
+    
+    res.json(updatedGraph);
+  } catch (error) {
+    console.error('Error adding user graph:', error);
+    res.status(500).json({ message: 'Failed to add user graph' });
+  }
+});
+app.post('/api/multi-graph/:id/add-contributor', async (req, res) => {
+  try {
+    // Get user ID from auth token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    const decoded = authenticateToken(token);
+    const userId = decoded.userId;
+    
+    // Add a contributor to a multi-user graph
+    const { id } = req.params;
+    const { contributorEmail } = req.body;
+    
+    // Get the multi-user graph
+    const graph = await getMultiUserGraphById(id);
+    
+    // Check if the user is the owner
+    if (graph.owner_user_id !== userId) {
+      return res.status(403).json({ message: 'Only the owner can add contributors' });
+    }
+    
+    // Get the user ID from email
+    const userResult = await db.query('SELECT id FROM users WHERE email = $1', [contributorEmail]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const contributorId = userResult.rows[0].id;
+    
+    // Add the contributor
+    const contributorIds = graph.contributor_ids || [];
+    if (contributorIds.includes(contributorId)) {
+      return res.status(400).json({ message: 'User is already a contributor' });
+    }
+    
+    contributorIds.push(contributorId);
+    
+    // Update the graph
+    const result = await db.query(
+      'UPDATE multi_user_graphs SET contributor_ids = $1 WHERE id = $2 RETURNING *',
+      [JSON.stringify(contributorIds), id]
+    );
+    
+    // Notify all users in the graph room about the new contributor
+    const io = req.app.get('io');
+    io.to(`graph:${id}`).emit('contributor-added', {
+      graphId: id,
+      contributorId
+    });
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adding contributor:', error);
+    res.status(500).json({ message: 'Failed to add contributor' });
+  }
+});
+Step 2: Create User Graph Management UI
+Create components for managing graphs:
+// client/src/components/MultiUserGraphManager.tsx
+import React, { useState, useEffect } from 'react';
+import { useSocket } from '@/hooks/use-socket';
+import { useAuthStore } from '@/stores/auth';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+export default function MultiUserGraphManager() {
+  const { token, user } = useAuthStore();
+  const socket = useSocket();
+  
+  const [userGraphs, setUserGraphs] = useState([]);
+  const [multiUserGraphs, setMultiUserGraphs] = useState([]);
+  const [newGraphName, setNewGraphName] = useState('');
+  const [newGraphDescription, setNewGraphDescription] = useState('');
+  
+  // Fetch user graphs
+  useEffect(() => {
+    if (!token) return;
+    
+    const fetchGraphs = async () => {
+      try {
+        const response = await fetch('/api/user-graphs', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch graphs');
+        
+        const data = await response.json();
+        setUserGraphs(data);
+      } catch (error) {
+        console.error('Error fetching user graphs:', error);
+      }
+    };
+    
+    fetchGraphs();
+  }, [token]);
+  
+  // Fetch multi-user graphs
+  useEffect(() => {
+    if (!token) return;
+    
+    const fetchMultiUserGraphs = async () => {
+      try {
+        const response = await fetch('/api/multi-graph', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch multi-user graphs');
+        
+        const data = await response.json();
+        setMultiUserGraphs(data);
+      } catch (error) {
+        console.error('Error fetching multi-user graphs:', error);
+      }
+    };
+    
+    fetchMultiUserGraphs();
+  }, [token]);
+  
+  // Socket events for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+    
+    // Listen for graph updates
+    socket.on('graph-updated', (data) => {
+      // Refresh the multi-user graphs
+      fetchMultiUserGraphs();
+    });
+    
+    return () => {
+      socket.off('graph-updated');
+    };
+  }, [socket]);
+  
+  // Create a new multi-user graph
+  const createMultiUserGraph = async () => {
+    if (!token || !newGraphName) return;
+    
+    try {
+      const response = await fetch('/api/multi-graph', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: newGraphName,
+          description: newGraphDescription
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to create multi-user graph');
+      
+      const newGraph = await response.json();
+      setMultiUserGraphs([...multiUserGraphs, newGraph]);
+      
+      // Reset form
+      setNewGraphName('');
+      setNewGraphDescription('');
+    } catch (error) {
+      console.error('Error creating multi-user graph:', error);
+    }
+  };
+  
+  // Add a user graph to a multi-user graph
+  const addGraphToMultiUser = async (multiUserGraphId, userGraphId) => {
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`/api/multi-graph/${multiUserGraphId}/add-user-graph`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ userGraphId })
+      });
+      
+      if (!response.ok) throw new Error('Failed to add graph');
+      
+      // Refresh multi-user graphs
+      const updatedGraph = await response.json();
+      setMultiUserGraphs(multiUserGraphs.map(g => 
+        g.id === updatedGraph.id ? updatedGraph : g
+      ));
+    } catch (error) {
+      console.error('Error adding graph to multi-user graph:', error);
+    }
+  };
+  
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Graph Management</h1>
+      
+      <Tabs defaultValue="user">
+        <TabsList className="mb-4">
+          <TabsTrigger value="user">My Graphs</TabsTrigger>
+          <TabsTrigger value="multi">Collaborative Graphs</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="user">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {userGraphs.map(graph => (
+              <Card key={graph.id}>
+                <CardHeader>
+                  <CardTitle>{graph.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500">{graph.description || 'No description'}</p>
+                  <div className="mt-2">
+                    <p className="text-xs">Nodes: {graph.nodes.length}</p>
+                    <p className="text-xs">Edges: {graph.edges.length}</p>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">Share</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add to Collaborative Graph</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <p className="text-sm">Select a collaborative graph to add this graph to:</p>
+                        <div className="space-y-2">
+                          {multiUserGraphs.map(multiGraph => (
+                            <Button 
+                              key={multiGraph.id}
+                              variant="outline"
+                              className="w-full justify-start"
+                              onClick={() => addGraphToMultiUser(multiGraph.id, graph.id)}
+                            >
+                              {multiGraph.name}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Button variant="default" size="sm" className="ml-2">
+                    View
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="multi">
+          <div className="mb-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Create New Collaborative Graph</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="graphName">Graph Name</Label>
+                    <Input 
+                      id="graphName"
+                      value={newGraphName}
+                      onChange={(e) => setNewGraphName(e.target.value)}
+                      placeholder="Enter graph name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="graphDescription">Description</Label>
+                    <Input 
+                      id="graphDescription"
+                      value={newGraphDescription}
+                      onChange={(e) => setNewGraphDescription(e.target.value)}
+                      placeholder="Enter description"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={createMultiUserGraph}>Create Collaborative Graph</Button>
+              </CardFooter>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {multiUserGraphs.map(graph => (
+              <Card key={graph.id}>
+                <CardHeader>
+                  <CardTitle>{graph.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500">{graph.description || 'No description'}</p>
+                  <div className="mt-2">
+                    <p className="text-xs">Nodes: {graph.nodes.length}</p>
+                    <p className="text-xs">Edges: {graph.edges.length}</p>
+                    <p className="text-xs">Contributors: {graph.contributor_ids.length}</p>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" size="sm">
+                    Analytics
+                  </Button>
+                  <Button variant="default" size="sm" className="ml-2">
+                    View
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+Phase 6: Graph Data Science Visualization
+Step 1: Create Graph Analytics Components
+Create components for visualizing graph analytics:
+// client/src/components/GraphAnalytics.tsx
+import React, { useState, useEffect } from 'react';
+import { useAuthStore } from '@/stores/auth';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
+  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line 
+} from 'recharts';
+export default function GraphAnalytics({ graph, multiUserGraph = false }) {
+  const { token } = useAuthStore();
+  const [analytics, setAnalytics] = useState(null);
+  const [centrality, setCentrality] = useState(null);
+  const [communities, setCommunities] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch graph analytics
+  useEffect(() => {
+    if (!graph || !token) return;
+    
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      try {
+        // Basic graph statistics
+        const statsResponse = await fetch('/api/graph/analytics', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ graph })
+        });
+        
+        if (!statsResponse.ok) throw new Error('Failed to fetch analytics');
+        
+        const statsData = await statsResponse.json();
+        setAnalytics(statsData.statistics);
+        setCentrality(statsData.centrality);
+        
+        // Community detection
+        const commResponse = await fetch('/api/graph/communities', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ graph })
+        });
+        
+        if (!commResponse.ok) throw new Error('Failed to detect communities');
+        
+        const commData = await commResponse.json();
+        setCommunities(commData.communities);
+      } catch (error) {
+        console.error('Error fetching graph analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAnalytics();
+  }, [graph, token]);
+  
+  // Format node type distribution for charts
+  const nodeTypeData = analytics ? 
+    Object.entries(analytics.nodeTypeDistribution).map(([type, count]) => ({
+      name: type,
+      value: count
+    })) : [];
+  
+  // Format edge label distribution for charts
+  const edgeLabelData = analytics ? 
+    Object.entries(analytics.edgeLabelDistribution).map(([label, count]) => ({
+      name: label,
+      value: count
+    })) : [];
+  
+  // Format centrality data for charts
+  const centralityData = centrality ? 
+    Object.entries(centrality).map(([nodeId, value]) => {
+      // Find the node to get its label
+      const node = graph.nodes.find(n => n.id === nodeId);
+      return {
+        name: node ? (node.properties.name || node.label) : nodeId,
+        value: value
+      };
+    })
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 10) : []; // Top 10 nodes by centrality
+  
+  // Format community data
+  const communityData = communities ? 
+    communities.map((community, index) => ({
+      name: `Community ${index + 1}`,
+      value: community.length
+    })) : [];
+  
+  // Colors for charts
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">Graph Analytics</h2>
+      
+      {loading ? (
+        <div className="text-center py-8">Loading analytics...</div>
+      ) : (
+        <Tabs defaultValue="overview">
+          <TabsList className="mb-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="centrality">Centrality</TabsTrigger>
+            <TabsTrigger value="communities">Communities</TabsTrigger>
+            {multiUserGraph && <TabsTrigger value="contributors">Contributors</TabsTrigger>}
+          </TabsList>
+          
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Basic Statistics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Nodes:</span>
+                      <span className="font-medium">{analytics?.nodeCount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Edges:</span>
+                      <span className="font-medium">{analytics?.edgeCount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Density:</span>
+                      <span className="font-medium">{analytics?.density.toFixed(4)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Avg. Degree:</span>
+                      <span className="font-medium">{analytics?.avgDegree.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Communities:</span>
+                      <span className="font-medium">{analytics?.communityCount}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="col-span-1 md:col-span-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Node Type Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={nodeTypeData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {nodeTypeData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Edge Label Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={edgeLabelData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="value" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="centrality">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Top Nodes by Centrality</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={centralityData}
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis type="category" dataKey="name" />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="value" fill="#82ca9d" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="communities">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Community Sizes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={communityData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {communityData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Communities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 max-h-72 overflow-auto">
+                    {communities?.map((community, index) => (
+                      <div key={index} className="border p-3 rounded">
+                        <h3 className="font-medium mb-2">Community {index + 1}</h3>
+                        <p className="text-sm">Nodes: {community.length}</p>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Top nodes: {community.slice(0, 3).map(nodeId => {
+                            const node = graph.nodes.find(n => n.id === nodeId);
+                            return node ? (node.properties.name || node.label) : nodeId;
+                          }).join(', ')}
+                          {community.length > 3 && `, and ${community.length - 3} more`}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          {multiUserGraph && (
+            <TabsContent value="contributors">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Contributor Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>This tab would show contributor-specific analytics for multi-user graphs</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
+      )}
+    </div>
+  );
+}
+Phase 7: Update App Routes and Navigation
+Step 1: Update App.tsx
+Update the main App.tsx file to include new routes:
+// client/src/App.tsx
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import NotFound from "@/pages/not-found";
+import Home from "@/pages/Home";
+import LogsPage from "@/pages/Logs";
+import GraphV2 from "@/pages/GraphV2";
+import LogTest from "@/pages/LogTest";
+import TextToGraphAnatomy from "@/pages/TextToGraphAnatomy";
+import WebSearchAnatomy from "@/pages/WebSearchAnatomy";
+import UIShowcase from "@/pages/UIShowcase";
+import Header from "@/components/Header";
+import Auth from "@/pages/Auth";
+import UserGraphs from "@/pages/UserGraphs";
+import MultiUserGraphs from "@/pages/MultiUserGraphs";
+import GraphDataScience from "@/pages/GraphDataScience";
+import { useAuthStore } from "@/stores/auth";
+function Router() {
+  const { isAuthenticated } = useAuthStore();
+  
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <div className="flex-1">
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/auth" component={Auth} />
+          <Route path="/logs" component={LogsPage} />
+          <Route path="/graph-v2" component={GraphV2} />
+          <Route path="/log-test" component={LogTest} />
+          <Route path="/text-to-graph-anatomy" component={TextToGraphAnatomy} />
+          <Route path="/web-search-anatomy" component={WebSearchAnatomy} />
+          <Route path="/ui-showcase" component={UIShowcase} />
+          
+          {/* Protected routes */}
+          {isAuthenticated && (
+            <>
+              <Route path="/user-graphs" component={UserGraphs} />
+              <Route path="/multi-user-graphs" component={MultiUserGraphs} />
+              <Route path="/graph-data-science" component={GraphDataScience} />
+            </>
+          )}
+          
+          <Route component={NotFound} />
+        </Switch>
+      </div>
+    </div>
+  );
+}
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router />
+      <Toaster />
+    </QueryClientProvider>
+  );
+}
+export default App;
+Step 2: Update Header Component
+Update the Header component to include new navigation links:
+// client/src/components/Header.tsx
+import { Link, useLocation } from "wouter";
+import { useAuthStore } from "@/stores/auth";
+export default function Header() {
+  const [location] = useLocation();
+  const { isAuthenticated, user, logout } = useAuthStore();
+  
+  return (
+    <header className="bg-white border-b shadow-sm py-3">
+      <div className="container mx-auto px-4 flex justify-between items-center">
+        <div className="flex items-center space-x-6">
+          <Link href="/">
+            <a className="text-xl font-bold">Graph Explorer</a>
+          </Link>
+          
+          <nav className="hidden md:flex space-x-4">
+            <Link href="/">
+              <a className={`text-sm ${location === '/' ? 'font-medium text-blue-600' : 'text-gray-600 hover:text-blue-600'}`}>
+                Home
+              </a>
+            </Link>
+            
+            {isAuthenticated && (
+              <>
+                <Link href="/user-graphs">
+                  <a className={`text-sm ${location === '/user-graphs' ? 'font-medium text-blue-600' : 'text-gray-600 hover:text-blue-600'}`}>
+                    My Graphs
+                  </a>
+                </Link>
+                
+                <Link href="/multi-user-graphs">
+                  <a className={`text-sm ${location === '/multi-user-graphs' ? 'font-medium text-blue-600' : 'text-gray-600 hover:text-blue-600'}`}>
+                    Collaborative
+                  </a>
+                </Link>
+                
+                <Link href="/graph-data-science">
+                  <a className={`text-sm ${location === '/graph-data-science' ? 'font-medium text-blue-600' : 'text-gray-600 hover:text-blue-600'}`}>
+                    Data Science
+                  </a>
+                </Link>
+              </>
+            )}
+            
+            <Link href="/ui-showcase">
+              <a className={`text-sm ${location === '/ui-showcase' ? 'font-medium text-blue-600' : 'text-gray-600 hover:text-blue-600'}`}>
+                UI Showcase
+              </a>
+            </Link>
+          </nav>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {isAuthenticated ? (
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                {user?.username || user?.email}
+              </span>
+              <button
+                onClick={logout}
+                className="text-sm text-red-600 hover:text-red-800"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <Link href="/auth">
+              <a className="text-sm text-blue-600 hover:text-blue-800">
+                Login / Register
+              </a>
+            </Link>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+Implementation Summary
+This comprehensive plan transforms your existing graph application into a collaborative multi-user experience with advanced graph data science capabilities. Key features include:
+1.	User Authentication System
+•	Secure login/register with JWT authentication
+•	User profiles and session management
+2.	Multi-User Graph Schema
+•	Individual user graphs with ownership
+•	Combined multi-user graphs with contributor tracking
+•	Subgraph identification for tracking contributions
+3.	Real-Time Communication
+•	Socket.io for live updates between users
+•	Real-time graph modifications
+•	Live collaborative editing
+4.	Graph Data Science & Analytics
+•	Node centrality measurements
+•	Community detection
+•	Graph statistics and metrics
+•	Time-based analytics for tracking graph evolution
+5.	Multi-User Graph Management
+•	Creating and sharing graphs
+•	Adding contributors
+•	Merging individual graphs into collaborative graphs
+6.	Graph Analytics Visualization
+•	Interactive charts and visualizations
+•	Statistical analysis of graph structure
+•	Community visualization
+To implement this plan, you'll need to install these packages (which you've already done):
+•	socket.io and socket.io-client for real-time communication
+•	bcryptjs and jsonwebtoken for authentication
+•	zustand for state management
+•	cors for cross-origin resource sharing
+This architecture provides a solid foundation for a collaborative graph experience while maintaining the core functionality of your existing application.
+
