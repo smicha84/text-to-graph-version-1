@@ -406,6 +406,9 @@ function processGraphData(graphData: Graph, text: string): void {
 }
 
 function buildPrompt(text: string, options: GraphOptions): string {
+  // Check if we have existing taxonomy information
+  const existingTaxonomy = options.existingTaxonomy;
+  
   return `
 Analyze the following text and extract a labeled property graph with entities and relationships. The graph should be represented as JSON with "nodes" and "edges" arrays.
 
@@ -421,6 +424,19 @@ ${options.inferProperties ? '- Infer additional properties for entities and rela
 ${options.mergeEntities ? '- Merge similar or duplicate entities into single nodes' : '- Keep entities separate even if they might be the same'}
 ${options.generateOntology ? '- Generate domain-specific ontology before extraction' : '- Skip ontology generation'}
 ${options.generateTaxonomies ? '- Generate hierarchical taxonomies for entity types (create IS_PARENT_OF relationships)' : '- Skip taxonomy generation'}
+${existingTaxonomy ? '- IMPORTANT: Reuse existing taxonomy nodes and relationships provided below' : ''}
+
+${existingTaxonomy ? `
+EXISTING TAXONOMY INFORMATION:
+The graph already contains a taxonomy hierarchy that should be reused. When applying taxonomy to new nodes, 
+connect them to these existing taxonomy nodes rather than creating new taxonomy categories unless absolutely necessary.
+
+Existing Taxonomy Nodes:
+${JSON.stringify(existingTaxonomy.nodes, null, 2)}
+
+Existing Taxonomy Relationships:
+${JSON.stringify(existingTaxonomy.relationships, null, 2)}
+` : ''}
 
 TASK BREAKDOWN:
 ${options.generateOntology ? `1. FIRST STEP - ONTOLOGY CREATION: Create an ontology based on the text that defines:

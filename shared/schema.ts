@@ -42,6 +42,10 @@ export const graphOptionsSchema = z.object({
   generateTaxonomies: z.boolean().optional().default(true), // Whether to generate entity taxonomies for hierarchical categorization
   model: z.literal("claude").default("claude"),
   appendMode: z.boolean().optional().default(false), // Whether to append to existing graph
+  existingTaxonomy: z.any().optional(), // To pass existing taxonomy information to Claude
+  sourceNodeType: z.string().optional(), // Type of the source node when doing web search
+  sourceNodeLabel: z.string().optional(), // Label of the source node when doing web search
+  graphContext: z.any().optional(), // Additional context about the existing graph
 });
 
 // API Input Schema

@@ -117,8 +117,55 @@ async function generateGraphFromText(text: string, options: any, existingGraph?:
     textToProcess = text;
   }
   
-  // Include the graphContext in the options if it exists
+  // Enhanced options for Claude
   const enhancedOptions = {...options};
+  
+  // If we're in append mode and have an existing graph with taxonomy nodes, extract them
+  if (appendMode && existingGraph) {
+    // Extract taxonomy information from the existing graph
+    const taxonomyNodes = existingGraph.nodes.filter((node: any) => 
+      node.id.startsWith('tax_') || 
+      (node.type === 'Taxonomy') || 
+      (node.label && node.label.endsWith('Type'))
+    );
+    
+    const taxonomyEdges = existingGraph.edges.filter((edge: any) =>
+      edge.label === 'IS_PARENT_OF' || 
+      edge.label === 'IS_A' ||
+      edge.id.startsWith('tax_e') ||
+      edge.source.startsWith('tax_') ||
+      edge.target.startsWith('tax_')
+    );
+    
+    // Include existing taxonomy in options if found
+    if (taxonomyNodes.length > 0) {
+      console.log(`Including ${taxonomyNodes.length} existing taxonomy nodes for context`);
+      
+      // Create a special context for the existing taxonomy
+      enhancedOptions.existingTaxonomy = {
+        nodes: taxonomyNodes,
+        relationships: taxonomyEdges
+      };
+      
+      // If webSearchNode is provided, find the source node type
+      if (options.webSearchNode) {
+        const sourceNode = existingGraph.nodes.find((node: any) => node.id === options.webSearchNode);
+        if (sourceNode) {
+          enhancedOptions.sourceNodeType = sourceNode.type;
+          enhancedOptions.sourceNodeLabel = sourceNode.label;
+        }
+      }
+      
+      // Add a text preamble about the existing taxonomy
+      const taxonomyTypes = new Set(taxonomyNodes.map((node: any) => 
+        node.label?.replace('Type', '')
+      ).filter(Boolean));
+      
+      if (taxonomyTypes.size > 0) {
+        textToProcess = `[IMPORTANT: Reuse the existing taxonomy hierarchy for these categories: ${Array.from(taxonomyTypes).join(', ')}]\n\n${textToProcess}`;
+      }
+    }
+  }
   
   // Generate the graph with the contextualized text
   const newGraph = await generateGraphWithClaude(textToProcess, enhancedOptions);
@@ -199,6 +246,21 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
   // Calculate the graph context for search with improved relevance
   const searchContext = buildGraphContextForSearch(existingGraph, nodeId);
   
+  // Extract taxonomy information from the existing graph
+  const taxonomyNodes = existingGraph.nodes.filter((node: any) => 
+    node.id.startsWith('tax_') || 
+    (node.type === 'Taxonomy') || 
+    (node.label && node.label.endsWith('Type'))
+  );
+  
+  const taxonomyEdges = existingGraph.edges.filter((edge: any) =>
+    edge.label === 'IS_PARENT_OF' || 
+    edge.label === 'IS_A' ||
+    edge.id.startsWith('tax_e') ||
+    edge.source.startsWith('tax_') ||
+    edge.target.startsWith('tax_')
+  );
+  
   // Set up options for graph generation with enhanced context and ontology-based extraction
   const options = {
     extractEntities: true,
@@ -214,8 +276,23 @@ async function webSearchAndExpandGraph(query: string, nodeId: string, existingGr
     useEntityTypeLLM: true, // Use the LLM for entity type detection
     useRelationInferenceLLM: true, // Use the LLM for relationship inference
     // Add a processing step to include ontology creation
-    processingSteps: ['ontology_creation', 'entity_extraction', 'relationship_mapping'] 
+    processingSteps: ['ontology_creation', 'entity_extraction', 'relationship_mapping'],
+    // Include existing taxonomy for consistent categorization
+    generateTaxonomies: true,
+    generateOntology: true,
+    // Source node information
+    sourceNodeType: sourceNode.type,
+    sourceNodeLabel: sourceNode.label
   };
+  
+  // If we have taxonomy nodes, include them in the options
+  if (taxonomyNodes.length > 0) {
+    console.log(`Including ${taxonomyNodes.length} taxonomy nodes for web search context`);
+    options.existingTaxonomy = {
+      nodes: taxonomyNodes,
+      relationships: taxonomyEdges
+    };
+  }
   
   // Perform the web search to get search results with context
   const searchResults = await performWebSearch(query, searchContext);
@@ -675,6 +752,22 @@ function buildGraphContextForSearch(graph: any, nodeId: string) {
   // In a full implementation, we would calculate actual centrality metrics
   const centralityNodes = findImportantNodes(graph, 3);
   
+  // Extract taxonomy nodes from the graph
+  const taxonomyNodes = graph.nodes.filter((node: any) => 
+    node.id.startsWith('tax_') || 
+    (node.type === 'Taxonomy') || 
+    (node.label && node.label.endsWith('Type'))
+  );
+  
+  // Extract taxonomy relationships
+  const taxonomyEdges = graph.edges.filter((edge: any) =>
+    edge.label === 'IS_PARENT_OF' || 
+    edge.label === 'IS_A' ||
+    edge.id.startsWith('tax_e') ||
+    edge.source.startsWith('tax_') ||
+    edge.target.startsWith('tax_')
+  );
+  
   // Build the context object
   return {
     sourceNode,
@@ -696,6 +789,20 @@ function buildGraphContextForSearch(graph: any, nodeId: string) {
       label: node.label,
       type: node.type,
       properties: node.properties
+    })),
+    // Add the taxonomy information
+    taxonomyNodes: taxonomyNodes.map((node: any) => ({
+      id: node.id,
+      label: node.label,
+      type: node.type,
+      properties: node.properties
+    })),
+    taxonomyRelationships: taxonomyEdges.map((edge: any) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      label: edge.label,
+      properties: edge.properties
     }))
   };
 }
