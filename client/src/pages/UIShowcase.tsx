@@ -12,7 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import Header from '../components/Header';
+
+import { Textarea } from '@/components/ui/textarea';
+import { Send, RotateCcw, Loader2, Database, Info, CheckCircle, ChevronDown, ChevronUp, AlertTriangle, PlusCircle } from 'lucide-react';
+import { ChatProvider, useChatContext } from '@/contexts/ChatContext';
 // We no longer need to import UICustomizationDemo as it's now integrated directly in the Header
 
 interface ShowcaseItemProps {
@@ -340,6 +343,171 @@ const AfterHoverExpand = () => {
   );
 };
 
+// Basic chat interface (before)
+const BeforeGraphChat = () => {
+  return (
+    <div className="border rounded-md overflow-hidden max-w-full" style={{ maxHeight: '300px' }}>
+      <div className="bg-gray-200 p-2 flex justify-between items-center">
+        <div className="font-medium">Graph Chat</div>
+        <button className="px-2 py-1 bg-gray-300 rounded text-xs">Clear</button>
+      </div>
+      
+      <div className="h-32 overflow-y-auto p-2 bg-white">
+        <div className="mb-2">
+          <div className="font-medium text-xs text-gray-500">User:</div>
+          <div className="p-1 bg-blue-50 rounded">What patterns do you see in this graph?</div>
+        </div>
+        <div className="mb-2">
+          <div className="font-medium text-xs text-gray-500">System:</div>
+          <div className="p-1 bg-gray-50 rounded">
+            I can see several Person nodes connected to Company nodes through 'WORKS_AT' relationships.
+            There are also some Department nodes connected to the Company nodes.
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-2 border-t">
+        <div className="flex">
+          <input 
+            type="text" 
+            className="flex-1 p-1 text-sm border rounded-l"
+            placeholder="Type your message..." 
+          />
+          <button className="bg-blue-500 text-white px-2 py-1 rounded-r text-sm">Send</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Advanced chat interface with graph analysis (after)
+const AfterGraphChat = () => {
+  const [expanded, setExpanded] = useState(false);
+  
+  return (
+    <div className="border rounded-md overflow-hidden shadow-sm max-w-full" style={{ maxHeight: '400px' }}>
+      <div className="bg-blue-600 text-white p-2 flex justify-between items-center">
+        <div className="flex items-center">
+          <Database size={16} className="mr-1" />
+          <div className="font-medium">Graph Explorer Chat</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="bg-blue-700 px-2 py-0.5 rounded-full text-xs flex items-center">
+            <Database size={12} className="mr-1" />
+            <span>Graph Connected</span>
+          </div>
+          <button className="p-1 hover:bg-blue-500 rounded">
+            <RotateCcw size={14} />
+          </button>
+        </div>
+      </div>
+      
+      <div className="h-40 overflow-y-auto p-2 bg-gray-50">
+        <div className="p-2 rounded-lg border bg-blue-100 border-blue-300 mb-2">
+          <div className="flex items-start">
+            <div className="mr-2 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">U</div>
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-1">
+                <div className="text-xs font-medium">User</div>
+                <div className="text-xs text-gray-500">11:30 AM</div>
+              </div>
+              <div className="text-sm">What patterns do you see in this knowledge graph?</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-2 rounded-lg border bg-gray-100 border-gray-300 mb-2">
+          <div className="flex items-start">
+            <div className="mr-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">A</div>
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-1">
+                <div className="text-xs font-medium">Assistant</div>
+                <div className="text-xs text-gray-500">11:31 AM</div>
+              </div>
+              <div className="text-sm">
+                I notice several interesting patterns in this knowledge graph:
+                
+                1. There's a hierarchical organization structure with Departments within Companies
+                2. People have direct reporting relationships forming a management tree
+                3. There are clusters of expertise based on skills across different departments
+              </div>
+              
+              <div className="mt-2">
+                <div 
+                  className="flex items-center text-xs font-medium text-blue-600 cursor-pointer"
+                  onClick={() => setExpanded(!expanded)}
+                >
+                  <Database size={12} className="mr-1" />
+                  <span>Graph Analysis</span>
+                  {expanded ? <ChevronUp size={12} className="ml-1" /> : <ChevronDown size={12} className="ml-1" />}
+                </div>
+                
+                {expanded && (
+                  <div className="mt-1 p-2 bg-white border border-blue-200 rounded-md text-xs">
+                    <div className="mb-2">
+                      <div className="font-medium mb-1 flex items-center">
+                        <Info size={12} className="mr-1" />
+                        Analysis
+                      </div>
+                      <div className="text-gray-700">
+                        The graph shows a corporate structure with multiple departments and a clear hierarchy.
+                      </div>
+                    </div>
+                    
+                    <div className="mb-2">
+                      <div className="font-medium mb-1 flex items-center">
+                        <PlusCircle size={12} className="mr-1" />
+                        Suggested Nodes (2)
+                      </div>
+                      <ul className="ml-4 list-disc">
+                        <li className="text-gray-700">
+                          Executive Team <span className="text-gray-500">(Department)</span>
+                        </li>
+                        <li className="text-gray-700">
+                          Project Management Office <span className="text-gray-500">(Department)</span>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-1 h-6 text-xs"
+                    >
+                      <CheckCircle size={12} className="mr-1" />
+                      Apply Changes to Graph
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-2 border-t bg-white">
+        <div className="flex space-x-2">
+          <Textarea
+            placeholder="Type a message about the graph..."
+            className="resize-none text-sm"
+            rows={2}
+          />
+          <Button 
+            size="sm"
+            className="self-end"
+          >
+            <Send size={14} className="mr-1" />
+            Send
+          </Button>
+        </div>
+        <div className="mt-1 text-xs text-gray-500">
+          <span className="font-medium">Graph context:</span> 32 nodes, 48 edges
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BeforeFocusMode = () => (
   <div className="p-2 rounded-md">
     <div className="grid grid-cols-3 gap-2">
@@ -522,7 +690,6 @@ const AfterBreadcrumbNavigation = () => {
 export default function UIShowcase() {
   return (
     <div className="container mx-auto">
-      <Header />
       <div className="py-6">
         <h1 className="text-3xl font-bold mb-6">UI Enhancement Showcase</h1>
         <p className="text-gray-600 mb-8">
@@ -1720,6 +1887,16 @@ export default function UIShowcase() {
           
           <TabsContent value="interaction" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ShowcaseItem
+                title="Graph Explorer Chat"
+                description="Add a dedicated AI chat interface for analyzing and expanding graphs with rich metadata visualization"
+                complexity="Medium"
+                impact="High"
+                beforeImage={<BeforeGraphChat />}
+                afterImage={<AfterGraphChat />}
+                explanation="The Graph Explorer Chat transforms simple text conversations into a powerful graph analysis tool by adding structured metadata extraction and visualization. This interface allows users to explore patterns, suggest new nodes/relationships, and get deeper insights about their knowledge graph. The implementation uses the ChatContext system to manage message state and adds collapsible sections for graph analysis with visual indicators of the graph connection status."
+              />
+              
               <ShowcaseItem
                 title="Hover States for Nodes"
                 description="Add rich hover states for graph nodes to show more information without clicking"
