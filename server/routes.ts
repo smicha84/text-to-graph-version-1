@@ -6,6 +6,7 @@ import { generateGraphInputSchema, exportGraphSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { generateGraphWithClaude, performWebSearch } from "./anthropic";
 import { getApiLogs, logApiInteraction } from "./database";
+import { processChat } from "./chatService";
 
 // Function to merge two graphs with subgraph tracking
 function mergeGraphs(existingGraph: any, newGraph: any): any {
@@ -1012,6 +1013,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API endpoint for chat with graph context
+  app.post('/api/chat', async (req, res) => {
+    const startTime = Date.now();
+    try {
+      // Extract request data
+      const { message, graphContext, selectedNodeContext, promptSource, promptMetadata } = req.body;
+      
+      // Basic validation
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: 'A message string is required' });
+      }
+      
+      // Log the request
+      await logApiInteraction(
+        'request',
+        'chat',
+        {
+          messageLength: message.length,
+          hasGraphContext: !!graphContext,
+          hasSelectedNode: !!selectedNodeContext,
+          promptSource
+        },
+        undefined,
+        undefined,
+        undefined,
+        req.ip,
+        req.headers['user-agent']
+      );
+      
+      // Process the chat message
+      const response = await processChat({
+        message,
+        graphContext,
+        selectedNodeContext,
+        promptSource,
+        promptMetadata
+      });
+      
+      // Calculate processing time
+      const processingTime = Date.now() - startTime;
+      
+      // Log the response
+      await logApiInteraction(
+        'response',
+        'chat',
+        undefined,
+        {
+          messageLength: response.message.length,
+          hasGraphAnalysis: !!response.graphAnalysis,
+          processingTimeMs: processingTime
+        },
+        200,
+        processingTime,
+        req.ip,
+        req.headers['user-agent']
+      );
+      
+      // Return the response
+      res.json(response);
+    } catch (error) {
+      console.error('Error processing chat:', error);
+      
+      // Log the error
+      await logApiInteraction(
+        'response',
+        'chat',
+        undefined,
+        {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        500,
+        Date.now() - startTime,
+        req.ip,
+        req.headers['user-agent']
+      );
+      
+      // Return error response
+      res.status(500).json({
+        message: 'Failed to process chat message',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // API endpoint to get API logs
   app.get('/api/logs', async (req, res) => {
     try {

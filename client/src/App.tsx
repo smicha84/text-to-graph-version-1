@@ -10,7 +10,9 @@ import LogTest from "@/pages/LogTest";
 import TextToGraphAnatomy from "@/pages/TextToGraphAnatomy";
 import WebSearchAnatomy from "@/pages/WebSearchAnatomy";
 import UIShowcase from "@/pages/UIShowcase";
+import GraphChat from "@/pages/GraphChat";
 import Header from "@/components/Header";
+import { ChatProvider } from "@/contexts/ChatContext";
 
 function Router() {
   return (
@@ -21,6 +23,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/logs" component={LogsPage} />
           <Route path="/graph-v2" component={GraphV2} />
+          <Route path="/graph-chat" component={GraphChat} />
           <Route path="/log-test" component={LogTest} />
           <Route path="/text-to-graph-anatomy" component={TextToGraphAnatomy} />
           <Route path="/web-search-anatomy" component={WebSearchAnatomy} />
@@ -35,8 +38,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <ChatProvider>
+        <Router />
+        <Toaster />
+      </ChatProvider>
     </QueryClientProvider>
   );
 }

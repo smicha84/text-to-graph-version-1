@@ -1024,6 +1024,17 @@ export default function Header() {
             </div>
           </Link>
           
+          <Link href="/graph-chat">
+            <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
+              location === "/graph-chat" 
+                ? "bg-primary/10 text-primary" 
+                : "text-gray-600 hover:text-primary"
+            } transition-colors`}>
+              <i className="fas fa-comments mr-2"></i>
+              <span>Graph Chat</span>
+            </div>
+          </Link>
+          
           <Link href="/text-to-graph-anatomy">
             <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
               location === "/text-to-graph-anatomy" 
