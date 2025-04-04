@@ -188,6 +188,13 @@ export default function SiteMap() {
             />
             
             <SiteMapNode
+              title="Smiley Page"
+              path="/smiley"
+              description="An orange page with a big smiley face."
+              color="bg-orange-100 text-orange-800 border-orange-200"
+            />
+            
+            <SiteMapNode
               title="API Logs"
               path="/logs"
               description="View API interaction logs for debugging."

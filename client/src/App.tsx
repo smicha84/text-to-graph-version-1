@@ -19,6 +19,7 @@ import { ChatProvider } from "@/contexts/ChatContext";
 import Auth from "@/pages/Auth";
 import Profile from "@/pages/Profile";
 import GraphAnalytics from "@/pages/GraphAnalytics";
+import SmileyPage from "@/pages/SmileyPage";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
           <Route path="/profile" component={Profile} />
           <Route path="/analytics" component={GraphAnalytics} />
           <Route path="/site-map" component={SiteMap} />
+          <Route path="/smiley" component={SmileyPage} />
           <Route component={NotFound} />
         </Switch>
       </div>
