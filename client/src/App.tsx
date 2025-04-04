@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
+import SiteMap from "@/pages/SiteMap";
 import LogsPage from "@/pages/Logs";
 import GraphV2 from "@/pages/GraphV2";
 import LogTest from "@/pages/LogTest";
@@ -38,6 +39,7 @@ function Router() {
           <Route path="/auth" component={Auth} />
           <Route path="/profile" component={Profile} />
           <Route path="/analytics" component={GraphAnalytics} />
+          <Route path="/site-map" component={SiteMap} />
           <Route component={NotFound} />
         </Switch>
       </div>

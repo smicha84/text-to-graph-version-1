@@ -1104,6 +1104,17 @@ export default function Header() {
               <span>UI Showcase</span>
             </div>
           </Link>
+          
+          <Link href="/site-map">
+            <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
+              location === "/site-map" 
+                ? "bg-primary/10 text-primary" 
+                : "text-gray-600 hover:text-primary"
+            } transition-colors`}>
+              <i className="fas fa-sitemap mr-2"></i>
+              <span>Site Map</span>
+            </div>
+          </Link>
         </div>
         
         <div className="flex items-center space-x-3 actions">
