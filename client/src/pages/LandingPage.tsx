@@ -36,7 +36,7 @@ export default function LandingPage() {
                 {isAuthenticated ? (
                   <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
                     <Link href="/dashboard">
-                      Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                      Go to Main Page <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 ) : (
@@ -274,7 +274,7 @@ export default function LandingPage() {
           {isAuthenticated ? (
             <Button asChild size="lg" variant="secondary">
               <Link href="/dashboard">
-                Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                Go to Main Page <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           ) : (
