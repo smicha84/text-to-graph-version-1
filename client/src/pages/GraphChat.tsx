@@ -205,7 +205,7 @@ export default function GraphChat() {
         <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
           <div className="flex items-center">
             <Database size={20} className="mr-2" />
-            <h1 className="text-xl font-semibold">Graph Explorer Chat</h1>
+            <h1 className="text-xl font-semibold">Graph AI Component Output</h1>
           </div>
           <div className="flex space-x-2">
             {graphContext ? (
@@ -226,7 +226,7 @@ export default function GraphChat() {
               onClick={clearMessages}
             >
               <RotateCcw size={16} className="mr-1" />
-              Clear Chat
+              Clear Output
             </Button>
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function GraphChat() {
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400">
               <Info size={48} className="mb-2" />
-              <p className="text-lg">No messages yet</p>
+              <p className="text-lg">No AI output yet</p>
               <p className="text-sm">Start a conversation about your graph data</p>
             </div>
           ) : (
@@ -254,7 +254,7 @@ export default function GraphChat() {
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message about the graph..."
+              placeholder="Ask AI to analyze your graph data..."
               className="resize-none"
               rows={3}
               disabled={isLoading}
