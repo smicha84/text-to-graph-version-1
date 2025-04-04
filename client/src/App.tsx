@@ -13,6 +13,9 @@ import UIShowcase from "@/pages/UIShowcase";
 import GraphChat from "@/pages/GraphChat";
 import Header from "@/components/Header";
 import { ChatProvider } from "@/contexts/ChatContext";
+import Auth from "@/pages/Auth";
+import Profile from "@/pages/Profile";
+import GraphAnalytics from "@/pages/GraphAnalytics";
 
 function Router() {
   return (
@@ -28,6 +31,9 @@ function Router() {
           <Route path="/text-to-graph-anatomy" component={TextToGraphAnatomy} />
           <Route path="/web-search-anatomy" component={WebSearchAnatomy} />
           <Route path="/ui-showcase" component={UIShowcase} />
+          <Route path="/auth" component={Auth} />
+          <Route path="/profile" component={Profile} />
+          <Route path="/analytics" component={GraphAnalytics} />
           <Route component={NotFound} />
         </Switch>
       </div>

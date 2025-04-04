@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuthStore } from "@/stores/auth";
 import { Edit2, X, Save, Moon, Sun, Layout, Grid, Sliders, Type, Layers, Target, Move, Plus, Minus, Eye, EyeOff, ExternalLink, CornerRightDown, ArrowRight, Maximize2, Minimize2, RotateCcw, ChevronsUpDown, ChevronsLeftRight, Crosshair } from "lucide-react";
 
 // Define UI customization settings
@@ -159,7 +160,8 @@ function ResizeHandle({ position, onResize }: ResizeHandleProps) {
 }
 
 export default function Header() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const { isAuthenticated, user, logout } = useAuthStore();
   const [showCustomization, setShowCustomization] = useState(false);
   const [activeTab, setActiveTab] = useState<'global' | 'elements'>('global');
   const [editMode, setEditMode] = useState(false);
@@ -1095,6 +1097,47 @@ export default function Header() {
           <button className="text-gray-600 hover:text-primary transition-colors">
             <i className="fas fa-question-circle"></i>
           </button>
+          
+          {/* User Authentication */}
+          {!isAuthenticated ? (
+            <Link href="/auth">
+              <div className="flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer bg-primary text-white hover:bg-primary/90 transition-colors">
+                <i className="fas fa-sign-in-alt mr-2"></i>
+                <span>Sign In</span>
+              </div>
+            </Link>
+          ) : (
+            <div className="relative group">
+              <button className="flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                <i className="fas fa-user-circle mr-2"></i>
+                <span>{user?.username}</span>
+              </button>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg overflow-hidden z-20 hidden group-hover:block">
+                <Link href="/profile">
+                  <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <i className="fas fa-user mr-2"></i>
+                    <span>Profile</span>
+                  </div>
+                </Link>
+                <Link href="/analytics">
+                  <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <i className="fas fa-chart-line mr-2"></i>
+                    <span>Analytics</span>
+                  </div>
+                </Link>
+                <div 
+                  className="px-4 py-2 text-sm text-red-700 hover:bg-gray-100 flex items-center cursor-pointer"
+                  onClick={() => {
+                    logout();
+                    window.location.href = '/';
+                  }}
+                >
+                  <i className="fas fa-sign-out-alt mr-2"></i>
+                  <span>Logout</span>
+                </div>
+              </div>
+            </div>
+          )}
           
           <button 
             onClick={() => setShowCustomization(!showCustomization)} 

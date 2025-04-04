@@ -1,12 +1,23 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { generateGraphInputSchema, exportGraphSchema } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import { 
+  generateGraphInputSchema, 
+  exportGraphSchema,
+  insertUserSchema,
+  users,
+  userProfiles,
+  userGraphs,
+  multiUserGraphs,
+  graphAnalytics
+} from "@shared/schema";
 import { storage } from "./storage";
 import { generateGraphWithClaude, performWebSearch } from "./anthropic";
 import { getApiLogs, logApiInteraction } from "./database";
 import { processChat } from "./chatService";
+import { registerUser, loginUser, authenticateToken, optionalAuthenticateToken } from "./auth";
 
 // Function to merge two graphs with subgraph tracking
 function mergeGraphs(existingGraph: any, newGraph: any): any {
@@ -840,8 +851,116 @@ function findImportantNodes(graph: any, count: number = 5) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      // Validate request body
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Register the user
+      const result = await registerUser(userData);
+      
+      // Return user and token
+      res.json(result);
+    } catch (error) {
+      console.error('Error registering user:', error);
+      
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      
+      if (error instanceof Error && error.message.includes('duplicate key')) {
+        return res.status(409).json({ message: 'Username or email already exists' });
+      }
+      
+      res.status(500).json({ message: error instanceof Error ? error.message : 'Registration failed' });
+    }
+  });
+  
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required' });
+      }
+      
+      // Login the user
+      const result = await loginUser(email, password);
+      
+      // Return user and token
+      res.json(result);
+    } catch (error) {
+      console.error('Error logging in:', error);
+      
+      if (error instanceof Error && error.message === 'Invalid credentials') {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+      
+      res.status(500).json({ message: 'Login failed' });
+    }
+  });
+  
+  // Protected route to get the current user profile
+  app.get('/api/auth/profile', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      
+      // Get user from database
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Don't return password
+      const { password, ...userWithoutPassword } = user;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error getting user profile:', error);
+      res.status(500).json({ message: 'Failed to get user profile' });
+    }
+  });
+  
+  // Route to update the current user profile
+  app.patch('/api/auth/profile', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const { password, email, username, ...updateData } = req.body;
+      
+      // Don't allow changing email, username, or password through this endpoint
+      // Those should have separate endpoints with additional validation
+      
+      // Update user in database
+      const [updatedUser] = await db.update(users)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Don't return password
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      
+      res.status(500).json({ message: 'Failed to update profile' });
+    }
+  });
+  
   // API endpoint to generate a graph from text
-  app.post('/api/generate-graph', async (req, res) => {
+  app.post('/api/generate-graph', optionalAuthenticateToken, async (req, res) => {
     try {
       // Validate request body
       const { text, options, existingGraph, appendMode } = generateGraphInputSchema.parse(req.body);
