@@ -1039,16 +1039,7 @@ export default function Header() {
             </Link>
           )}
           
-          <Link href="/graph-v2">
-            <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
-              location === "/graph-v2" 
-                ? "bg-primary/10 text-primary" 
-                : "text-gray-600 hover:text-primary"
-            } transition-colors`}>
-              <i className="fas fa-flask mr-2"></i>
-              <span>Graph V2</span>
-            </div>
-          </Link>
+          {/* GraphV2 link removed */}
           
           <Link href="/graph-chat">
             <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${

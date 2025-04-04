@@ -8,7 +8,7 @@ import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import SiteMap from "@/pages/SiteMap";
 import LogsPage from "@/pages/Logs";
-import GraphV2 from "@/pages/GraphV2";
+// GraphV2 removed as it's no longer needed
 import LogTest from "@/pages/LogTest";
 import TextToGraphAnatomy from "@/pages/TextToGraphAnatomy";
 import WebSearchAnatomy from "@/pages/WebSearchAnatomy";
@@ -30,7 +30,6 @@ function Router() {
           <Route path="/home" component={Home} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/logs" component={LogsPage} />
-          <Route path="/graph-v2" component={GraphV2} />
           <Route path="/graph-chat" component={GraphChat} />
           <Route path="/log-test" component={LogTest} />
           <Route path="/text-to-graph-anatomy" component={TextToGraphAnatomy} />

@@ -117,12 +117,6 @@ export default function SiteMap() {
                   </div>
                   
                   <div className="grid grid-cols-1 gap-4">
-                    <SiteMapNode
-                      title="Graph Creator (V2)"
-                      path="/graph-v2"
-                      description="The main graph creation and editing interface."
-                      color="bg-amber-100 text-amber-800 border-amber-200"
-                    />
                     
                     <SiteMapNode
                       title="Analytics Dashboard"
@@ -157,13 +151,6 @@ export default function SiteMap() {
               </div>
               
               <div className="grid grid-cols-1 gap-4">
-                <SiteMapNode
-                  title="Graph Creator (V2)"
-                  path="/graph-v2"
-                  description="The main graph creation and editing interface."
-                  color="bg-amber-100 text-amber-800 border-amber-200"
-                />
-                
                 <SiteMapNode
                   title="Graph Chat"
                   path="/graph-chat"
