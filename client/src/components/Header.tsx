@@ -1013,6 +1013,17 @@ export default function Header() {
         </div>
         
         <div className="flex items-center space-x-3 nav-menu">
+          <Link href="/">
+            <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
+              location === "/" 
+                ? "bg-primary/10 text-primary" 
+                : "text-gray-600 hover:text-primary"
+            } transition-colors`}>
+              <i className="fas fa-home mr-2"></i>
+              <span>Home</span>
+            </div>
+          </Link>
+          
           <Link href="/graph-v2">
             <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
               location === "/graph-v2" 
@@ -1031,7 +1042,7 @@ export default function Header() {
                 : "text-gray-600 hover:text-primary"
             } transition-colors`}>
               <i className="fas fa-comments mr-2"></i>
-              <span>Graph Chat</span>
+              <span>Graph AI Component Output</span>
             </div>
           </Link>
           
