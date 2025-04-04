@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
+import LandingPage from "@/pages/LandingPage";
+import Dashboard from "@/pages/Dashboard";
 import LogsPage from "@/pages/Logs";
 import GraphV2 from "@/pages/GraphV2";
 import LogTest from "@/pages/LogTest";
@@ -23,7 +25,9 @@ function Router() {
       <Header />
       <div className="flex-1">
         <Switch>
-          <Route path="/" component={Home} />
+          <Route path="/" component={LandingPage} />
+          <Route path="/home" component={Home} />
+          <Route path="/dashboard" component={Dashboard} />
           <Route path="/logs" component={LogsPage} />
           <Route path="/graph-v2" component={GraphV2} />
           <Route path="/graph-chat" component={GraphChat} />

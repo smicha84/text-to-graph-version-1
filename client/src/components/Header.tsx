@@ -1026,6 +1026,19 @@ export default function Header() {
             </div>
           </Link>
           
+          {isAuthenticated && (
+            <Link href="/dashboard">
+              <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
+                location === "/dashboard" 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-gray-600 hover:text-primary"
+              } transition-colors`}>
+                <i className="fas fa-tachometer-alt mr-2"></i>
+                <span>Dashboard</span>
+              </div>
+            </Link>
+          )}
+          
           <Link href="/graph-v2">
             <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
               location === "/graph-v2" 
@@ -1117,6 +1130,12 @@ export default function Header() {
                   <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                     <i className="fas fa-user mr-2"></i>
                     <span>Profile</span>
+                  </div>
+                </Link>
+                <Link href="/dashboard">
+                  <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <i className="fas fa-tachometer-alt mr-2"></i>
+                    <span>Dashboard</span>
                   </div>
                 </Link>
                 <Link href="/analytics">
