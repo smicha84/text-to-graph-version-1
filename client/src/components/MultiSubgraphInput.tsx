@@ -73,7 +73,7 @@ export default function MultiSubgraphInput({
     }
   };
 
-  // Create a new segment from current selection
+  // Create a new segment from current selection and remove it from the text
   const createSegment = () => {
     if (!selection || !textAreaRef.current) return;
     
@@ -96,6 +96,10 @@ export default function MultiSubgraphInput({
       name: `Subgraph ${segments.length + 1}: ${segmentName}`,
       color: getNextColor()
     };
+    
+    // Remove the selected text from the main text area
+    const newText = text.substring(0, start) + text.substring(end);
+    onChange(newText);
     
     onSegmentsChange([...segments, newSegment]);
     setSelection(null);
@@ -131,56 +135,7 @@ export default function MultiSubgraphInput({
     onSegmentsChange(newSegments);
   };
   
-  // Render the text with highlighted segments
-  const renderHighlightedText = () => {
-    if (segments.length === 0) return text;
-    
-    // Sort segments by their appearance in the text
-    const sortedSegments = [...segments].sort((a, b) => {
-      const aStart = text.indexOf(a.text);
-      const bStart = text.indexOf(b.text);
-      return aStart - bStart;
-    });
-    
-    let lastIndex = 0;
-    let result = [];
-    
-    for (const segment of sortedSegments) {
-      const startIndex = text.indexOf(segment.text, lastIndex);
-      
-      if (startIndex !== -1) {
-        // Add text before this segment
-        if (startIndex > lastIndex) {
-          result.push(text.substring(lastIndex, startIndex));
-        }
-        
-        // Add highlighted segment
-        result.push(
-          <span 
-            key={segment.id} 
-            style={{ 
-              backgroundColor: segment.color + '33', // Add transparency
-              borderBottom: `2px solid ${segment.color}`,
-              padding: '0 2px',
-              borderRadius: '2px'
-            }}
-            title={segment.name}
-          >
-            {segment.text}
-          </span>
-        );
-        
-        lastIndex = startIndex + segment.text.length;
-      }
-    }
-    
-    // Add any remaining text
-    if (lastIndex < text.length) {
-      result.push(text.substring(lastIndex));
-    }
-    
-    return result;
-  };
+  // We no longer need to render highlighted text since we're removing segments from the main text
 
   return (
     <div className="flex flex-col gap-2">
@@ -202,7 +157,7 @@ export default function MultiSubgraphInput({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              Select text and click here to create a new subgraph segment
+              Select text to create a subgraph - selected text will be removed from the main input
             </TooltipContent>
           </Tooltip>
         </div>
@@ -210,7 +165,7 @@ export default function MultiSubgraphInput({
         <div className="flex items-center gap-1">
           <InfoIcon size={16} className="text-gray-500" />
           <span className="text-xs text-gray-500">
-            Select text to create multiple subgraphs
+            Select text and click 'Create Subgraph' to cut it into a separate segment
           </span>
         </div>
       </div>
@@ -228,15 +183,7 @@ export default function MultiSubgraphInput({
           placeholder="Enter your text here to generate a property graph..."
         />
         
-        {/* Text preview with highlighting (always visible with varying opacity) */}
-        {segments.length > 0 && (
-          <div 
-            className={`absolute top-0 left-0 w-full h-full p-3 font-mono text-sm pointer-events-none 
-              overflow-auto whitespace-pre-wrap bg-white ${textAreaRef.current === document.activeElement ? 'opacity-70' : 'opacity-100'}`}
-          >
-            {renderHighlightedText()}
-          </div>
-        )}
+        {/* No overlay needed since we're removing text instead of highlighting it */}
       </div>
       
       {/* Segments list */}
