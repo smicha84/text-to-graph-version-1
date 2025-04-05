@@ -6,6 +6,7 @@ import ExportModal from "@/components/ExportModal";
 import SidebarPromptStation from "@/components/SidebarPromptStation";
 import NodeAnatomyChart from "@/components/NodeAnatomyChart";
 import SimpleStrategyPrompt from "@/components/SimpleStrategyPrompt";
+import { TextSegment } from "@/components/MultiSubgraphInput";
 import { Graph, Node, Edge, GraphGenerationOptions, ExportOptions, WebSearchOptions } from "@/types/graph";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -51,12 +52,27 @@ export default function Home() {
 
   // Generate graph mutation
   const generateMutation = useMutation({
-    mutationFn: async ({ text, options }: { text: string, options: GraphGenerationOptions }) => {
+    mutationFn: async ({ 
+      text, 
+      options, 
+      segmentId, 
+      segmentName, 
+      segmentColor 
+    }: { 
+      text: string, 
+      options: GraphGenerationOptions,
+      segmentId?: string,
+      segmentName?: string,
+      segmentColor?: string
+    }) => {
       // If we're in append mode, we need to send the existing graph to merge with
       const payload = {
         text,
         options,
-        ...(options.appendMode && graph ? { existingGraph: graph, appendMode: true } : {})
+        ...(options.appendMode && graph ? { existingGraph: graph, appendMode: true } : {}),
+        ...(segmentId ? { segmentId } : {}),
+        ...(segmentName ? { segmentName } : {}),
+        ...(segmentColor ? { segmentColor } : {})
       };
       const response = await apiRequest('POST', '/api/generate-graph', payload);
       return response.json();
@@ -128,8 +144,64 @@ export default function Home() {
     },
   });
 
-  const handleGenerateGraph = (text: string, options: GraphGenerationOptions) => {
-    generateMutation.mutate({ text, options });
+  const handleGenerateGraph = (text: string, options: GraphGenerationOptions, segments?: TextSegment[]) => {
+    if (segments && segments.length > 0) {
+      // If we have segments, process each segment one by one
+      setGraph(null); // Clear any existing graph first
+      let currentIndex = 0;
+      
+      // Process segments sequentially using a helper function
+      const processNextSegment = () => {
+        if (currentIndex < segments.length) {
+          const segment = segments[currentIndex];
+          const segmentOptions = { 
+            ...options, 
+            appendMode: currentIndex > 0, // Only append after the first segment
+          };
+          
+          toast({
+            title: `Processing Subgraph ${currentIndex + 1}/${segments.length}`,
+            description: `Generating graph for segment: ${segment.name}`,
+          });
+          
+          // Process this segment
+          generateMutation.mutate(
+            { 
+              text: segment.text, 
+              options: segmentOptions,
+              segmentId: segment.id,
+              segmentName: segment.name,
+              segmentColor: segment.color
+            },
+            {
+              onSuccess: () => {
+                // Move to the next segment
+                currentIndex++;
+                setTimeout(processNextSegment, 500); // Add small delay between segments
+              },
+              onError: (error) => {
+                toast({
+                  title: "Error Processing Segment",
+                  description: `Failed to process segment ${currentIndex + 1}: ${error.message}`,
+                  variant: "destructive"
+                });
+              }
+            }
+          );
+        } else {
+          toast({
+            title: "All Subgraphs Processed",
+            description: `Successfully generated graph from ${segments.length} segments.`,
+          });
+        }
+      };
+      
+      // Start processing the segments
+      processNextSegment();
+    } else {
+      // No segments, just process the entire text
+      generateMutation.mutate({ text, options });
+    }
   };
 
   const handleElementSelect = (element: Node | Edge | null) => {

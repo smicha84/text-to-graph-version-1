@@ -110,7 +110,15 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
 }
 
 // Main graph generation function using Claude API
-async function generateGraphFromText(text: string, options: any, existingGraph?: any, appendMode = false) {
+async function generateGraphFromText(
+  text: string, 
+  options: any, 
+  existingGraph?: any, 
+  appendMode = false,
+  segmentId?: string,
+  segmentName?: string, 
+  segmentColor?: string
+) {
   console.log("Using Claude API for graph generation");
   
   // If web search mode, we already have the context in the text format from the performWebSearch function
@@ -181,6 +189,35 @@ async function generateGraphFromText(text: string, options: any, existingGraph?:
   
   // Generate the graph with the contextualized text
   const newGraph = await generateGraphWithClaude(textToProcess, enhancedOptions);
+  
+  // If we have segment information, add it to each node and edge
+  if (segmentId) {
+    // Create or use the provided segment ID
+    const subgraphId = segmentId;
+    
+    // Add subgraph ID to all nodes
+    newGraph.nodes.forEach((node: any) => {
+      node.subgraphIds = [subgraphId];
+      // Add segment name as a property if available
+      if (segmentName) {
+        if (!node.properties) node.properties = {};
+        node.properties.segmentName = segmentName;
+      }
+      // Add segment color as a property if available
+      if (segmentColor) {
+        if (!node.properties) node.properties = {};
+        node.properties.segmentColor = segmentColor;
+      }
+    });
+    
+    // Add subgraph ID to all edges
+    newGraph.edges.forEach((edge: any) => {
+      edge.subgraphIds = [subgraphId];
+    });
+    
+    // Store the segment counter in the graph
+    newGraph.subgraphCounter = 1;
+  }
   
   // If append mode is true and we have an existing graph, merge them intelligently
   if (appendMode && existingGraph) {
@@ -965,8 +1002,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body
       const { text, options, existingGraph, appendMode } = generateGraphInputSchema.parse(req.body);
       
+      // Extract additional segment information (for multi-subgraph handling)
+      const segmentId = req.body.segmentId;
+      const segmentName = req.body.segmentName;
+      const segmentColor = req.body.segmentColor;
+      
       // Generate graph using Claude API, potentially merging with existing graph
-      const result = await generateGraphFromText(text, options, existingGraph, appendMode);
+      const result = await generateGraphFromText(text, options, existingGraph, appendMode, segmentId, segmentName, segmentColor);
       
       // Verify that we have nodes and edges arrays in the result
       if (!result || !Array.isArray(result.nodes) || !Array.isArray(result.edges)) {

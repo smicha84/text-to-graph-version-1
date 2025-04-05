@@ -152,6 +152,9 @@ export const generateGraphInputSchema = z.object({
   options: graphOptionsSchema,
   existingGraph: z.any().optional(), // Optional existing graph to append to
   appendMode: z.boolean().optional().default(false), // Whether to append to existing graph
+  segmentId: z.string().optional(), // ID of the text segment (for subgraph tracking)
+  segmentName: z.string().optional(), // Name of the text segment (for display)
+  segmentColor: z.string().optional(), // Color associated with the segment
 });
 
 // Export Graph Schema
