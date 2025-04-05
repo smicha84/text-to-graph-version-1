@@ -82,10 +82,18 @@ export default function MultiSubgraphInput({
     
     if (segmentText.trim().length === 0) return;
     
+    // Generate a more descriptive name by using the first few words
+    let segmentName = segmentText.trim().split(' ').slice(0, 3).join(' ');
+    if (segmentName.length > 30) {
+      segmentName = segmentName.substring(0, 30) + '...';
+    } else if (segmentText.length > segmentName.length) {
+      segmentName += '...';
+    }
+    
     const newSegment: TextSegment = {
       id: generateId(),
       text: segmentText,
-      name: `Subgraph ${segments.length + 1}`,
+      name: `Subgraph ${segments.length + 1}: ${segmentName}`,
       color: getNextColor()
     };
     
@@ -153,7 +161,8 @@ export default function MultiSubgraphInput({
             style={{ 
               backgroundColor: segment.color + '33', // Add transparency
               borderBottom: `2px solid ${segment.color}`,
-              padding: '0 2px'
+              padding: '0 2px',
+              borderRadius: '2px'
             }}
             title={segment.name}
           >
@@ -182,11 +191,11 @@ export default function MultiSubgraphInput({
             <TooltipTrigger asChild>
               <Button 
                 type="button" 
-                variant="outline" 
+                variant={selection ? "default" : "outline"} 
                 size="sm"
                 disabled={!selection}
                 onClick={createSegment}
-                className="flex items-center"
+                className={`flex items-center ${selection ? 'bg-primary hover:bg-primary/90 text-white' : ''}`}
               >
                 <HighlighterIcon size={16} className="mr-1" />
                 Create Subgraph
@@ -210,19 +219,20 @@ export default function MultiSubgraphInput({
       <div className="relative">
         <textarea
           ref={textAreaRef}
-          className="w-full min-h-[150px] p-3 border border-gray-300 rounded font-mono text-sm resize-none 
-            focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+          className={`w-full min-h-[150px] p-3 border rounded font-mono text-sm resize-none 
+            outline-none transition-all ${selection ? 'border-primary ring-2 ring-primary/30' : 'border-gray-300'} 
+            focus:ring-2 focus:ring-primary focus:border-primary`}
           value={text}
           onChange={(e) => onChange(e.target.value)}
           onSelect={handleTextSelect}
           placeholder="Enter your text here to generate a property graph..."
         />
         
-        {/* Text preview with highlighting (absolute positioned over the textarea when not focused) */}
-        {textAreaRef.current !== document.activeElement && segments.length > 0 && (
+        {/* Text preview with highlighting (always visible with varying opacity) */}
+        {segments.length > 0 && (
           <div 
-            className="absolute top-0 left-0 w-full h-full p-3 font-mono text-sm pointer-events-none 
-              overflow-auto whitespace-pre-wrap"
+            className={`absolute top-0 left-0 w-full h-full p-3 font-mono text-sm pointer-events-none 
+              overflow-auto whitespace-pre-wrap bg-white ${textAreaRef.current === document.activeElement ? 'opacity-70' : 'opacity-100'}`}
           >
             {renderHighlightedText()}
           </div>
