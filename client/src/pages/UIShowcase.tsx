@@ -687,6 +687,57 @@ const AfterBreadcrumbNavigation = () => {
   );
 };
 
+// Components for text label update showcase
+const BeforeTextLabelsUpdate = () => (
+  <div className="border p-4 rounded-md bg-white">
+    <div className="flex flex-col space-y-4">
+      <div className="bg-blue-600 text-white p-3 rounded flex items-center">
+        <Database size={16} className="mr-2" />
+        <h3 className="font-medium">Graph AI Component Output</h3>
+      </div>
+      
+      <div className="p-3 border rounded">
+        <div className="flex items-center">
+          <span className="text-gray-700 font-medium">Navigation menu item:</span>
+          <span className="ml-2 px-3 py-1 bg-gray-100 rounded">Graph AI Component Output</span>
+        </div>
+      </div>
+      
+      <div className="p-3 border rounded">
+        <div className="flex items-center">
+          <span className="text-gray-700 font-medium">Browser tab:</span>
+          <span className="ml-2 px-3 py-1 bg-gray-100 rounded">Text-to-Graph AI | Dashboard</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const AfterTextLabelsUpdate = () => (
+  <div className="border p-4 rounded-md bg-white">
+    <div className="flex flex-col space-y-4">
+      <div className="bg-blue-600 text-white p-3 rounded flex items-center">
+        <Database size={16} className="mr-2" />
+        <h3 className="font-medium">Graph Component AI Text Outputs</h3>
+      </div>
+      
+      <div className="p-3 border rounded">
+        <div className="flex items-center">
+          <span className="text-gray-700 font-medium">Navigation menu item:</span>
+          <span className="ml-2 px-3 py-1 bg-gray-100 rounded">Graph Component AI Text Outputs</span>
+        </div>
+      </div>
+      
+      <div className="p-3 border rounded">
+        <div className="flex items-center">
+          <span className="text-gray-700 font-medium">Browser tab:</span>
+          <span className="ml-2 px-3 py-1 bg-gray-100 rounded">Knowledge Graph AI | Text Analyzer</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function UIShowcase() {
   return (
     <div className="container mx-auto">
@@ -1724,6 +1775,16 @@ export default function UIShowcase() {
           
           <TabsContent value="navigation" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ShowcaseItem
+                title="Improved Text Labels"
+                description="Update text labels across the application for better clarity and consistency"
+                complexity="Easy"
+                impact="Medium"
+                beforeImage={<BeforeTextLabelsUpdate />}
+                afterImage={<AfterTextLabelsUpdate />}
+                explanation="Clear, descriptive text labels help users understand the purpose of different UI components. We've updated 'Graph AI Component Output' to 'Graph Component AI Text Outputs' to better describe the function of this component, providing clearer context for users. This change maintains consistency across the navigation menu, page headers, and browser tab names, creating a more cohesive user experience with minimal implementation effort."
+              />
+            
               <ShowcaseItem
                 title="Breadcrumb Navigation"
                 description="Add breadcrumbs to help users understand where they are in the app"
