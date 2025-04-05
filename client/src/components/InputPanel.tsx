@@ -11,7 +11,8 @@ import {
   SettingsIcon,
   InfoIcon,
   ArrowRightIcon,
-  RefreshCwIcon
+  RefreshCwIcon,
+  LayersIcon
 } from "lucide-react";
 import { generateWebSearchQuery } from "@/lib/webSearchUtils";
 import { getNodeDisplayLabel } from "@/lib/displayUtils";
@@ -20,9 +21,10 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import MultiSubgraphInput, { TextSegment } from "@/components/MultiSubgraphInput";
 
 interface InputPanelProps {
-  onGenerateGraph: (text: string, options: GraphGenerationOptions) => void;
+  onGenerateGraph: (text: string, options: GraphGenerationOptions, segments?: TextSegment[]) => void;
   onWebSearch?: (nodeId: string, query: string) => void;
   isLoading: boolean;
   isSearching?: boolean;
@@ -51,6 +53,7 @@ export default function InputPanel({
   const [activeTab, setActiveTab] = useState<string>("input");
   const [searchPrompt, setSearchPrompt] = useState<string>("");
   const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
+  const [textSegments, setTextSegments] = useState<TextSegment[]>([]);
   
   // Default options
   const [options, setOptions] = useState<GraphGenerationOptions>({
@@ -100,17 +103,20 @@ export default function InputPanel({
 
   const handleGenerateClick = () => {
     if (!text.trim()) return;
-    onGenerateGraph(text, options);
+    // Pass text segments if available, otherwise just generate from the full text
+    onGenerateGraph(text, options, textSegments.length > 0 ? textSegments : undefined);
   };
 
   const handleClearClick = () => {
     setText("");
+    setTextSegments([]);
   };
 
   const handleExampleClick = () => {
     // Select a random example
     const randomExample = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
     setText(randomExample);
+    setTextSegments([]); // Clear any text segments when loading an example
   };
 
   // Function to generate contextual search suggestions based on node type
@@ -210,17 +216,27 @@ export default function InputPanel({
             </div>
             
             <div className="p-4 flex flex-col gap-4 flex-1 overflow-auto">
-              {/* Text input area */}
+              {/* Text input area with segmentation */}
               <div>
-                <Label htmlFor="textInput" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Enter Text to Transform
-                </Label>
-                <Textarea
-                  id="textInput"
-                  className="w-full min-h-[150px] p-3 border border-gray-300 rounded font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                  placeholder="Enter your text here to generate a property graph..."
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
+                <div className="flex justify-between items-center mb-1.5">
+                  <Label htmlFor="textInput" className="block text-sm font-medium text-gray-700">
+                    Enter Text to Transform
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${textSegments.length > 0 ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-gray-50'}`}
+                    >
+                      {textSegments.length > 0 ? `${textSegments.length} Subgraphs` : "No Subgraphs"}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <MultiSubgraphInput 
+                  text={text}
+                  onChange={setText}
+                  segments={textSegments}
+                  onSegmentsChange={setTextSegments}
                 />
               </div>
               
