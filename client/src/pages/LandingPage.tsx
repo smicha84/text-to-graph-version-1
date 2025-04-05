@@ -26,7 +26,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-                Collaborative Graph Intelligence
+                A New Graph Intelligence Paradigm
               </h1>
               <p className="text-xl text-gray-600 max-w-lg">
                 Transform complex information into interactive knowledge graphs, 
