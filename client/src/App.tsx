@@ -20,6 +20,7 @@ import Auth from "@/pages/Auth";
 import Profile from "@/pages/Profile";
 import GraphAnalytics from "@/pages/GraphAnalytics";
 import SmileyPage from "@/pages/SmileyPage";
+import SpidermanPage from "@/pages/SpidermanPage";
 
 function Router() {
   return (
@@ -41,6 +42,7 @@ function Router() {
           <Route path="/analytics" component={GraphAnalytics} />
           <Route path="/site-map" component={SiteMap} />
           <Route path="/smiley" component={SmileyPage} />
+          <Route path="/spiderman" component={SpidermanPage} />
           <Route component={NotFound} />
         </Switch>
       </div>

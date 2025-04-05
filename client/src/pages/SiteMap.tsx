@@ -195,6 +195,13 @@ export default function SiteMap() {
             />
             
             <SiteMapNode
+              title="Spiderman's Fear"
+              path="/spiderman"
+              description="Spiderman running away from a fly."
+              color="bg-red-100 text-red-800 border-red-200"
+            />
+            
+            <SiteMapNode
               title="API Logs"
               path="/logs"
               description="View API interaction logs for debugging."
