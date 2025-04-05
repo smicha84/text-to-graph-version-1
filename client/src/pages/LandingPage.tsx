@@ -35,7 +35,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-2">
                 {isAuthenticated ? (
                   <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
-                    <Link href="/dashboard">
+                    <Link href="/home">
                       Go to Main Page <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -273,7 +273,7 @@ export default function LandingPage() {
           </p>
           {isAuthenticated ? (
             <Button asChild size="lg" variant="secondary">
-              <Link href="/dashboard">
+              <Link href="/home">
                 Go to Main Page <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
