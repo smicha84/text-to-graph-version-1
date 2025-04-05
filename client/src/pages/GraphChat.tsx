@@ -205,7 +205,7 @@ export default function GraphChat() {
         <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
           <div className="flex items-center">
             <Database size={20} className="mr-2" />
-            <h1 className="text-xl font-semibold">Graph AI Component Output</h1>
+            <h1 className="text-xl font-semibold">Graph Component AI Text Outputs</h1>
           </div>
           <div className="flex space-x-2">
             {graphContext ? (

@@ -1048,7 +1048,7 @@ export default function Header() {
                 : "text-gray-600 hover:text-primary"
             } transition-colors`}>
               <i className="fas fa-comments mr-2"></i>
-              <span>Graph AI Component Output</span>
+              <span>Graph Component AI Text Outputs</span>
             </div>
           </Link>
           
