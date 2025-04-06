@@ -687,6 +687,92 @@ const AfterBreadcrumbNavigation = () => {
   );
 };
 
+// Entity Deduplication Notification Components
+const BeforeDeduplicationNotifications = () => {
+  return (
+    <div className="p-3 border rounded bg-white">
+      <div className="mb-2 border rounded-lg shadow-sm p-2 bg-white">
+        <div className="flex items-center">
+          <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Processing Subgraph 2/3</div>
+            <div className="text-xs text-gray-600">Generating graph for: "Market Analysis" (66% complete)</div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mb-2 border rounded-lg shadow-sm p-2 bg-white">
+        <div className="flex items-center">
+          <div className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Subgraph 2/3 Complete</div>
+            <div className="text-xs text-gray-600">Added 8 nodes and 6 edges. Progress: 66%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AfterDeduplicationNotifications = () => {
+  return (
+    <div className="p-3 border rounded bg-white">
+      <div className="mb-2 border rounded-lg shadow-sm p-2 bg-white">
+        <div className="flex items-center">
+          <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Processing Subgraph 2/3</div>
+            <div className="text-xs text-gray-600">Generating graph for: "Market Analysis" (66% complete) with entity deduplication</div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mb-2 border rounded-lg shadow-sm p-2 bg-white">
+        <div className="flex items-center">
+          <div className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Subgraph 2/3 Complete</div>
+            <div className="text-xs text-gray-600">Added 8 nodes and 6 edges with entity deduplication. Progress: 66%</div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="border rounded-lg shadow-sm p-2 bg-white">
+        <div className="flex items-center">
+          <div className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div className="text-sm font-semibold">All Subgraphs Processed</div>
+            <div className="text-xs text-gray-600">Successfully generated complete graph from 3 segments with intelligent entity deduplication.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Components for text label update showcase
 const BeforeTextLabelsUpdate = () => (
   <div className="border p-4 rounded-md bg-white">
@@ -1604,6 +1690,16 @@ export default function UIShowcase() {
           
           <TabsContent value="ux" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ShowcaseItem
+                title="Entity Deduplication Notifications"
+                description="Enhanced toast notifications to show intelligent entity deduplication process"
+                complexity="Easy"
+                impact="Medium"
+                beforeImage={<BeforeDeduplicationNotifications />}
+                afterImage={<AfterDeduplicationNotifications />}
+                explanation="Enhanced toast notifications provide users with clear visibility into the entity deduplication process during multi-segment graph generation. By clearly indicating when deduplication is being applied, users gain better understanding of how the system maintains data integrity across text segments. This small UI enhancement significantly improves the user's mental model of the system's intelligence and provides confidence that duplicate entities are being properly handled."
+              />
+              
               <ShowcaseItem
                 title="Focus Mode"
                 description="Add a toggle to hide secondary panels and focus only on primary content"
