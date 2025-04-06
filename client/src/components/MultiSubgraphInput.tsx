@@ -50,8 +50,8 @@ export default function MultiSubgraphInput({
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Generate a new unique ID
-  const generateId = () => `sg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+  // Generate a simple sequential ID for better readability in legends
+  const generateId = () => `sg${segments.length + 1}`;
   
   // Get the next available color from the palette
   const getNextColor = useCallback(() => {
@@ -90,8 +90,9 @@ export default function MultiSubgraphInput({
       segmentName += '...';
     }
     
-    const newSegment: TextSegment = {
-      id: generateId(),
+    // Create a temporary new segment
+    const tempSegment: TextSegment = {
+      id: 'temp', // Will be replaced by reindexSegments
       text: segmentText,
       name: `Subgraph ${segments.length + 1}: ${segmentName}`,
       color: getNextColor()
@@ -101,20 +102,48 @@ export default function MultiSubgraphInput({
     const newText = text.substring(0, start) + text.substring(end);
     onChange(newText);
     
-    onSegmentsChange([...segments, newSegment]);
+    // Add the new segment and reindex everything
+    onSegmentsChange(reindexSegments([...segments, tempSegment]));
     setSelection(null);
   };
 
-  // Remove a segment
+  // Remove a segment and reindex remaining segments for consistent IDs
   const removeSegment = (id: string) => {
-    onSegmentsChange(segments.filter(s => s.id !== id));
+    // First filter out the segment to remove
+    const filteredSegments = segments.filter(s => s.id !== id);
+    
+    // Then reindex to maintain consistent IDs
+    onSegmentsChange(reindexSegments(filteredSegments));
   };
 
-  // Update segment name
+  // Update segment name while preserving ID structure
   const updateSegmentName = (id: string, name: string) => {
-    onSegmentsChange(
-      segments.map(s => (s.id === id ? { ...s, name } : s))
+    const updatedSegments = segments.map(s => 
+      s.id === id ? { ...s, name } : s
     );
+    
+    // Don't reindex here - we want to preserve the IDs when just changing names
+    onSegmentsChange(updatedSegments);
+  };
+
+  // Helper to reindex segments with consistent IDs and names - placed before it's used
+  const reindexSegments = (segmentsToReindex: TextSegment[]) => {
+    return segmentsToReindex.map((segment, index) => {
+      // Create a new subgraph ID using the sequential index
+      const newId = `sg${index + 1}`;
+      
+      // Update the segment name to reflect new numbering if it starts with "Subgraph X:"
+      let newName = segment.name;
+      if (segment.name.match(/^Subgraph \d+:/)) {
+        newName = `Subgraph ${index + 1}: ${segment.name.split(':').slice(1).join(':').trim()}`;
+      }
+      
+      return {
+        ...segment,
+        id: newId,
+        name: newName
+      };
+    });
   };
 
   // Move segment up in the list
@@ -123,7 +152,9 @@ export default function MultiSubgraphInput({
     
     const newSegments = [...segments];
     [newSegments[index - 1], newSegments[index]] = [newSegments[index], newSegments[index - 1]];
-    onSegmentsChange(newSegments);
+    
+    // Reindex to maintain consistent IDs
+    onSegmentsChange(reindexSegments(newSegments));
   };
 
   // Move segment down in the list
@@ -132,7 +163,9 @@ export default function MultiSubgraphInput({
     
     const newSegments = [...segments];
     [newSegments[index], newSegments[index + 1]] = [newSegments[index + 1], newSegments[index]];
-    onSegmentsChange(newSegments);
+    
+    // Reindex to maintain consistent IDs
+    onSegmentsChange(reindexSegments(newSegments));
   };
   
   // We no longer need to render highlighted text since we're removing segments from the main text
