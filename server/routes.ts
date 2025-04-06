@@ -28,9 +28,40 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
     subgraphCounter: existingGraph.subgraphCounter || 0
   };
   
-  // Generate a new subgraph ID for this addition
-  const newSubgraphId = `sg${(mergedGraph.subgraphCounter || 0) + 1}`;
-  mergedGraph.subgraphCounter = (mergedGraph.subgraphCounter || 0) + 1;
+  // Determine the next sequential subgraph ID
+  // First, collect all existing subgraph IDs from the graph
+  const existingSubgraphIds = new Set<string>();
+  
+  existingGraph.nodes.forEach((node: any) => {
+    if (node.subgraphIds) {
+      node.subgraphIds.forEach((id: string) => existingSubgraphIds.add(id));
+    }
+  });
+  
+  existingGraph.edges.forEach((edge: any) => {
+    if (edge.subgraphIds) {
+      edge.subgraphIds.forEach((id: string) => existingSubgraphIds.add(id));
+    }
+  });
+  
+  // Extract numeric parts from existing subgraph IDs
+  const subgraphNumbers = Array.from(existingSubgraphIds)
+    .map(id => {
+      const match = id.match(/^sg(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter(num => num > 0);
+  
+  // Calculate the next available subgraph ID
+  const maxSubgraphNumber = subgraphNumbers.length > 0 
+    ? Math.max(...subgraphNumbers) 
+    : 0;
+  
+  const nextSubgraphNumber = maxSubgraphNumber + 1;
+  const newSubgraphId = `sg${nextSubgraphNumber}`;
+  
+  // Update the counter to match our calculated value
+  mergedGraph.subgraphCounter = nextSubgraphNumber;
   
   // Create a map of existing node IDs and labels for quick lookup
   const existingNodeIds = new Map();
@@ -261,25 +292,20 @@ async function generateGraphFromText(
   
   // If we have segment information, add it to each node and edge
   if (segmentId) {
-    // Determine if we need to respect client-provided subgraph ID or adjust it based on existing graph
-    const subgraphId = appendMode && existingGraph && existingGraph.subgraphCounter 
-        ? `sg${existingGraph.subgraphCounter}` // Use sequential numbering based on existing counter
-        : segmentId; // Use original ID if no existing graph or subgraph counter
-    
-    console.log(`Using subgraph ID: ${subgraphId} (original: ${segmentId}, appendMode: ${appendMode})`);
+    // Use the segment ID directly from the client, as it's already sequential and consistent
+    // This matches the client-side behavior where segmentIds are generated as "sg1", "sg2", etc.
+    console.log(`Using segment ID: ${segmentId} (appendMode: ${appendMode})`);
     
     // Add subgraph ID to all nodes
     newGraph.nodes.forEach((node: any) => {
-      node.subgraphIds = [subgraphId];
+      node.subgraphIds = [segmentId];
+      
       // Add segment name as a property if available
       if (segmentName) {
         if (!node.properties) node.properties = {};
-        // Update segmentName to match the adjusted subgraph ID if needed
-        const adjustedSegmentName = appendMode && existingGraph && existingGraph.subgraphCounter
-          ? segmentName.replace(/^Subgraph \d+:/, `Subgraph ${existingGraph.subgraphCounter}:`)
-          : segmentName;
-        node.properties.segmentName = adjustedSegmentName;
+        node.properties.segmentName = segmentName;
       }
+      
       // Add segment color as a property if available
       if (segmentColor) {
         if (!node.properties) node.properties = {};
@@ -289,13 +315,16 @@ async function generateGraphFromText(
     
     // Add subgraph ID to all edges
     newGraph.edges.forEach((edge: any) => {
-      edge.subgraphIds = [subgraphId];
+      edge.subgraphIds = [segmentId];
     });
     
-    // Store the segment counter in the graph with proper sequential numbering
-    newGraph.subgraphCounter = appendMode && existingGraph && existingGraph.subgraphCounter
-      ? existingGraph.subgraphCounter // Keep existing counter which will be incremented in mergeGraphs
-      : 1; // Start from 1 for new graphs
+    // Extract the numeric portion of the segment ID to set the counter correctly
+    const match = segmentId.match(/^sg(\d+)$/);
+    const segmentNumber = match ? parseInt(match[1], 10) : 0;
+    
+    // Set the subgraph counter to match the segment number
+    newGraph.subgraphCounter = segmentNumber;
+    console.log(`Setting subgraph counter to ${newGraph.subgraphCounter} from segment ID ${segmentId}`);
   }
   
   // If append mode is true and we have an existing graph, merge them intelligently

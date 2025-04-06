@@ -50,17 +50,15 @@ export default function MultiSubgraphInput({
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Generate a sequential ID that doesn't conflict with existing IDs
+  // Generate a sequential ID that follows a proper sequence
   const generateId = () => {
-    // Extract numbers from existing segment IDs (e.g., "sg3" -> 3)
-    const existingIds = segments.map(s => {
-      const match = s.id.match(/^sg(\d+)$/);
-      return match ? parseInt(match[1], 10) : 0;
-    });
+    // If there are no segments, start with sg1
+    if (segments.length === 0) {
+      return 'sg1';
+    }
     
-    // Find the highest number + 1
-    const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
-    return `sg${maxId + 1}`;
+    // Otherwise, use the next number after the count of segments
+    return `sg${segments.length + 1}`;
   };
   
   // Get the next available color from the palette
