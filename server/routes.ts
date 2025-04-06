@@ -261,8 +261,12 @@ async function generateGraphFromText(
   
   // If we have segment information, add it to each node and edge
   if (segmentId) {
-    // Create or use the provided segment ID
-    const subgraphId = segmentId;
+    // Determine if we need to respect client-provided subgraph ID or adjust it based on existing graph
+    const subgraphId = appendMode && existingGraph && existingGraph.subgraphCounter 
+        ? `sg${existingGraph.subgraphCounter}` // Use sequential numbering based on existing counter
+        : segmentId; // Use original ID if no existing graph or subgraph counter
+    
+    console.log(`Using subgraph ID: ${subgraphId} (original: ${segmentId}, appendMode: ${appendMode})`);
     
     // Add subgraph ID to all nodes
     newGraph.nodes.forEach((node: any) => {
@@ -270,7 +274,11 @@ async function generateGraphFromText(
       // Add segment name as a property if available
       if (segmentName) {
         if (!node.properties) node.properties = {};
-        node.properties.segmentName = segmentName;
+        // Update segmentName to match the adjusted subgraph ID if needed
+        const adjustedSegmentName = appendMode && existingGraph && existingGraph.subgraphCounter
+          ? segmentName.replace(/^Subgraph \d+:/, `Subgraph ${existingGraph.subgraphCounter}:`)
+          : segmentName;
+        node.properties.segmentName = adjustedSegmentName;
       }
       // Add segment color as a property if available
       if (segmentColor) {
@@ -284,8 +292,10 @@ async function generateGraphFromText(
       edge.subgraphIds = [subgraphId];
     });
     
-    // Store the segment counter in the graph
-    newGraph.subgraphCounter = 1;
+    // Store the segment counter in the graph with proper sequential numbering
+    newGraph.subgraphCounter = appendMode && existingGraph && existingGraph.subgraphCounter
+      ? existingGraph.subgraphCounter // Keep existing counter which will be incremented in mergeGraphs
+      : 1; // Start from 1 for new graphs
   }
   
   // If append mode is true and we have an existing graph, merge them intelligently
