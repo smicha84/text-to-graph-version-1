@@ -77,6 +77,16 @@ export default function InputPanel({
     }
   }, [isLoading]);
   
+  // Clear text segments after graph generation is completed
+  // This fixes the issue of segments persisting after they're added to the graph
+  useEffect(() => {
+    // When isLoading transitions from true to false, it means the graph generation has completed
+    if (!isLoading && hasExistingGraph && textSegments.length > 0) {
+      // Clear segments only when graph generation was in progress and now completed
+      setTextSegments([]);
+    }
+  }, [isLoading, hasExistingGraph, textSegments.length]);
+  
   // Auto-generate search prompt and suggestions when a node is selected
   useEffect(() => {
     if (selectedNodeId && graph) {
