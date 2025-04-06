@@ -102,7 +102,10 @@ export default function InputPanel({
   };
 
   const handleGenerateClick = () => {
-    if (!text.trim()) return;
+    // If we have segments, we can proceed even with empty main text
+    // If no segments and no text, we can't proceed (button should be disabled)
+    if (!text.trim() && textSegments.length === 0) return;
+    
     // Pass text segments if available, otherwise just generate from the full text
     onGenerateGraph(text, options, textSegments.length > 0 ? textSegments : undefined);
   };
