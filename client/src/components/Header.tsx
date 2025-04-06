@@ -1052,6 +1052,17 @@ export default function Header() {
             </div>
           </Link>
           
+          <Link href="/multiplayer-graph">
+            <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
+              location === "/multiplayer-graph" 
+                ? "bg-primary/10 text-primary" 
+                : "text-gray-600 hover:text-primary"
+            } transition-colors`}>
+              <i className="fas fa-users mr-2"></i>
+              <span>Multiplayer Graph</span>
+            </div>
+          </Link>
+          
           <Link href="/text-to-graph-anatomy">
             <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
               location === "/text-to-graph-anatomy" 

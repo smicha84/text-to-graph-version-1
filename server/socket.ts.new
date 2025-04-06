@@ -1,0 +1,515 @@
+import { Server as HttpServer } from 'http';
+import { Server, Socket } from 'socket.io';
+import { verifyToken } from './auth';
+import { Graph } from '../shared/schema';
+import { v4 as uuidv4 } from 'uuid';
+import { log } from './vite';
+
+// User type for socket connections
+interface User {
+  userId: number;
+  username: string;
+  socketId: string;
+  color?: string;
+}
+
+// Room type for collaborative graph sessions
+interface Room {
+  id: string;
+  name: string;
+  users: User[];
+  createdBy: number;
+  isPublic: boolean;
+  graph: Graph;
+}
+
+// Room info type for client display
+interface RoomInfo {
+  id: string;
+  name: string;
+  users: User[];
+  createdBy: string;
+  isPublic: boolean;
+}
+
+// Chat message type
+interface ChatMessage {
+  user: {
+    id: number;
+    username: string;
+    color?: string;
+  };
+  message: string;
+  timestamp: string;
+}
+
+// EditInfo for tracking who is editing which element
+interface EditInfo {
+  userId: number;
+  username: string;
+  elementId: string;
+  elementType: 'node' | 'edge';
+  isEditing: boolean;
+}
+
+// Store active rooms in memory
+const activeRooms: Map<string, Room> = new Map();
+// Store active users
+const activeUsers: Map<number, User> = new Map();
+// Store socket-to-user mapping
+const socketToUser: Map<string, number> = new Map();
+
+// Generate a random color for a user
+function generateUserColor(): string {
+  const colors = [
+    '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6',
+    '#1abc9c', '#d35400', '#c0392b', '#27ae60', '#2980b9'
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+// Initialize Socket.IO server
+export function initializeSocketServer(httpServer: HttpServer): Server {
+  const io = new Server(httpServer);
+
+  // Middleware for authentication
+  io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    
+    if (!token) {
+      return next(new Error('Authentication error: No token provided'));
+    }
+    
+    try {
+      const decoded = verifyToken(token);
+      socket.data.userId = decoded.userId;
+      next();
+    } catch (error) {
+      log(`Socket auth error: ${error}`, 'socket');
+      next(new Error('Authentication error: Invalid token'));
+    }
+  });
+
+  io.on('connection', (socket: Socket) => {
+    log(`Socket connected: ${socket.id}`, 'socket');
+    
+    // Handle user identification
+    socket.on('identify', (data: { userId: number, username: string }) => {
+      try {
+        const { userId, username } = data;
+        
+        // Ensure the userId from the token matches the one provided
+        if (socket.data.userId !== userId) {
+          throw new Error('User ID mismatch');
+        }
+        
+        // Store user information
+        const user: User = {
+          userId,
+          username,
+          socketId: socket.id,
+          color: generateUserColor()
+        };
+        
+        activeUsers.set(userId, user);
+        socketToUser.set(socket.id, userId);
+        
+        // Send list of available public rooms to the user
+        const publicRoomInfo: RoomInfo[] = Array.from(activeRooms.values())
+          .filter(room => room.isPublic)
+          .map(room => ({
+            id: room.id,
+            name: room.name,
+            users: room.users,
+            createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
+            isPublic: room.isPublic
+          }));
+        
+        socket.emit('rooms', publicRoomInfo);
+        
+        log(`User identified: ${username} (${userId})`, 'socket');
+      } catch (error) {
+        log(`Error identifying user: ${error}`, 'socket');
+        socket.disconnect();
+      }
+    });
+    
+    // Handle room creation
+    socket.on('createRoom', (data: { name: string, isPublic: boolean }, callback) => {
+      try {
+        const userId = socketToUser.get(socket.id);
+        if (!userId || !activeUsers.has(userId)) {
+          throw new Error('User not found');
+        }
+        
+        const user = activeUsers.get(userId)!;
+        const roomId = uuidv4();
+        
+        // Create a new room
+        const newRoom: Room = {
+          id: roomId,
+          name: data.name,
+          users: [user],
+          createdBy: userId,
+          isPublic: data.isPublic,
+          graph: { nodes: [], edges: [] }
+        };
+        
+        activeRooms.set(roomId, newRoom);
+        
+        // Join the socket to the room
+        socket.join(roomId);
+        
+        const roomInfo: RoomInfo = {
+          id: newRoom.id,
+          name: newRoom.name,
+          users: newRoom.users,
+          createdBy: user.username,
+          isPublic: newRoom.isPublic
+        };
+        
+        // Update available rooms for all users
+        const publicRoomInfo: RoomInfo[] = Array.from(activeRooms.values())
+          .filter(room => room.isPublic)
+          .map(room => ({
+            id: room.id,
+            name: room.name,
+            users: room.users,
+            createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
+            isPublic: room.isPublic
+          }));
+        
+        io.emit('rooms', publicRoomInfo);
+        
+        // Send room joined event to the creator
+        socket.emit('roomJoined', roomInfo, newRoom.graph);
+        
+        // Return success to the client
+        if (callback) callback(true, roomInfo);
+        
+        log(`Room created: ${data.name} (${roomId}) by ${user.username}`, 'socket');
+      } catch (error) {
+        log(`Error creating room: ${error}`, 'socket');
+        if (callback) callback(false);
+      }
+    });
+    
+    // Handle joining a room
+    socket.on('joinRoom', (roomId: string, callback) => {
+      try {
+        const userId = socketToUser.get(socket.id);
+        if (!userId || !activeUsers.has(userId)) {
+          throw new Error('User not found');
+        }
+        
+        const user = activeUsers.get(userId)!;
+        
+        // Check if the room exists
+        if (!activeRooms.has(roomId)) {
+          throw new Error('Room not found');
+        }
+        
+        const room = activeRooms.get(roomId)!;
+        
+        // Check if user is already in the room
+        if (!room.users.some(u => u.userId === userId)) {
+          room.users.push(user);
+        }
+        
+        // Join the socket to the room
+        socket.join(roomId);
+        
+        const roomInfo: RoomInfo = {
+          id: room.id,
+          name: room.name,
+          users: room.users,
+          createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
+          isPublic: room.isPublic
+        };
+        
+        // Send room joined event to the user
+        socket.emit('roomJoined', roomInfo, room.graph);
+        
+        // Notify other users in the room
+        socket.to(roomId).emit('userJoined', roomInfo);
+        
+        // Return success to the client
+        if (callback) callback(true);
+        
+        log(`User ${user.username} joined room: ${room.name} (${roomId})`, 'socket');
+      } catch (error) {
+        log(`Error joining room: ${error}`, 'socket');
+        if (callback) callback(false);
+      }
+    });
+    
+    // Handle leaving a room
+    socket.on('leaveRoom', (roomId: string) => {
+      try {
+        const userId = socketToUser.get(socket.id);
+        if (!userId || !activeUsers.has(userId)) {
+          throw new Error('User not found');
+        }
+        
+        const user = activeUsers.get(userId)!;
+        
+        // Check if the room exists
+        if (!activeRooms.has(roomId)) {
+          throw new Error('Room not found');
+        }
+        
+        const room = activeRooms.get(roomId)!;
+        
+        // Remove user from the room
+        room.users = room.users.filter(u => u.userId !== userId);
+        
+        // Leave the socket room
+        socket.leave(roomId);
+        
+        // If the room is empty, remove it
+        if (room.users.length === 0) {
+          activeRooms.delete(roomId);
+          
+          // Update available rooms for all users
+          const publicRoomInfo: RoomInfo[] = Array.from(activeRooms.values())
+            .filter(room => room.isPublic)
+            .map(room => ({
+              id: room.id,
+              name: room.name,
+              users: room.users,
+              createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
+              isPublic: room.isPublic
+            }));
+          
+          io.emit('rooms', publicRoomInfo);
+        } else {
+          // Notify other users in the room
+          const roomInfo: RoomInfo = {
+            id: room.id,
+            name: room.name,
+            users: room.users,
+            createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
+            isPublic: room.isPublic
+          };
+          
+          socket.to(roomId).emit('userLeft', roomInfo);
+        }
+        
+        log(`User ${user.username} left room: ${room.name} (${roomId})`, 'socket');
+      } catch (error) {
+        log(`Error leaving room: ${error}`, 'socket');
+      }
+    });
+    
+    // Handle sending a chat message
+    socket.on('sendMessage', (data: { roomId: string, message: string }) => {
+      try {
+        const userId = socketToUser.get(socket.id);
+        if (!userId || !activeUsers.has(userId)) {
+          throw new Error('User not found');
+        }
+        
+        const user = activeUsers.get(userId)!;
+        
+        // Check if the room exists
+        if (!activeRooms.has(data.roomId)) {
+          throw new Error('Room not found');
+        }
+        
+        // Create the message
+        const message: ChatMessage = {
+          user: {
+            id: user.userId,
+            username: user.username,
+            color: user.color
+          },
+          message: data.message,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Send the message to all users in the room
+        io.to(data.roomId).emit('chatMessage', message);
+        
+        log(`Message sent in room ${data.roomId} by ${user.username}`, 'socket');
+      } catch (error) {
+        log(`Error sending message: ${error}`, 'socket');
+      }
+    });
+    
+    // Handle updating the graph
+    socket.on('updateGraph', (data: { roomId: string, graph: Graph }) => {
+      try {
+        const userId = socketToUser.get(socket.id);
+        if (!userId || !activeUsers.has(userId)) {
+          throw new Error('User not found');
+        }
+        
+        // Check if the room exists
+        if (!activeRooms.has(data.roomId)) {
+          throw new Error('Room not found');
+        }
+        
+        const room = activeRooms.get(data.roomId)!;
+        
+        // Update the graph in the room
+        room.graph = data.graph;
+        
+        // Send the updated graph to all users in the room except the sender
+        socket.to(data.roomId).emit('graphUpdated', data.graph);
+        
+        log(`Graph updated in room ${data.roomId} by ${userId}`, 'socket');
+      } catch (error) {
+        log(`Error updating graph: ${error}`, 'socket');
+      }
+    });
+    
+    // Handle getting the latest graph
+    socket.on('getGraph', (roomId: string) => {
+      try {
+        // Check if the room exists
+        if (!activeRooms.has(roomId)) {
+          throw new Error('Room not found');
+        }
+        
+        const room = activeRooms.get(roomId)!;
+        
+        // Send the graph to the client
+        socket.emit('graphUpdated', room.graph);
+        
+        log(`Graph retrieved for room ${roomId}`, 'socket');
+      } catch (error) {
+        log(`Error getting graph: ${error}`, 'socket');
+      }
+    });
+    
+    // Handle element editing
+    socket.on('startEditing', (data: { roomId: string, elementId: string, elementType: 'node' | 'edge' }) => {
+      try {
+        const userId = socketToUser.get(socket.id);
+        if (!userId || !activeUsers.has(userId)) {
+          throw new Error('User not found');
+        }
+        
+        const user = activeUsers.get(userId)!;
+        
+        // Check if the room exists
+        if (!activeRooms.has(data.roomId)) {
+          throw new Error('Room not found');
+        }
+        
+        // Create editing info
+        const editInfo: EditInfo = {
+          userId: user.userId,
+          username: user.username,
+          elementId: data.elementId,
+          elementType: data.elementType,
+          isEditing: true
+        };
+        
+        // Notify all users in the room
+        io.to(data.roomId).emit('editingElement', editInfo);
+        
+        log(`User ${user.username} started editing ${data.elementType} ${data.elementId}`, 'socket');
+      } catch (error) {
+        log(`Error starting edit: ${error}`, 'socket');
+      }
+    });
+    
+    // Handle element editing complete
+    socket.on('stopEditing', (data: { roomId: string, elementId: string, elementType: 'node' | 'edge' }) => {
+      try {
+        const userId = socketToUser.get(socket.id);
+        if (!userId || !activeUsers.has(userId)) {
+          throw new Error('User not found');
+        }
+        
+        const user = activeUsers.get(userId)!;
+        
+        // Check if the room exists
+        if (!activeRooms.has(data.roomId)) {
+          throw new Error('Room not found');
+        }
+        
+        // Create editing info
+        const editInfo: EditInfo = {
+          userId: user.userId,
+          username: user.username,
+          elementId: data.elementId,
+          elementType: data.elementType,
+          isEditing: false
+        };
+        
+        // Notify all users in the room
+        io.to(data.roomId).emit('editingElement', editInfo);
+        
+        log(`User ${user.username} stopped editing ${data.elementType} ${data.elementId}`, 'socket');
+      } catch (error) {
+        log(`Error stopping edit: ${error}`, 'socket');
+      }
+    });
+    
+    // Handle disconnection
+    socket.on('disconnect', () => {
+      try {
+        const userId = socketToUser.get(socket.id);
+        if (!userId) return;
+        
+        // Remove user from active users
+        socketToUser.delete(socket.id);
+        const user = activeUsers.get(userId);
+        if (!user) return;
+        
+        // Check if the user has other active connections
+        const hasOtherConnections = Array.from(socketToUser.values()).some(id => id === userId);
+        
+        if (!hasOtherConnections) {
+          activeUsers.delete(userId);
+          
+          // Remove user from all rooms
+          for (const [roomId, room] of activeRooms.entries()) {
+            const userIndex = room.users.findIndex(u => u.userId === userId);
+            if (userIndex !== -1) {
+              // Remove user from the room
+              room.users.splice(userIndex, 1);
+              
+              // If the room is empty, remove it
+              if (room.users.length === 0) {
+                activeRooms.delete(roomId);
+              } else {
+                // Notify other users in the room
+                const roomInfo: RoomInfo = {
+                  id: room.id,
+                  name: room.name,
+                  users: room.users,
+                  createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
+                  isPublic: room.isPublic
+                };
+                
+                socket.to(roomId).emit('userLeft', roomInfo);
+              }
+            }
+          }
+          
+          // Update available rooms for all users
+          const publicRoomInfo: RoomInfo[] = Array.from(activeRooms.values())
+            .filter(room => room.isPublic)
+            .map(room => ({
+              id: room.id,
+              name: room.name,
+              users: room.users,
+              createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
+              isPublic: room.isPublic
+            }));
+          
+          io.emit('rooms', publicRoomInfo);
+        }
+        
+        log(`Socket disconnected: ${socket.id} (${user.username})`, 'socket');
+      } catch (error) {
+        log(`Error handling disconnect: ${error}`, 'socket');
+      }
+    });
+  });
+
+  return io;
+}
