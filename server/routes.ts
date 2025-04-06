@@ -139,6 +139,33 @@ async function generateGraphFromText(
   
   // Enhanced options for Claude
   const enhancedOptions = {...options};
+
+  // Provide existing graph context for entity deduplication if in append mode
+  if (appendMode && existingGraph && existingGraph.nodes && existingGraph.nodes.length > 0) {
+    // Create a list of existing entities for reference and deduplication
+    const existingEntities = existingGraph.nodes
+      .filter((node: any) => !node.id.startsWith('tax_'))
+      .map((node: any) => {
+        return {
+          id: node.id,
+          label: node.label,
+          type: node.type,
+          name: node.properties?.name || '',
+          description: node.properties?.description || '',
+          key_properties: Object.entries(node.properties || {})
+            .filter(([key]) => key !== 'description')
+            .slice(0, 3)
+        };
+      });
+      
+    // Add existing entity context to the prompt
+    enhancedOptions.existingEntities = existingEntities;
+    
+    // For subgraph processing, add a preamble about entity resolution
+    if (segmentId) {
+      textToProcess = `[IMPORTANT: This text is part of a larger document being processed as multiple segments. Ensure all entities are cross-referenced with the provided existing entities list. When an entity appears to be the same as an existing one (even if referenced by just first name or nickname), it should be merged rather than creating a duplicate. Pay special attention to people, organizations, locations, and concepts that might be mentioned differently but refer to the same entity.]\n\n${textToProcess}`;
+    }
+  }
   
   // If we're in append mode and have an existing graph with taxonomy nodes, extract them
   if (appendMode && existingGraph) {

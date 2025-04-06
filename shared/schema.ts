@@ -141,6 +141,7 @@ export const graphOptionsSchema = z.object({
   model: z.literal("claude").default("claude"),
   appendMode: z.boolean().optional().default(false), // Whether to append to existing graph
   existingTaxonomy: z.any().optional(), // To pass existing taxonomy information to Claude
+  existingEntities: z.any().optional(), // To pass existing entity information for deduplication
   sourceNodeType: z.string().optional(), // Type of the source node when doing web search
   sourceNodeLabel: z.string().optional(), // Label of the source node when doing web search
   graphContext: z.any().optional(), // Additional context about the existing graph

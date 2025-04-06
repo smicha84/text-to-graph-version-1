@@ -165,7 +165,7 @@ export default function Home() {
           // Show progress toast
           toast({
             title: `Processing Subgraph ${currentIndex + 1}/${totalSegments}`,
-            description: `Generating graph for: "${segment.name}" (${Math.round((currentIndex/totalSegments)*100)}% complete)`,
+            description: `Generating graph for: "${segment.name}" (${Math.round((currentIndex/totalSegments)*100)}% complete)${currentIndex > 0 ? ' with entity deduplication' : ''}`,
           });
           
           // Process this segment
@@ -186,7 +186,7 @@ export default function Home() {
                 
                 toast({
                   title: `Subgraph ${currentIndex + 1}/${totalSegments} Complete`,
-                  description: `Added ${nodeCount} nodes and ${edgeCount} edges. Progress: ${Math.round(progress)}%`,
+                  description: `Added ${nodeCount} nodes and ${edgeCount} edges${currentIndex > 0 ? ' with entity deduplication' : ''}. Progress: ${Math.round(progress)}%`,
                 });
                 
                 // Move to the next segment
@@ -205,7 +205,7 @@ export default function Home() {
         } else {
           toast({
             title: "All Subgraphs Processed",
-            description: `Successfully generated complete graph from ${totalSegments} segments.`,
+            description: `Successfully generated complete graph from ${totalSegments} segments with intelligent entity deduplication.`,
           });
         }
       };

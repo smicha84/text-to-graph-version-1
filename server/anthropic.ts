@@ -408,6 +408,8 @@ function processGraphData(graphData: Graph, text: string): void {
 function buildPrompt(text: string, options: GraphOptions): string {
   // Check if we have existing taxonomy information
   const existingTaxonomy = options.existingTaxonomy;
+  // Check if we have existing entities for deduplication
+  const existingEntities = options.existingEntities;
   
   return `
 Analyze the following text and extract a labeled property graph with entities and relationships. The graph should be represented as JSON with "nodes" and "edges" arrays.
@@ -425,6 +427,18 @@ ${options.mergeEntities ? '- Merge similar or duplicate entities into single nod
 ${options.generateOntology ? '- Generate domain-specific ontology before extraction' : '- Skip ontology generation'}
 ${options.generateTaxonomies ? '- Generate hierarchical taxonomies for entity types (create IS_PARENT_OF relationships)' : '- Skip taxonomy generation'}
 ${existingTaxonomy ? '- IMPORTANT: Reuse existing taxonomy nodes and relationships provided below' : ''}
+${existingEntities ? '- IMPORTANT: When identifying entities, first check if they already exist in the provided list of existing entities' : ''}
+
+${existingEntities ? `
+EXISTING ENTITIES FOR DEDUPLICATION:
+The graph already contains these entities. When you identify an entity in the text:
+1. Check if it's the same as any entity in this list (even if referenced differently, e.g., by first name only or nickname)
+2. If it matches an existing entity, use the same node ID and maintain consistency with the entity type
+3. Pay special attention to people, organizations, and locations that might be referenced differently but are the same entity
+
+Existing Entities:
+${JSON.stringify(existingEntities, null, 2)}
+` : ''}
 
 ${existingTaxonomy ? `
 EXISTING TAXONOMY INFORMATION:
