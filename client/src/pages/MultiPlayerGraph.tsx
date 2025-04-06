@@ -2,7 +2,16 @@ import { useEffect, useState, useRef } from 'react';
 import { Socket, io } from 'socket.io-client';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Graph, Node, Edge } from '../../shared/schema';
+// Import all types from client/src/types/graph.ts
+import { 
+  Graph, 
+  Node, 
+  Edge, 
+  ExportOptions, 
+  ExportFormat, 
+  GraphGenerationOptions,
+  WebSearchOptions
+} from '@/types/graph';
 import GraphPanel from '@/components/GraphPanel';
 import InputPanel from '@/components/InputPanel';
 import PropertyPanel from '@/components/PropertyPanel';
@@ -28,28 +37,10 @@ interface ActiveUser extends User {
   lastActive: Date;
   isTyping?: boolean;
   color?: string;
-  selectedNodeId?: string;
+  selectedNodeId?: string | null;
 }
 
-interface GraphGenerationOptions {
-  includeSubgraphs: boolean;
-  includeStyles: boolean;
-  layoutAlgorithm: 'force' | 'radial' | 'hierarchical' | 'grid';
-  nodeTypes: string[];
-  maxNodes: number;
-  maxEdges: number;
-}
-
-interface WebSearchOptions {
-  nodeId: string;
-  query: string;
-}
-
-interface ExportOptions {
-  format: 'json' | 'csv' | 'graphml' | 'cypher';
-  includeProperties: boolean;
-  includeStyles: boolean;
-}
+// Use the GraphGenerationOptions and WebSearchOptions from @/types/graph
 
 interface TextSegment {
   text: string;
@@ -69,12 +60,16 @@ export default function MultiPlayerGraph() {
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [options, setOptions] = useState<GraphGenerationOptions>({
-    includeSubgraphs: true,
-    includeStyles: true,
-    layoutAlgorithm: 'force',
-    nodeTypes: ['all'],
-    maxNodes: 50,
-    maxEdges: 100
+    extractEntities: true,
+    extractRelations: true,
+    inferProperties: true,
+    mergeEntities: true,
+    generateOntology: true,
+    generateTaxonomies: true,
+    model: 'claude',
+    useEntityMergingLLM: true,
+    useEntityTypeLLM: true,
+    useRelationInferenceLLM: true
   });
   
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -296,14 +291,34 @@ export default function MultiPlayerGraph() {
     }, 1000);
   };
   
-  const handleElementSelect = (nodes: Node[], edges: Edge[]) => {
-    setSelectedElements({ nodes, edges });
-    
-    // Send the selected node to other users
-    if (nodes.length === 1 && socket.current) {
-      socket.current.emit('select-node', nodes[0].id);
-    } else if (nodes.length === 0 && socket.current) {
-      socket.current.emit('select-node', null);
+  const handleElementSelect = (element: Node | Edge | null) => {
+    if (element) {
+      if ('source' in element) {
+        // It's an edge
+        setSelectedElements({ 
+          nodes: [], 
+          edges: [element as Edge] 
+        });
+      } else {
+        // It's a node
+        setSelectedElements({ 
+          nodes: [element as Node], 
+          edges: [] 
+        });
+        
+        // Send the selected node to other users
+        if (socket.current) {
+          socket.current.emit('select-node', element.id);
+        }
+      }
+    } else {
+      // No selection
+      setSelectedElements({ nodes: [], edges: [] });
+      
+      // Clear selection for other users
+      if (socket.current) {
+        socket.current.emit('select-node', null);
+      }
     }
   };
   
@@ -338,7 +353,7 @@ export default function MultiPlayerGraph() {
                     <TooltipContent side="bottom">
                       <p>{user.username}</p>
                       {user.selectedNodeId && graph?.nodes && <p className="text-xs opacity-70">Looking at: {
-                        graph.nodes.find(n => n.id === user.selectedNodeId)?.label || 'Unknown node'
+                        graph.nodes.find((n: Node) => n.id === user.selectedNodeId)?.label || 'Unknown node'
                       }</p>}
                     </TooltipContent>
                   </Tooltip>
