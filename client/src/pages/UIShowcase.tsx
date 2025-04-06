@@ -824,6 +824,86 @@ const AfterTextLabelsUpdate = () => (
   </div>
 );
 
+// Before component for subgraph sequential numbering
+const BeforeSubgraphNumbering = () => {
+  return (
+    <div className="border p-4 rounded-md">
+      <div className="mb-3">
+        <h3 className="font-medium mb-2">Subgraph Generation (First Batch)</h3>
+        <div className="flex gap-2">
+          <Badge className="bg-blue-500">sg1</Badge>
+          <Badge className="bg-green-500">sg2</Badge>
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 p-3 rounded">
+        <div className="text-sm font-medium mb-1">Graph Overview</div>
+        <div className="flex gap-3 mb-3">
+          <div className="bg-white p-2 border rounded text-sm">
+            <span className="font-medium">Subgraph 1:</span>
+            <div className="text-xs">5 nodes, 4 edges</div>
+          </div>
+          <div className="bg-white p-2 border rounded text-sm">
+            <span className="font-medium">Subgraph 2:</span>
+            <div className="text-xs">3 nodes, 2 edges</div>
+          </div>
+        </div>
+        
+        <div className="text-sm font-medium mb-1">New Batch - Second Operation</div>
+        <div className="flex gap-2 mb-2">
+          <Badge className="bg-red-500">sg1</Badge>
+          <Badge className="bg-purple-500">sg2</Badge>
+        </div>
+        
+        <div className="bg-orange-100 p-2 rounded border border-orange-200 text-xs">
+          <AlertTriangle className="inline-block h-3 w-3 mr-1 text-orange-500" />
+          <span className="text-orange-700">Notice how new subgraphs use same IDs (sg1, sg2)</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// After component for subgraph sequential numbering
+const AfterSubgraphNumbering = () => {
+  return (
+    <div className="border p-4 rounded-md">
+      <div className="mb-3">
+        <h3 className="font-medium mb-2">Subgraph Generation (First Batch)</h3>
+        <div className="flex gap-2">
+          <Badge className="bg-blue-500">sg1</Badge>
+          <Badge className="bg-green-500">sg2</Badge>
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 p-3 rounded">
+        <div className="text-sm font-medium mb-1">Graph Overview</div>
+        <div className="flex gap-3 mb-3">
+          <div className="bg-white p-2 border rounded text-sm">
+            <span className="font-medium">Subgraph 1:</span>
+            <div className="text-xs">5 nodes, 4 edges</div>
+          </div>
+          <div className="bg-white p-2 border rounded text-sm">
+            <span className="font-medium">Subgraph 2:</span>
+            <div className="text-xs">3 nodes, 2 edges</div>
+          </div>
+        </div>
+        
+        <div className="text-sm font-medium mb-1">New Batch - Second Operation</div>
+        <div className="flex gap-2 mb-2">
+          <Badge className="bg-red-500">sg3</Badge>
+          <Badge className="bg-purple-500">sg4</Badge>
+        </div>
+        
+        <div className="bg-green-100 p-2 rounded border border-green-200 text-xs">
+          <CheckCircle className="inline-block h-3 w-3 mr-1 text-green-500" />
+          <span className="text-green-700">Improved: New subgraphs use sequential IDs (sg3, sg4)</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function UIShowcase() {
   return (
     <div className="container mx-auto">
@@ -1708,6 +1788,16 @@ export default function UIShowcase() {
                 beforeImage={<BeforeFocusMode />}
                 afterImage={<AfterFocusMode />}
                 explanation="Focus mode allows users to temporarily simplify the interface by hiding non-essential elements, helping them concentrate on specific tasks without distractions. This is particularly valuable for complex applications where different tasks might benefit from different interface configurations. The implementation requires component state management to control visibility and layout, but delivers significant usability benefits for users working with complex data or visualizations."
+              />
+              
+              <ShowcaseItem
+                title="Sequential Subgraph Numbering"
+                description="Intelligent tracking of subgraph IDs across multiple operations"
+                complexity="Easy"
+                impact="Medium"
+                beforeImage={<BeforeSubgraphNumbering />}
+                afterImage={<AfterSubgraphNumbering />}
+                explanation="Enhanced subgraph numbering ensures that when users create multiple batches of subgraphs in separate operations, the new subgraphs continue sequential numbering (e.g., sg3, sg4) instead of reusing the same IDs (sg1, sg2). This seemingly small improvement significantly reduces confusion when filtering and analyzing subgraphs, providing a more coherent user experience when working with complex multi-segment graph visualizations. The backend implementation intelligently tracks existing subgraph counters and ensures proper sequential naming across all graph operations."
               />
               
               <ShowcaseItem
