@@ -89,9 +89,15 @@ export default function InputPanel({
         // Reset the flag and clear the segments
         submittedForProcessing.current = false;
         setTextSegments([]);
+        
+        // If text was processed in append mode, keep that mode active
+        // Otherwise reset it to avoid unexpected behavior on the next generation
+        if (!options.appendMode) {
+          handleOptionChange("appendMode", false);
+        }
       }
     }
-  }, [isLoading, hasExistingGraph, textSegments.length]);
+  }, [isLoading, hasExistingGraph, textSegments.length, options.appendMode]);
   
   // Ref to track if segments have been submitted for processing
   const submittedForProcessing = useRef(false);
@@ -138,6 +144,10 @@ export default function InputPanel({
   const handleClearClick = () => {
     setText("");
     setTextSegments([]);
+    // Reset the appendMode option when clearing text
+    if (options.appendMode) {
+      handleOptionChange("appendMode", false);
+    }
   };
 
   const handleExampleClick = () => {
@@ -145,6 +155,10 @@ export default function InputPanel({
     const randomExample = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
     setText(randomExample);
     setTextSegments([]); // Clear any text segments when loading an example
+    // Reset appendMode when loading an example
+    if (options.appendMode) {
+      handleOptionChange("appendMode", false);
+    }
   };
 
   // Function to generate contextual search suggestions based on node type
@@ -378,16 +392,28 @@ export default function InputPanel({
                         <Checkbox
                           id="appendMode"
                           checked={options.appendMode === true}
+                          disabled={!hasExistingGraph}
                           onCheckedChange={(checked) => 
                             handleOptionChange("appendMode", checked === true)
                           }
-                          className="h-4 w-4 text-blue-600 border-blue-300 rounded focus:ring-blue-500"
+                          className={`h-4 w-4 border-blue-300 rounded focus:ring-blue-500 ${
+                            hasExistingGraph 
+                              ? 'text-blue-600 hover:bg-blue-50' 
+                              : 'text-gray-300'
+                          }`}
                         />
-                        <Label htmlFor="appendMode" className="ml-2 text-sm font-medium text-blue-800">
-                          Append to Existing Graph
+                        <Label 
+                          htmlFor="appendMode" 
+                          className={`ml-2 text-sm font-medium ${
+                            hasExistingGraph ? 'text-blue-800' : 'text-gray-400'
+                          }`}
+                        >
+                          Append to Existing Graph {!hasExistingGraph && "(Generate a graph first)"}
                         </Label>
                       </div>
-                      <p className="mt-1 text-xs text-blue-700 ml-6">
+                      <p className={`mt-1 text-xs ml-6 ${
+                        hasExistingGraph ? 'text-blue-700' : 'text-gray-400'
+                      }`}>
                         Add new nodes and connections to the current graph instead of replacing it
                       </p>
                     </CardContent>
