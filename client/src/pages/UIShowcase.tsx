@@ -508,6 +508,76 @@ const AfterGraphChat = () => {
   );
 };
 
+const BeforeAppendMode = () => (
+  <div className="p-2 rounded-md">
+    <div className="bg-white border p-3 rounded">
+      <div className="border-b pb-2 mb-3">
+        <h3 className="font-medium text-xs">Graph Generation Options</h3>
+      </div>
+      
+      <div className="mb-3">
+        <div className="flex items-center mb-1">
+          <input
+            type="checkbox"
+            id="demoAppendMode"
+            className="h-4 w-4 text-gray-400 border-gray-300 rounded cursor-not-allowed"
+            disabled
+          />
+          <label htmlFor="demoAppendMode" className="ml-2 text-sm font-medium text-gray-400 cursor-not-allowed">
+            Append to Existing Graph
+          </label>
+        </div>
+        <p className="mt-1 text-xs text-gray-400 ml-6">
+          Add new nodes and connections to the current graph instead of replacing it
+        </p>
+      </div>
+      
+      <div className="mt-4">
+        <button
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded transition-colors flex items-center justify-center"
+        >
+          <span>Generate Graph</span>
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const AfterAppendMode = () => (
+  <div className="p-2 rounded-md">
+    <div className="bg-white border p-3 rounded">
+      <div className="border-b pb-2 mb-3">
+        <h3 className="font-medium text-xs">Graph Generation Options</h3>
+      </div>
+      
+      <div className="mb-3">
+        <div className="flex items-center mb-1">
+          <input
+            type="checkbox"
+            id="demoAppendMode"
+            className="h-4 w-4 text-blue-600 border-blue-300 rounded focus:ring-blue-500 cursor-pointer"
+            defaultChecked
+          />
+          <label htmlFor="demoAppendMode" className="ml-2 text-sm font-medium text-blue-800 cursor-pointer">
+            Append to Existing Graph
+          </label>
+        </div>
+        <p className="mt-1 text-xs text-blue-700 ml-6">
+          Add new nodes and connections to the current graph instead of replacing it
+        </p>
+      </div>
+      
+      <div className="mt-4">
+        <button
+          className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded transition-colors flex items-center justify-center"
+        >
+          <span>Append to Graph</span>
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const BeforeFocusMode = () => (
   <div className="p-2 rounded-md">
     <div className="grid grid-cols-3 gap-2">
@@ -1770,6 +1840,16 @@ export default function UIShowcase() {
           
           <TabsContent value="ux" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ShowcaseItem
+                title="Enhanced Append Mode UI"
+                description="Improved visual presentation and button behavior in append mode"
+                complexity="Easy"
+                impact="Medium"
+                beforeImage={<BeforeAppendMode />}
+                afterImage={<AfterAppendMode />}
+                explanation="The enhanced Append Mode UI improves the graph generation experience with clear visual cues and intuitive state transitions. Color coding (green for append mode) helps users understand the current state, while proper disabling and resetting of options prevents confusion. The improved UI maintains context by providing clear labels, appropriate button text, and smooth transitions between states. These subtle enhancements significantly improve user confidence when building complex multi-segment graphs incrementally."
+              />
+              
               <ShowcaseItem
                 title="Entity Deduplication Notifications"
                 description="Enhanced toast notifications to show intelligent entity deduplication process"
