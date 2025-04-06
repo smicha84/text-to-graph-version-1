@@ -1760,6 +1760,16 @@ export class GraphVisualizer {
       return;
     }
     
+    // Create a set of node IDs that are in the selected subgraph for quick lookups
+    const nodesInSubgraph = new Set<string>();
+    if (this.graph && this.graph.nodes) {
+      this.graph.nodes.forEach(node => {
+        if (node.subgraphIds && node.subgraphIds.includes(subgraphId)) {
+          nodesInSubgraph.add(node.id);
+        }
+      });
+    }
+    
     // Fade all elements first
     this.container.selectAll(".node circle")
       .transition().duration(300)
@@ -1825,6 +1835,13 @@ export class GraphVisualizer {
         .selectAll("text")
         .transition().duration(300)
         .attr("opacity", 1.0);
+        
+      // Add source nodes to the set of visible nodes
+      this.graph?.nodes.forEach((node, index) => {
+        if (index === 0 || (node.properties && node.properties.source_node_id)) {
+          nodesInSubgraph.add(node.id);
+        }
+      });
     }
     
     // Highlight all nodes that belong to the selected subgraph
@@ -1844,9 +1861,20 @@ export class GraphVisualizer {
       .transition().duration(300)
       .attr("opacity", 1.0);
       
-    // Highlight edges in the active subgraph
+    // Highlight edges in the active subgraph - but only if both source and target nodes are in the subgraph
     this.container.selectAll(".edge")
-      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
+      .filter((d: any) => {
+        // First check if the edge belongs to this subgraph
+        if (!d.subgraphIds || !d.subgraphIds.includes(subgraphId)) {
+          return false;
+        }
+        
+        // Additional check: both source and target nodes must be visible in this subgraph
+        const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+        const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+        
+        return nodesInSubgraph.has(sourceId) && nodesInSubgraph.has(targetId);
+      })
       .selectAll("path")
       .transition().duration(300)
       .attr("opacity", 1.0)
@@ -1855,11 +1883,70 @@ export class GraphVisualizer {
       .attr("marker-end", "url(#arrowhead-highlighted)");
       
     this.container.selectAll(".edge")
-      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
+      .filter((d: any) => {
+        // First check if the edge belongs to this subgraph
+        if (!d.subgraphIds || !d.subgraphIds.includes(subgraphId)) {
+          return false;
+        }
+        
+        // Additional check: both source and target nodes must be visible in this subgraph
+        const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+        const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+        
+        return nodesInSubgraph.has(sourceId) && nodesInSubgraph.has(targetId);
+      })
       .selectAll("text")
       .transition().duration(300)
       .attr("opacity", 1.0)
       .attr("fill", "#2563EB"); // blue-600
+      
+    // Final verification pass: double-check that all nodes included in edges are visible
+    // This ensures no "dangling" edges pointing to invisible nodes
+    if (this.graph && this.graph.edges) {
+      // Find all highlighted edges
+      const highlightedEdges = this.graph.edges.filter(edge => 
+        edge.subgraphIds && 
+        edge.subgraphIds.includes(subgraphId)
+      );
+      
+      // Collect all node IDs referenced by these edges
+      const edgeNodeIds = new Set<string>();
+      highlightedEdges.forEach(edge => {
+        const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
+        const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
+        edgeNodeIds.add(sourceId);
+        edgeNodeIds.add(targetId);
+      });
+      
+      // Make sure all these nodes are visible by adding them to the subgraph if needed
+      edgeNodeIds.forEach(nodeId => {
+        if (!nodesInSubgraph.has(nodeId)) {
+          // Add this node to the active subgraph data
+          const node = this.graph?.nodes.find(n => n.id === nodeId);
+          if (node && node.subgraphIds) {
+            // Update the node's subgraph membership
+            if (!node.subgraphIds.includes(subgraphId)) {
+              node.subgraphIds.push(subgraphId);
+            }
+            
+            // Update visual appearance for this node
+            this.container.selectAll(".node")
+              .filter((d: any) => d.id === nodeId)
+              .selectAll("circle")
+              .transition().duration(300)
+              .attr("opacity", 1.0)
+              .attr("stroke", "#2563EB")
+              .attr("stroke-width", 3);
+              
+            this.container.selectAll(".node")
+              .filter((d: any) => d.id === nodeId)
+              .selectAll("text")
+              .transition().duration(300)
+              .attr("opacity", 1.0);
+          }
+        }
+      });
+    }
   }
   
   /**
