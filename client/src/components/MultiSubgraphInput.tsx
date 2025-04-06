@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Graph } from "@/types/graph";
 import { 
   PlusCircleIcon, 
   MinusCircleIcon,
@@ -26,6 +27,7 @@ interface MultiSubgraphInputProps {
   onChange: (text: string) => void;
   onSegmentsChange: (segments: TextSegment[]) => void;
   segments: TextSegment[];
+  graph?: Graph | null;
 }
 
 // Color palette for subgraph highlighting
@@ -45,20 +47,71 @@ export default function MultiSubgraphInput({
   text, 
   onChange, 
   onSegmentsChange,
-  segments 
+  segments,
+  graph = null
 }: MultiSubgraphInputProps) {
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   
+  // Function to get the highest subgraph ID from the existing graph
+  const getHighestSubgraphIdFromGraph = (): number => {
+    if (!graph) return 0;
+    
+    const subgraphIdRegex = /^sg(\d+)$/;
+    const allSubgraphIds: number[] = [];
+    
+    // Collect all subgraph IDs from nodes
+    graph.nodes.forEach(node => {
+      if (node.subgraphIds) {
+        node.subgraphIds.forEach(id => {
+          const match = id.match(subgraphIdRegex);
+          if (match) {
+            const numericId = parseInt(match[1], 10);
+            if (!isNaN(numericId)) {
+              allSubgraphIds.push(numericId);
+            }
+          }
+        });
+      }
+    });
+    
+    // Collect all subgraph IDs from edges
+    graph.edges.forEach(edge => {
+      if (edge.subgraphIds) {
+        edge.subgraphIds.forEach(id => {
+          const match = id.match(subgraphIdRegex);
+          if (match) {
+            const numericId = parseInt(match[1], 10);
+            if (!isNaN(numericId)) {
+              allSubgraphIds.push(numericId);
+            }
+          }
+        });
+      }
+    });
+    
+    // Return the highest ID, or 0 if no subgraph IDs were found
+    return allSubgraphIds.length > 0 ? Math.max(...allSubgraphIds) : 0;
+  };
+  
   // Generate a sequential ID that follows a proper sequence
   const generateId = () => {
-    // If there are no segments, start with sg1
-    if (segments.length === 0) {
-      return 'sg1';
-    }
+    // Get the highest subgraph ID from the graph (if available)
+    const highestGraphId = getHighestSubgraphIdFromGraph();
     
-    // Otherwise, use the next number after the count of segments
-    return `sg${segments.length + 1}`;
+    // Get the highest subgraph ID from the current segments
+    const highestSegmentId = segments.length > 0 
+      ? Math.max(...segments.map(s => {
+          const match = s.id.match(/^sg(\d+)$/);
+          return match ? parseInt(match[1], 10) : 0;
+        }))
+      : 0;
+    
+    // Use the highest ID from either source as the base
+    const baseId = Math.max(highestGraphId, highestSegmentId);
+    
+    // Return the next ID in sequence
+    return `sg${baseId + 1}`;
   };
   
   // Get the next available color from the palette
@@ -98,19 +151,22 @@ export default function MultiSubgraphInput({
       segmentName += '...';
     }
     
-    // Find what the new segment ID will be
+    // Get the highest ID considering both existing segments and the graph
+    const highestGraphId = getHighestSubgraphIdFromGraph();
+    
     const existingIds = segments.map(s => {
       const match = s.id.match(/^sg(\d+)$/);
       return match ? parseInt(match[1], 10) : 0;
     }).filter(id => id > 0);
     
-    const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
-    const nextId = maxId + 1;
+    const maxSegmentId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
+    const nextId = Math.max(highestGraphId, maxSegmentId) + 1;
     
     // Log the ID calculation for verification
     console.log('Creating new segment:');
-    console.log('Existing IDs:', existingIds);
-    console.log('Max ID:', maxId);
+    console.log('Highest graph ID:', highestGraphId);
+    console.log('Existing segment IDs:', existingIds);
+    console.log('Max segment ID:', maxSegmentId);
     console.log('Next ID to use:', nextId);
     
     // Create a temporary new segment
@@ -154,7 +210,11 @@ export default function MultiSubgraphInput({
     console.log('--- REINDEX SEGMENTS START ---');
     console.log('Input segments:', segmentsToReindex.map(s => ({ id: s.id, name: s.name })));
     
-    // First, extract all existing numbers from segment IDs
+    // First, get the highest ID from the graph (if available)
+    const highestGraphId = getHighestSubgraphIdFromGraph();
+    console.log('Highest graph ID:', highestGraphId);
+    
+    // Extract all existing numbers from segment IDs
     const existingIds = segmentsToReindex
       .map(s => {
         // Handle the temporary ID from createSegment
@@ -165,7 +225,12 @@ export default function MultiSubgraphInput({
       })
       .filter(id => id > 0);
     
-    console.log('Existing numeric IDs:', existingIds);
+    // Add the highest graph ID to the existing IDs to reserve it
+    if (highestGraphId > 0) {
+      existingIds.push(highestGraphId);
+    }
+    
+    console.log('Existing numeric IDs (including graph IDs):', existingIds);
     
     // Find the highest existing ID
     const maxExistingId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
@@ -190,7 +255,8 @@ export default function MultiSubgraphInput({
     console.log('Sorted segments:', sortedSegments.map(s => ({ id: s.id, name: s.name })));
     
     // Now assign IDs keeping existing IDs when possible
-    let nextId = 1;
+    // Start from the highest ID from the graph + 1 if we have temp segments
+    let nextId = hasTemporarySegments(sortedSegments) ? maxExistingId + 1 : 1;
     
     const result = sortedSegments.map((segment) => {
       let newId = segment.id;
@@ -235,6 +301,11 @@ export default function MultiSubgraphInput({
     console.log('--- REINDEX SEGMENTS END ---');
     
     return result;
+  };
+  
+  // Helper function to check if there are any temporary segments
+  const hasTemporarySegments = (segments: TextSegment[]): boolean => {
+    return segments.some(s => s.id === 'temp');
   };
 
   // Move segment up in the list

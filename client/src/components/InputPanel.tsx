@@ -250,6 +250,7 @@ export default function InputPanel({
                   onChange={setText}
                   segments={textSegments}
                   onSegmentsChange={setTextSegments}
+                  graph={graph}
                 />
               </div>
               
