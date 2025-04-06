@@ -784,10 +784,13 @@ export class GraphVisualizer {
       return;
     }
     
-    console.log(`Processing ${graph.nodes.length} nodes and ${graph.edges.length} edges`);
+    // Apply filtering based on active subgraph
+    const filteredGraph = this.getFilteredGraph(graph);
+    
+    console.log(`Processing ${filteredGraph.nodes.length} nodes and ${filteredGraph.edges.length} edges`);
     
     // Prepare node and link data for force simulation
-    const nodeData = graph.nodes.map((node, index) => {
+    const nodeData = filteredGraph.nodes.map((node, index) => {
       // For the first node (typically a central entity), fix it at the center or custom center point
       if (index === 0) {
         // Use custom center point if available, otherwise use the SVG center
@@ -818,7 +821,7 @@ export class GraphVisualizer {
     });
     
     // Create link data with references to node objects
-    const linkData = graph.edges.map(edge => {
+    const linkData = filteredGraph.edges.map(edge => {
       const source = nodeMap.get(edge.source);
       const target = nodeMap.get(edge.target);
       
@@ -1000,7 +1003,7 @@ export class GraphVisualizer {
           
           // Only release the fixed position for nodes other than the first node
           // For the first node (index 0), we keep it fixed at the center
-          const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+          const nodeIndex = filteredGraph.nodes.findIndex(node => node.id === d.id);
           if (nodeIndex !== 0) {
             // Release fixed position for non-anchored nodes
             d.fx = null;
@@ -1030,7 +1033,7 @@ export class GraphVisualizer {
         }
         
         // Otherwise, add a border to the first node to indicate it's anchored
-        const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+        const nodeIndex = filteredGraph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "#000" : null;
       })
       .attr("stroke-width", (d: SimulationNode) => {
@@ -1039,7 +1042,7 @@ export class GraphVisualizer {
           return 3;
         }
         
-        const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+        const nodeIndex = filteredGraph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? 2 : 0;
       })
       .attr("stroke-dasharray", (d: SimulationNode) => {
@@ -1048,12 +1051,12 @@ export class GraphVisualizer {
           return "5,2"; // Distinctive dash pattern for web search results
         }
         
-        const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+        const nodeIndex = filteredGraph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "3,3" : null;
       })
       .style("cursor", (d: SimulationNode) => {
         // The first node is fixed and cannot be freely dragged
-        const nodeIndex = graph.nodes.findIndex(node => node.id === d.id);
+        const nodeIndex = filteredGraph.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "default" : "grab";
       })
     
@@ -1718,224 +1721,70 @@ export class GraphVisualizer {
   }
 
   /**
+   * Filter graph based on active subgraph ID
+   * @param graph The original graph to filter
+   * @returns Filtered graph containing only nodes and edges in the active subgraph
+   */
+  private getFilteredGraph(graph: Graph): Graph {
+    // If no active subgraph or no graph, return the original graph
+    if (!this.activeSubgraphId || !graph || !graph.nodes || !graph.edges) {
+      return graph;
+    }
+    
+    // Filter nodes to include:
+    // 1. Nodes that belong to the active subgraph
+    // 2. Nodes that belong to multiple subgraphs (regardless of which ones)
+    const filteredNodes = graph.nodes.filter(node => 
+      // Include nodes with no subgraphIds (might be older data)
+      !node.subgraphIds || 
+      // Include nodes that belong to the active subgraph
+      node.subgraphIds.includes(this.activeSubgraphId) ||
+      // Include nodes that belong to multiple subgraphs (shared nodes)
+      (node.subgraphIds && node.subgraphIds.length > 1)
+    );
+    
+    // Create a set of filtered node IDs for faster lookups
+    const filteredNodeIds = new Set(filteredNodes.map(node => node.id));
+    
+    // Filter edges to include only those where both source and target nodes are included
+    // AND the edge belongs to the active subgraph OR multiple subgraphs
+    const filteredEdges = graph.edges.filter(edge => 
+      filteredNodeIds.has(edge.source) && 
+      filteredNodeIds.has(edge.target) && 
+      (
+        // Include edges with no subgraphIds (might be older data)
+        !edge.subgraphIds || 
+        // Include edges that belong to the active subgraph
+        edge.subgraphIds.includes(this.activeSubgraphId) ||
+        // Include edges that belong to multiple subgraphs
+        (edge.subgraphIds && edge.subgraphIds.length > 1)
+      )
+    );
+    
+    console.log(`Filtered graph from ${graph.nodes.length} nodes to ${filteredNodes.length} nodes`);
+    console.log(`Filtered graph from ${graph.edges.length} edges to ${filteredEdges.length} edges`);
+    
+    return {
+      nodes: filteredNodes,
+      edges: filteredEdges,
+      // Preserve metadata and other properties
+      ...graph
+    };
+  }
+
+  /**
    * Highlight a specific subgraph by ID, fading other elements
    * @param subgraphId The ID of the subgraph to highlight, or null to clear highlighting
    */
   public highlightSubgraph(subgraphId: string | null): void {
+    // Store the active subgraph ID
     this.activeSubgraphId = subgraphId;
     
     if (!this.graph) return;
     
-    // If no subgraph is selected, reset all elements to normal appearance
-    if (!subgraphId) {
-      this.container.selectAll(".node circle")
-        .transition().duration(300)
-        .attr("opacity", 1.0)
-        .attr("stroke-width", (d: any) => {
-          // Preserve the stroke-width for the anchored node
-          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-          
-          // Check if node appears in multiple subgraphs (special highlight for multi-subgraph nodes)
-          if (d.subgraphIds && d.subgraphIds.length > 1) {
-            return 2; // Thicker border for multi-subgraph nodes
-          }
-          
-          return nodeIndex === 0 ? 2 : 0;
-        })
-        .attr("stroke-dasharray", (d: any) => {
-          // Distinctive pattern for nodes that appear in multiple subgraphs
-          if (d.subgraphIds && d.subgraphIds.length > 1) {
-            return "5,2"; // Dotted pattern different from anchor node
-          }
-          
-          // Preserve the dash array for the anchored node
-          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-          return nodeIndex === 0 ? "3,3" : null;
-        })
-        .attr("stroke", (d: any) => {
-          // Special color for nodes that appear in multiple subgraphs
-          if (d.subgraphIds && d.subgraphIds.length > 1) {
-            return "#8B5CF6"; // Purple color for multi-subgraph nodes
-          }
-          
-          // Preserve the stroke color for the anchored node
-          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-          return nodeIndex === 0 ? "#000" : null;
-        });
-        
-      this.container.selectAll(".edge path")
-        .transition().duration(300)
-        .attr("opacity", 1.0)
-        .attr("stroke-width", 1.5)
-        .attr("marker-end", "url(#arrowhead)");
-        
-      this.container.selectAll(".edge text, .node text")
-        .transition().duration(300)
-        .attr("opacity", 1.0);
-        
-      return;
-    }
-    
-    // Fade all elements first
-    this.container.selectAll(".node circle")
-      .transition().duration(300)
-      .attr("opacity", 0.3)
-      .attr("stroke-width", (d: any) => {
-        // Preserve the stroke-width for the anchored node
-        const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-        
-        // Highlight nodes that appear in multiple subgraphs even when faded
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return 2;
-        }
-        
-        return nodeIndex === 0 ? 2 : 0;
-      })
-      .attr("stroke-dasharray", (d: any) => {
-        // Distinctive pattern for nodes that appear in multiple subgraphs
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return "5,2";
-        }
-        
-        // Preserve the dash array for the anchored node
-        const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-        return nodeIndex === 0 ? "3,3" : null;
-      })
-      .attr("stroke", (d: any) => {
-        // Special color for nodes that appear in multiple subgraphs
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return "#8B5CF6"; // Purple color for multi-subgraph nodes
-        }
-        
-        // Preserve the stroke color for the anchored node
-        const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-        return nodeIndex === 0 ? "#000" : null;
-      });
-      
-    this.container.selectAll(".edge path")
-      .transition().duration(300)
-      .attr("opacity", 0.2)
-      .attr("stroke-width", 1)
-      .attr("marker-end", "url(#arrowhead)");
-      
-    this.container.selectAll(".edge text, .node text")
-      .transition().duration(300)
-      .attr("opacity", 0.2);
-    
-    // Check if this is a web search subgraph by looking at the ID
-    const isWebSearchSubgraph = subgraphId.startsWith('webSearch_');
-    
-    // For web search subgraphs, find and highlight the source node
-    // (typically the node that initiated the web search)
-    if (isWebSearchSubgraph) {
-      // First, find nodes that have a property indicating they were the source of this web search
-      // This is more reliable than trying to guess based on graph structure
-      this.container.selectAll(".node")
-        .filter((d: any) => {
-          // Check for web search specific properties that would indicate this is a source node
-          if (d.properties && d.properties.source_node_id) {
-            return true;
-          }
-          
-          // Also check for position in the graph (root nodes are typically first)
-          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-          return nodeIndex === 0; // First node is often the root/source
-        })
-        .selectAll("circle")
-        .transition().duration(300)
-        .attr("opacity", 1.0)
-        .attr("stroke", "#EF4444") // red-500 for the source node
-        .attr("stroke-width", 4);
-        
-      this.container.selectAll(".node")
-        .filter((d: any) => {
-          if (d.properties && d.properties.source_node_id) {
-            return true;
-          }
-          const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-          return nodeIndex === 0;
-        })
-        .selectAll("text")
-        .transition().duration(300)
-        .attr("opacity", 1.0);
-    }
-    
-    // Highlight nodes that are in multiple subgraphs with a distinctive visual indicator
-    this.container.selectAll(".node")
-      .filter((d: any) => {
-        // Check if this node belongs to multiple subgraphs
-        return d.subgraphIds && 
-               d.subgraphIds.length > 1 && 
-               d.subgraphIds.includes(subgraphId);
-      })
-      .selectAll("circle")
-      .transition().duration(300)
-      .attr("opacity", 1.0)
-      .attr("stroke", "#8B5CF6") // purple-500 for multi-subgraph nodes
-      .attr("stroke-width", 3)
-      .attr("stroke-dasharray", "5,2"); // Dotted pattern for multi-subgraph nodes
-    
-    // Also make sure their labels are visible
-    this.container.selectAll(".node")
-      .filter((d: any) => {
-        return d.subgraphIds && 
-               d.subgraphIds.length > 1 && 
-               d.subgraphIds.includes(subgraphId);
-      })
-      .selectAll("text")
-      .transition().duration(300)
-      .attr("opacity", 1.0);
-    
-    // Then highlight all elements that belong to the selected subgraph
-    this.container.selectAll(".node")
-      .filter((d: any) => {
-        // Only apply this style to nodes that belong exclusively to this subgraph
-        // (not to nodes that are in multiple subgraphs, which we handled above)
-        return d.subgraphIds && 
-               d.subgraphIds.includes(subgraphId) && 
-               d.subgraphIds.length === 1;
-      })
-      .selectAll("circle")
-      .transition().duration(300)
-      .attr("opacity", 1.0)
-      .attr("stroke", "#2563EB") // blue-600
-      .attr("stroke-width", 3)
-      .attr("stroke-dasharray", null); // No dash pattern for single-subgraph nodes
-      
-    this.container.selectAll(".node")
-      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
-      .selectAll("text")
-      .transition().duration(300)
-      .attr("opacity", 1.0);
-      
-    // Highlight edges in the active subgraph
-    this.container.selectAll(".edge")
-      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
-      .selectAll("path")
-      .transition().duration(300)
-      .attr("opacity", 1.0)
-      .attr("stroke-width", 2.5)
-      .attr("stroke", (d: any) => {
-        // Use a different color for edges that are in multiple subgraphs
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return "#8B5CF6"; // purple-500 for multi-subgraph edges
-        }
-        return "#2563EB"; // blue-600 for single-subgraph edges
-      })
-      .attr("marker-end", "url(#arrowhead-highlighted)");
-      
-    this.container.selectAll(".edge")
-      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
-      .selectAll("text")
-      .transition().duration(300)
-      .attr("opacity", 1.0)
-      .attr("fill", (d: any) => {
-        // Use a different color for edge labels that are in multiple subgraphs
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return "#8B5CF6"; // purple-500 for multi-subgraph edge labels
-        }
-        return "#2563EB"; // blue-600 for single-subgraph edge labels
-      });
+    // Re-render the graph with the new active subgraph
+    // This will ensure that only the appropriate nodes and edges are shown
+    this.render(this.graph);
   }
   
   /**
