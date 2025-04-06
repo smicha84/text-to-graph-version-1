@@ -593,7 +593,8 @@ export default function GraphPanel({
                         onClick={() => handleSubgraphSelect(id)}
                       >
                         <span className="w-3 h-3 rounded-full bg-blue-500 mr-2" />
-                        Subgraph {id}
+                        {/* Extract the number from sgX format */}
+                        Subgraph {id.startsWith('sg') ? id.substring(2) : id}
                       </button>
                     ))}
                   </div>
