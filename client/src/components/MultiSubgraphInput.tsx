@@ -100,11 +100,20 @@ export default function MultiSubgraphInput({
       segmentName += '...';
     }
     
+    // Find what the new segment ID will be
+    const existingIds = segments.map(s => {
+      const match = s.id.match(/^sg(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    }).filter(id => id > 0);
+    
+    const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
+    const nextId = maxId + 1;
+    
     // Create a temporary new segment
     const tempSegment: TextSegment = {
       id: 'temp', // Will be replaced by reindexSegments
       text: segmentText,
-      name: `Subgraph ${segments.length + 1}: ${segmentName}`,
+      name: `Subgraph ${nextId}: ${segmentName}`,
       color: getNextColor()
     };
     
@@ -186,14 +195,16 @@ export default function MultiSubgraphInput({
         nextId++;
       }
       
-      // Extract the numeric part for the name
+      // Extract the numeric part from the ID for use in the name
       const idMatch = newId.match(/^sg(\d+)$/);
       const idNumber = idMatch ? parseInt(idMatch[1], 10) : 0;
       
-      // Update the segment name to reflect numbering if it starts with "Subgraph X:"
+      // Update the segment name to reflect the correct ID number if it starts with "Subgraph X:"
       let newName = segment.name;
       if (segment.name.match(/^Subgraph \d+:/)) {
-        newName = `Subgraph ${idNumber}: ${segment.name.split(':').slice(1).join(':').trim()}`;
+        // Extract the content after "Subgraph X:" to preserve it
+        const contentPart = segment.name.split(':').slice(1).join(':').trim();
+        newName = `Subgraph ${idNumber}: ${contentPart}`;
       }
       
       return {
