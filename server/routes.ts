@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { eq } from "drizzle-orm";
+import { Server as SocketServer } from "socket.io";
 import { 
   generateGraphInputSchema, 
   exportGraphSchema,
@@ -11,7 +12,9 @@ import {
   userProfiles,
   userGraphs,
   multiUserGraphs,
-  graphAnalytics
+  graphAnalytics,
+  Graph,
+  Node
 } from "@shared/schema";
 import { storage } from "./storage";
 import { generateGraphWithClaude, performWebSearch } from "./anthropic";
@@ -1545,6 +1548,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Create HTTP server
   const httpServer = createServer(app);
+  
+  // Create a Socket.IO server
+  const io = new SocketServer(httpServer);
+  
+  // Map to store user data
+  const activeUsers = new Map();
+  
+  io.on('connection', (socket) => {
+    console.log(`Socket connected: ${socket.id}`);
+    
+    // Handle user joining
+    socket.on('join', (userData) => {
+      const userId = Math.floor(Math.random() * 10000);
+      const userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
+      
+      // Create user data object
+      const user = {
+        id: userId,
+        username: userData.username || `User_${userId}`,
+        avatarUrl: userData.avatarUrl,
+        socketId: socket.id,
+        lastActive: new Date(),
+        color: userColor,
+        isTyping: false,
+        selectedNodeId: null
+      };
+      
+      // Store user data
+      activeUsers.set(socket.id, user);
+      
+      // Join a room (all sockets will be in the same room for this implementation)
+      socket.join('graph-room');
+      
+      // Broadcast to everyone except the current socket
+      socket.broadcast.to('graph-room').emit('user-joined', user);
+      
+      // Send current list of active users to the newly joined user
+      const userList = Array.from(activeUsers.values());
+      socket.emit('active-users', userList);
+      
+      console.log(`User ${user.username} (${userId}) joined`);
+    });
+    
+    // Handle user typing status
+    socket.on('user-typing', (isTyping) => {
+      const user = activeUsers.get(socket.id);
+      if (!user) return;
+      
+      user.isTyping = isTyping;
+      user.lastActive = new Date();
+      
+      // Broadcast typing status to other users
+      socket.broadcast.to('graph-room').emit('user-typing', user.id, isTyping);
+    });
+    
+    // Handle user selecting a node
+    socket.on('select-node', (nodeId) => {
+      const user = activeUsers.get(socket.id);
+      if (!user) return;
+      
+      user.selectedNodeId = nodeId;
+      user.lastActive = new Date();
+      
+      // Broadcast node selection to other users
+      socket.broadcast.to('graph-room').emit('select-node', user.id, nodeId);
+    });
+    
+    // Handle graph updates
+    socket.on('graph-update', (graph: Graph) => {
+      const user = activeUsers.get(socket.id);
+      if (!user) return;
+      
+      user.lastActive = new Date();
+      
+      // Broadcast the updated graph to all users
+      socket.broadcast.to('graph-room').emit('graph-update', graph);
+    });
+    
+    // Handle chat messages
+    socket.on('chat-message', (message) => {
+      const user = activeUsers.get(socket.id);
+      if (!user) return;
+      
+      user.lastActive = new Date();
+      user.isTyping = false;
+      
+      // Broadcast the message to all users
+      io.to('graph-room').emit('chat-message', user.username, message);
+    });
+    
+    // Handle disconnection
+    socket.on('disconnect', () => {
+      const user = activeUsers.get(socket.id);
+      if (!user) return;
+      
+      console.log(`User ${user.username} (${user.id}) disconnected`);
+      
+      // Remove user from the active users list
+      activeUsers.delete(socket.id);
+      
+      // Notify others that the user has left
+      socket.broadcast.to('graph-room').emit('user-left', user.id);
+    });
+  });
   
   return httpServer;
 }
