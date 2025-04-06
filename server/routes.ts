@@ -1108,12 +1108,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate-graph', optionalAuthenticateToken, async (req, res) => {
     try {
       // Validate request body
-      const { text, options, existingGraph, appendMode } = generateGraphInputSchema.parse(req.body);
+      const { text, options, existingGraph } = generateGraphInputSchema.parse(req.body);
       
       // Extract additional segment information (for multi-subgraph handling)
       const segmentId = req.body.segmentId;
       const segmentName = req.body.segmentName;
       const segmentColor = req.body.segmentColor;
+      
+      // Use appendMode flag from options (which is safer than a top-level appendMode)
+      const appendMode = options?.appendMode === true;
+      
+      console.log(`Generate graph called with appendMode: ${appendMode}, existing graph: ${existingGraph ? 'yes' : 'no'}`);
       
       // Generate graph using Claude API, potentially merging with existing graph
       const result = await generateGraphFromText(text, options, existingGraph, appendMode, segmentId, segmentName, segmentColor);
