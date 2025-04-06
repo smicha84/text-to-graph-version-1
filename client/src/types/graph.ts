@@ -19,13 +19,11 @@ export interface EdgeStyle {
 
 export interface Node {
   id: string;
-  label: string;
   type: string;
   x?: number;
   y?: number;
   properties: Record<string, any>;
   subgraphIds?: string[]; // Array of IDs for subgraphs this node belongs to
-  labelDetail?: string;
 }
 
 export interface Edge {

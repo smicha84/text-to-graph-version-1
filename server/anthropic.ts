@@ -261,90 +261,87 @@ export async function generateGraphWithClaude(text: string, options: GraphOption
     
     console.log('Extracted content text:', contentText);
     
-    // Try to find and extract a valid JSON object using various approaches
-    // We'll try multiple methods to extract the JSON graph data
-    let graphData = null;
+    // Try to find and extract a valid JSON object using regex for better reliability
+    // This regex looks for objects with "nodes" and "edges" arrays which are the essential parts of our graph
+    const graphJsonRegex = /{[\s\S]*?"nodes"\s*:\s*\[[\s\S]*?\][\s\S]*?"edges"\s*:\s*\[[\s\S]*?\][\s\S]*?}/g;
+    const match = graphJsonRegex.exec(contentText);
     
-    try {
-      // Method 1: Use regex to find JSON object with nodes and edges
-      // This regex looks for objects with "nodes" and "edges" arrays which are the essential parts of our graph
-      const graphJsonRegex = /{[\s\S]*?"nodes"\s*:\s*\[[\s\S]*?\][\s\S]*?"edges"\s*:\s*\[[\s\S]*?\][\s\S]*?}/g;
-      const match = graphJsonRegex.exec(contentText);
-      
-      if (match) {
-        console.log('Extracted graph JSON with regex match (Method 1)');
-        graphData = JSON.parse(match[0]);
-      } else {
-        // Method 2: Look for JSON code blocks in markdown
-        const codeBlockRegex = /```(?:json)?\s*({[\s\S]*?})```/g;
-        const codeMatch = codeBlockRegex.exec(contentText);
-        
-        if (codeMatch) {
-          console.log('Extracted graph JSON from code block (Method 2)');
-          const parsedData = JSON.parse(codeMatch[1]);
-          
-          // Check if it has nodes and edges
-          if (parsedData.nodes && parsedData.edges) {
-            graphData = parsedData;
-          }
-        }
-      }
-    } catch (parseError) {
-      console.error('JSON parsing error:', parseError);
-    }
-    
-    if (!graphData) {
+    if (!match) {
       console.error('Could not find valid graph JSON in Claude response');
       
       // No fallback - fail immediately
       statusCode = 422; // Unprocessable Entity
       const processingTimeMs = Date.now() - startTime;
       
-      // Log the error with more details
+      // Log the error
       await logApiInteraction(
         'error',
         'generate_graph',
         requestData,
         { 
           error: 'Could not find valid graph JSON in Claude response',
-          method: 'json_extraction_failed',
-          response_sample: contentText.substring(0, 500) // Log a sample of the response for debugging
+          method: 'json_extraction_failed'
         },
         statusCode,
         processingTimeMs
       );
       
-      throw new Error('The AI could not generate a valid graph from your text. Please try again with more descriptive text or a different prompt.');
+      throw new Error('Could not find valid graph JSON in Claude response. Please try with a different text or prompt.');
     }
     
-    // Continue with the graphData we found
-    console.log('Processing extracted graph data');
+    // We found a match with the regex
+    const jsonResponse = match[0];
+    console.log('Extracted graph JSON with regex match');
     
-    // Process the graph data (if we got this far, we have valid graph data)
-    processGraphData(graphData, text);
-    
-    // Calculate processing time
-    const processingTimeMs = Date.now() - startTime;
-    
-    // Log the successful response
-    const responseData = {
-      nodeCount: graphData.nodes.length,
-      edgeCount: graphData.edges.length,
-      completion_tokens: response.usage?.output_tokens || 0,
-      prompt_tokens: response.usage?.input_tokens || 0,
-      model: CLAUDE_MODEL
-    };
-    
-    await logApiInteraction(
-      'response',
-      'generate_graph',
-      requestData,
-      responseData,
-      statusCode,
-      processingTimeMs
-    );
-    
-    return graphData;
+    try {
+      const graphData = JSON.parse(jsonResponse);
+      
+      // Process the graph data
+      processGraphData(graphData, text);
+      
+      // Calculate processing time
+      const processingTimeMs = Date.now() - startTime;
+      
+      // Log the successful response
+      const responseData = {
+        nodeCount: graphData.nodes.length,
+        edgeCount: graphData.edges.length,
+        completion_tokens: response.usage?.output_tokens || 0,
+        prompt_tokens: response.usage?.input_tokens || 0,
+        model: CLAUDE_MODEL
+      };
+      
+      await logApiInteraction(
+        'response',
+        'generate_graph',
+        requestData,
+        responseData,
+        statusCode,
+        processingTimeMs
+      );
+      
+      return graphData;
+    } catch (parseError) {
+      console.error('Error parsing regex-matched JSON response:', parseError);
+      
+      // Update status code for parsing error
+      statusCode = 422; // Unprocessable Entity
+      
+      // Calculate processing time
+      const processingTimeMs = Date.now() - startTime;
+      
+      // Log the parsing error
+      await logApiInteraction(
+        'error',
+        'generate_graph',
+        requestData,
+        { error: parseError instanceof Error ? parseError.message : String(parseError) },
+        statusCode,
+        processingTimeMs
+      );
+      
+      throw new Error(`Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+    }
   } catch (error) {
     console.error('Error calling Claude API:', error);
     

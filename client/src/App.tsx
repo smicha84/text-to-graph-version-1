@@ -22,7 +22,6 @@ import Profile from "@/pages/Profile";
 import GraphAnalytics from "@/pages/GraphAnalytics";
 import SmileyPage from "@/pages/SmileyPage";
 import SpidermanPage from "@/pages/SpidermanPage";
-import MultiPlayerGraph from "@/pages/MultiPlayerGraph";
 
 function Router() {
   return (
@@ -45,7 +44,6 @@ function Router() {
           <Route path="/site-map" component={SiteMap} />
           <Route path="/smiley" component={SmileyPage} />
           <Route path="/spiderman" component={SpidermanPage} />
-          <Route path="/multi-player-graph" component={MultiPlayerGraph} />
           <Route component={NotFound} />
         </Switch>
       </div>

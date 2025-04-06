@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/stores/auth";
-import { Edit2, X, Save, Moon, Sun, Layout, Grid, Sliders, Type, Layers, Target, Move, Plus, Minus, Eye, EyeOff, ExternalLink, CornerRightDown, ArrowRight, Maximize2, Minimize2, RotateCcw, ChevronsUpDown, ChevronsLeftRight, Crosshair, Users } from "lucide-react";
+import { Edit2, X, Save, Moon, Sun, Layout, Grid, Sliders, Type, Layers, Target, Move, Plus, Minus, Eye, EyeOff, ExternalLink, CornerRightDown, ArrowRight, Maximize2, Minimize2, RotateCcw, ChevronsUpDown, ChevronsLeftRight, Crosshair } from "lucide-react";
 
 // Define UI customization settings
 interface UISettings {
@@ -1093,17 +1093,6 @@ export default function Header() {
             } transition-colors`}>
               <i className="fas fa-palette mr-2"></i>
               <span>UI Showcase</span>
-            </div>
-          </Link>
-          
-          <Link href="/multi-player-graph">
-            <div className={`flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
-              location === "/multi-player-graph" 
-                ? "bg-primary/10 text-primary" 
-                : "text-gray-600 hover:text-primary"
-            } transition-colors`}>
-              <Users className="h-4 w-4 mr-2" />
-              <span>Multi Player Graph</span>
             </div>
           </Link>
           
