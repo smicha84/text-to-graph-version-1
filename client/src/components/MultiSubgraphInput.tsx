@@ -109,6 +109,12 @@ export default function MultiSubgraphInput({
     const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
     const nextId = maxId + 1;
     
+    // Log the ID calculation for verification
+    console.log('Creating new segment:');
+    console.log('Existing IDs:', existingIds);
+    console.log('Max ID:', maxId);
+    console.log('Next ID to use:', nextId);
+    
     // Create a temporary new segment
     const tempSegment: TextSegment = {
       id: 'temp', // Will be replaced by reindexSegments
@@ -147,6 +153,9 @@ export default function MultiSubgraphInput({
 
   // Helper to reindex segments with consistent IDs and names - placed before it's used
   const reindexSegments = (segmentsToReindex: TextSegment[]) => {
+    console.log('--- REINDEX SEGMENTS START ---');
+    console.log('Input segments:', segmentsToReindex.map(s => ({ id: s.id, name: s.name })));
+    
     // First, extract all existing numbers from segment IDs
     const existingIds = segmentsToReindex
       .map(s => {
@@ -158,8 +167,11 @@ export default function MultiSubgraphInput({
       })
       .filter(id => id > 0);
     
+    console.log('Existing numeric IDs:', existingIds);
+    
     // Find the highest existing ID
     const maxExistingId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
+    console.log('Max existing ID:', maxExistingId);
     
     // Sort segments to keep any pre-numbered ones first
     const sortedSegments = [...segmentsToReindex].sort((a, b) => {
@@ -177,10 +189,12 @@ export default function MultiSubgraphInput({
       return aNum - bNum;
     });
     
+    console.log('Sorted segments:', sortedSegments.map(s => ({ id: s.id, name: s.name })));
+    
     // Now assign IDs keeping existing IDs when possible
     let nextId = 1;
     
-    return sortedSegments.map((segment) => {
+    const result = sortedSegments.map((segment) => {
       let newId = segment.id;
       
       // If it's a temp ID or needs reassignment
@@ -191,6 +205,7 @@ export default function MultiSubgraphInput({
         }
         
         newId = `sg${nextId}`;
+        console.log(`Assigning new ID ${newId} to temp segment`);
         existingIds.push(nextId);
         nextId++;
       }
@@ -205,6 +220,10 @@ export default function MultiSubgraphInput({
         // Extract the content after "Subgraph X:" to preserve it
         const contentPart = segment.name.split(':').slice(1).join(':').trim();
         newName = `Subgraph ${idNumber}: ${contentPart}`;
+        
+        if (segment.name !== newName) {
+          console.log(`Renaming from "${segment.name}" to "${newName}"`);
+        }
       }
       
       return {
@@ -213,6 +232,11 @@ export default function MultiSubgraphInput({
         name: newName
       };
     });
+    
+    console.log('Final result:', result.map(s => ({ id: s.id, name: s.name })));
+    console.log('--- REINDEX SEGMENTS END ---');
+    
+    return result;
   };
 
   // Move segment up in the list
