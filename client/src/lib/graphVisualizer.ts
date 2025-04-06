@@ -1734,30 +1734,14 @@ export class GraphVisualizer {
         .attr("stroke-width", (d: any) => {
           // Preserve the stroke-width for the anchored node
           const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-          
-          // Check if node appears in multiple subgraphs (special highlight for multi-subgraph nodes)
-          if (d.subgraphIds && d.subgraphIds.length > 1) {
-            return 2; // Thicker border for multi-subgraph nodes
-          }
-          
           return nodeIndex === 0 ? 2 : 0;
         })
         .attr("stroke-dasharray", (d: any) => {
-          // Distinctive pattern for nodes that appear in multiple subgraphs
-          if (d.subgraphIds && d.subgraphIds.length > 1) {
-            return "5,2"; // Dotted pattern different from anchor node
-          }
-          
           // Preserve the dash array for the anchored node
           const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
           return nodeIndex === 0 ? "3,3" : null;
         })
         .attr("stroke", (d: any) => {
-          // Special color for nodes that appear in multiple subgraphs
-          if (d.subgraphIds && d.subgraphIds.length > 1) {
-            return "#8B5CF6"; // Purple color for multi-subgraph nodes
-          }
-          
           // Preserve the stroke color for the anchored node
           const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
           return nodeIndex === 0 ? "#000" : null;
@@ -1783,30 +1767,14 @@ export class GraphVisualizer {
       .attr("stroke-width", (d: any) => {
         // Preserve the stroke-width for the anchored node
         const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
-        
-        // Highlight nodes that appear in multiple subgraphs even when faded
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return 2;
-        }
-        
         return nodeIndex === 0 ? 2 : 0;
       })
       .attr("stroke-dasharray", (d: any) => {
-        // Distinctive pattern for nodes that appear in multiple subgraphs
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return "5,2";
-        }
-        
         // Preserve the dash array for the anchored node
         const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "3,3" : null;
       })
       .attr("stroke", (d: any) => {
-        // Special color for nodes that appear in multiple subgraphs
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return "#8B5CF6"; // Purple color for multi-subgraph nodes
-        }
-        
         // Preserve the stroke color for the anchored node
         const nodeIndex = this.graph?.nodes.findIndex(node => node.id === d.id);
         return nodeIndex === 0 ? "#000" : null;
@@ -1829,7 +1797,6 @@ export class GraphVisualizer {
     // (typically the node that initiated the web search)
     if (isWebSearchSubgraph) {
       // First, find nodes that have a property indicating they were the source of this web search
-      // This is more reliable than trying to guess based on graph structure
       this.container.selectAll(".node")
         .filter((d: any) => {
           // Check for web search specific properties that would indicate this is a source node
@@ -1860,48 +1827,17 @@ export class GraphVisualizer {
         .attr("opacity", 1.0);
     }
     
-    // Highlight nodes that are in multiple subgraphs with a distinctive visual indicator
+    // Highlight all nodes that belong to the selected subgraph
+    // This includes nodes that are in multiple subgraphs
     this.container.selectAll(".node")
-      .filter((d: any) => {
-        // Check if this node belongs to multiple subgraphs
-        return d.subgraphIds && 
-               d.subgraphIds.length > 1 && 
-               d.subgraphIds.includes(subgraphId);
-      })
-      .selectAll("circle")
-      .transition().duration(300)
-      .attr("opacity", 1.0)
-      .attr("stroke", "#8B5CF6") // purple-500 for multi-subgraph nodes
-      .attr("stroke-width", 3)
-      .attr("stroke-dasharray", "5,2"); // Dotted pattern for multi-subgraph nodes
-    
-    // Also make sure their labels are visible
-    this.container.selectAll(".node")
-      .filter((d: any) => {
-        return d.subgraphIds && 
-               d.subgraphIds.length > 1 && 
-               d.subgraphIds.includes(subgraphId);
-      })
-      .selectAll("text")
-      .transition().duration(300)
-      .attr("opacity", 1.0);
-    
-    // Then highlight all elements that belong to the selected subgraph
-    this.container.selectAll(".node")
-      .filter((d: any) => {
-        // Only apply this style to nodes that belong exclusively to this subgraph
-        // (not to nodes that are in multiple subgraphs, which we handled above)
-        return d.subgraphIds && 
-               d.subgraphIds.includes(subgraphId) && 
-               d.subgraphIds.length === 1;
-      })
+      .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
       .selectAll("circle")
       .transition().duration(300)
       .attr("opacity", 1.0)
       .attr("stroke", "#2563EB") // blue-600
-      .attr("stroke-width", 3)
-      .attr("stroke-dasharray", null); // No dash pattern for single-subgraph nodes
+      .attr("stroke-width", 3);
       
+    // Make their labels visible
     this.container.selectAll(".node")
       .filter((d: any) => d.subgraphIds && d.subgraphIds.includes(subgraphId))
       .selectAll("text")
@@ -1915,13 +1851,7 @@ export class GraphVisualizer {
       .transition().duration(300)
       .attr("opacity", 1.0)
       .attr("stroke-width", 2.5)
-      .attr("stroke", (d: any) => {
-        // Use a different color for edges that are in multiple subgraphs
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return "#8B5CF6"; // purple-500 for multi-subgraph edges
-        }
-        return "#2563EB"; // blue-600 for single-subgraph edges
-      })
+      .attr("stroke", "#2563EB") // blue-600
       .attr("marker-end", "url(#arrowhead-highlighted)");
       
     this.container.selectAll(".edge")
@@ -1929,13 +1859,7 @@ export class GraphVisualizer {
       .selectAll("text")
       .transition().duration(300)
       .attr("opacity", 1.0)
-      .attr("fill", (d: any) => {
-        // Use a different color for edge labels that are in multiple subgraphs
-        if (d.subgraphIds && d.subgraphIds.length > 1) {
-          return "#8B5CF6"; // purple-500 for multi-subgraph edge labels
-        }
-        return "#2563EB"; // blue-600 for single-subgraph edge labels
-      });
+      .attr("fill", "#2563EB"); // blue-600
   }
   
   /**
