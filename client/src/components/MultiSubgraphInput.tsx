@@ -50,8 +50,18 @@ export default function MultiSubgraphInput({
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Generate a simple sequential ID for better readability in legends
-  const generateId = () => `sg${segments.length + 1}`;
+  // Generate a sequential ID that doesn't conflict with existing IDs
+  const generateId = () => {
+    // Extract numbers from existing segment IDs (e.g., "sg3" -> 3)
+    const existingIds = segments.map(s => {
+      const match = s.id.match(/^sg(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Find the highest number + 1
+    const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
+    return `sg${maxId + 1}`;
+  };
   
   // Get the next available color from the palette
   const getNextColor = useCallback(() => {
@@ -128,14 +138,62 @@ export default function MultiSubgraphInput({
 
   // Helper to reindex segments with consistent IDs and names - placed before it's used
   const reindexSegments = (segmentsToReindex: TextSegment[]) => {
-    return segmentsToReindex.map((segment, index) => {
-      // Create a new subgraph ID using the sequential index
-      const newId = `sg${index + 1}`;
+    // First, extract all existing numbers from segment IDs
+    const existingIds = segmentsToReindex
+      .map(s => {
+        // Handle the temporary ID from createSegment
+        if (s.id === 'temp') return 0;
+        
+        const match = s.id.match(/^sg(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter(id => id > 0);
+    
+    // Find the highest existing ID
+    const maxExistingId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
+    
+    // Sort segments to keep any pre-numbered ones first
+    const sortedSegments = [...segmentsToReindex].sort((a, b) => {
+      const aMatch = a.id.match(/^sg(\d+)$/);
+      const bMatch = b.id.match(/^sg(\d+)$/);
       
-      // Update the segment name to reflect new numbering if it starts with "Subgraph X:"
+      const aNum = aMatch ? parseInt(aMatch[1], 10) : 0;
+      const bNum = bMatch ? parseInt(bMatch[1], 10) : 0;
+      
+      // Sort temp IDs to the end
+      if (a.id === 'temp') return 1;
+      if (b.id === 'temp') return -1;
+      
+      // Then sort by numeric ID
+      return aNum - bNum;
+    });
+    
+    // Now assign IDs keeping existing IDs when possible
+    let nextId = 1;
+    
+    return sortedSegments.map((segment) => {
+      let newId = segment.id;
+      
+      // If it's a temp ID or needs reassignment
+      if (segment.id === 'temp') {
+        // Find the next available ID number
+        while (existingIds.includes(nextId)) {
+          nextId++;
+        }
+        
+        newId = `sg${nextId}`;
+        existingIds.push(nextId);
+        nextId++;
+      }
+      
+      // Extract the numeric part for the name
+      const idMatch = newId.match(/^sg(\d+)$/);
+      const idNumber = idMatch ? parseInt(idMatch[1], 10) : 0;
+      
+      // Update the segment name to reflect numbering if it starts with "Subgraph X:"
       let newName = segment.name;
       if (segment.name.match(/^Subgraph \d+:/)) {
-        newName = `Subgraph ${index + 1}: ${segment.name.split(':').slice(1).join(':').trim()}`;
+        newName = `Subgraph ${idNumber}: ${segment.name.split(':').slice(1).join(':').trim()}`;
       }
       
       return {
