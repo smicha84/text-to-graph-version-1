@@ -121,7 +121,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
             id: room.id,
             name: room.name,
             users: room.users,
-            createdBy: room.users.find((u: User) => u.userId === room.createdBy)?.username || 'Unknown',
+            createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
             isPublic: room.isPublic
           }));
         
@@ -175,7 +175,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
             id: room.id,
             name: room.name,
             users: room.users,
-            createdBy: room.users.find((u: User) => u.userId === room.createdBy)?.username || 'Unknown',
+            createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
             isPublic: room.isPublic
           }));
         
@@ -212,7 +212,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
         const room = activeRooms.get(roomId)!;
         
         // Check if user is already in the room
-        if (!room.users.some((u: User) => u.userId === userId)) {
+        if (!room.users.some(u => u.userId === userId)) {
           room.users.push(user);
         }
         
@@ -223,7 +223,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
           id: room.id,
           name: room.name,
           users: room.users,
-          createdBy: room.users.find((u: User) => u.userId === room.createdBy)?.username || 'Unknown',
+          createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
           isPublic: room.isPublic
         };
         
@@ -261,7 +261,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
         const room = activeRooms.get(roomId)!;
         
         // Remove user from the room
-        room.users = room.users.filter((u: User) => u.userId !== userId);
+        room.users = room.users.filter(u => u.userId !== userId);
         
         // Leave the socket room
         socket.leave(roomId);
@@ -277,7 +277,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
               id: room.id,
               name: room.name,
               users: room.users,
-              createdBy: room.users.find((u: User) => u.userId === room.createdBy)?.username || 'Unknown',
+              createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
               isPublic: room.isPublic
             }));
           
@@ -288,7 +288,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
             id: room.id,
             name: room.name,
             users: room.users,
-            createdBy: room.users.find((u: User) => u.userId === room.createdBy)?.username || 'Unknown',
+            createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
             isPublic: room.isPublic
           };
           
@@ -466,8 +466,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
           activeUsers.delete(userId);
           
           // Remove user from all rooms
-          const roomEntries = Array.from(activeRooms.entries());
-          for (const [roomId, room] of roomEntries) {
+          for (const [roomId, room] of Array.from(activeRooms.entries())) {
             const userIndex = room.users.findIndex((u: User) => u.userId === userId);
             if (userIndex !== -1) {
               // Remove user from the room
@@ -498,7 +497,7 @@ export function initializeSocketServer(httpServer: HttpServer): Server {
               id: room.id,
               name: room.name,
               users: room.users,
-              createdBy: room.users.find((u: User) => u.userId === room.createdBy)?.username || 'Unknown',
+              createdBy: room.users.find(u => u.userId === room.createdBy)?.username || 'Unknown',
               isPublic: room.isPublic
             }));
           
