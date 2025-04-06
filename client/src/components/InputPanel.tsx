@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -82,10 +82,19 @@ export default function InputPanel({
   useEffect(() => {
     // When isLoading transitions from true to false, it means the graph generation has completed
     if (!isLoading && hasExistingGraph && textSegments.length > 0) {
-      // Clear segments only when graph generation was in progress and now completed
-      setTextSegments([]);
+      // Check if this is the state after a successful graph generation
+      // Note: We don't clear segments just because isLoading becomes false
+      // We only want to clear them after they've been submitted for processing
+      if (submittedForProcessing.current) {
+        // Reset the flag and clear the segments
+        submittedForProcessing.current = false;
+        setTextSegments([]);
+      }
     }
   }, [isLoading, hasExistingGraph, textSegments.length]);
+  
+  // Ref to track if segments have been submitted for processing
+  const submittedForProcessing = useRef(false);
   
   // Auto-generate search prompt and suggestions when a node is selected
   useEffect(() => {
@@ -115,6 +124,12 @@ export default function InputPanel({
     // If we have segments, we can proceed even with empty main text
     // If no segments and no text, we can't proceed (button should be disabled)
     if (!text.trim() && textSegments.length === 0) return;
+    
+    // Set the flag to indicate that we're submitting for processing
+    // This will allow the useEffect to clear segments only after they've been processed
+    if (textSegments.length > 0) {
+      submittedForProcessing.current = true;
+    }
     
     // Pass text segments if available, otherwise just generate from the full text
     onGenerateGraph(text, options, textSegments.length > 0 ? textSegments : undefined);
