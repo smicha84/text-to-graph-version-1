@@ -395,18 +395,26 @@ export default function InputPanel({
               <div className="mt-auto pt-2">
                 <Button
                   onClick={handleGenerateClick}
-                  disabled={isLoading || !text.trim()}
+                  disabled={isLoading || (!text.trim() && textSegments.length === 0)}
                   className={`w-full ${options.appendMode ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600'} text-white font-medium py-2 rounded transition-colors flex items-center justify-center`}
                 >
                   {isLoading ? (
                     <>
                       <RotateCwIcon size={16} className="mr-2 animate-spin" />
-                      <span>{options.appendMode ? 'Appending...' : 'Generating...'}</span>
+                      <span>
+                        {textSegments.length > 0 
+                          ? `Processing Subgraphs...` 
+                          : options.appendMode ? 'Appending...' : 'Generating...'}
+                      </span>
                     </>
                   ) : (
                     <>
                       <Share2Icon size={16} className="mr-2" />
-                      <span>{options.appendMode ? 'Append to Graph' : 'Generate Graph'}</span>
+                      <span>
+                        {textSegments.length > 0 
+                          ? `Generate From ${textSegments.length} Subgraph${textSegments.length > 1 ? 's' : ''}` 
+                          : options.appendMode ? 'Append to Graph' : 'Generate Graph'}
+                      </span>
                     </>
                   )}
                 </Button>
@@ -415,11 +423,21 @@ export default function InputPanel({
                 <div className="mt-2 text-xs text-gray-500 flex items-start px-1">
                   <InfoIcon className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
                   <span>
-                    This will process your text using Claude AI to 
-                    {options.generateOntology ? ' create a domain ontology, ' : ''}
-                    {options.generateTaxonomies ? ' build taxonomic hierarchies, ' : ''}
-                    extract entities and relationships, then visualize them as a graph. 
-                    Processing takes {(options.generateOntology && options.generateTaxonomies) ? '10-20' : options.generateOntology ? '8-15' : '5-10'} seconds.
+                    {textSegments.length > 0 ? (
+                      <>
+                        This will process your {textSegments.length} subgraph{textSegments.length > 1 ? 's' : ''} sequentially using Claude AI. 
+                        Each subgraph will be processed individually and then merged into a cohesive visualization.
+                        Total processing takes approximately {textSegments.length * 5}-{textSegments.length * 10} seconds.
+                      </>
+                    ) : (
+                      <>
+                        This will process your text using Claude AI to 
+                        {options.generateOntology ? ' create a domain ontology, ' : ''}
+                        {options.generateTaxonomies ? ' build taxonomic hierarchies, ' : ''}
+                        extract entities and relationships, then visualize them as a graph. 
+                        Processing takes {(options.generateOntology && options.generateTaxonomies) ? '10-20' : options.generateOntology ? '8-15' : '5-10'} seconds.
+                      </>
+                    )}
                   </span>
                 </div>
               </div>

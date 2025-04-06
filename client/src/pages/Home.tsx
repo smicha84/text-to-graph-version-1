@@ -150,18 +150,22 @@ export default function Home() {
       setGraph(null); // Clear any existing graph first
       let currentIndex = 0;
       
+      // Set up progress tracking for user feedback
+      const totalSegments = segments.length;
+      
       // Process segments sequentially using a helper function
       const processNextSegment = () => {
-        if (currentIndex < segments.length) {
+        if (currentIndex < totalSegments) {
           const segment = segments[currentIndex];
           const segmentOptions = { 
             ...options, 
             appendMode: currentIndex > 0, // Only append after the first segment
           };
           
+          // Show progress toast
           toast({
-            title: `Processing Subgraph ${currentIndex + 1}/${segments.length}`,
-            description: `Generating graph for segment: ${segment.name}`,
+            title: `Processing Subgraph ${currentIndex + 1}/${totalSegments}`,
+            description: `Generating graph for: "${segment.name}" (${Math.round((currentIndex/totalSegments)*100)}% complete)`,
           });
           
           // Process this segment
@@ -174,7 +178,17 @@ export default function Home() {
               segmentColor: segment.color
             },
             {
-              onSuccess: () => {
+              onSuccess: (data) => {
+                // Show progress after each segment is processed
+                const progress = ((currentIndex + 1) / totalSegments) * 100;
+                const nodeCount = data.nodes.length;
+                const edgeCount = data.edges.length;
+                
+                toast({
+                  title: `Subgraph ${currentIndex + 1}/${totalSegments} Complete`,
+                  description: `Added ${nodeCount} nodes and ${edgeCount} edges. Progress: ${Math.round(progress)}%`,
+                });
+                
                 // Move to the next segment
                 currentIndex++;
                 setTimeout(processNextSegment, 500); // Add small delay between segments
@@ -191,7 +205,7 @@ export default function Home() {
         } else {
           toast({
             title: "All Subgraphs Processed",
-            description: `Successfully generated graph from ${segments.length} segments.`,
+            description: `Successfully generated complete graph from ${totalSegments} segments.`,
           });
         }
       };
