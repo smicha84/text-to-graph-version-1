@@ -147,7 +147,10 @@ export default function Home() {
   const handleGenerateGraph = (text: string, options: GraphGenerationOptions, segments?: TextSegment[]) => {
     if (segments && segments.length > 0) {
       // If we have segments, process each segment one by one
-      setGraph(null); // Clear any existing graph first
+      // Only clear the existing graph if not in append mode
+      if (!options.appendMode) {
+        setGraph(null); // Clear any existing graph if not appending
+      }
       let currentIndex = 0;
       
       // Set up progress tracking for user feedback
@@ -159,7 +162,9 @@ export default function Home() {
           const segment = segments[currentIndex];
           const segmentOptions = { 
             ...options, 
-            appendMode: currentIndex > 0, // Only append after the first segment
+            // If original options had appendMode=true, keep it for all segments
+            // Otherwise use the default behavior of appending after the first segment
+            appendMode: options.appendMode === true ? true : currentIndex > 0,
           };
           
           // Show progress toast
