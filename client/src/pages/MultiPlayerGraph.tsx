@@ -17,6 +17,8 @@ import InputPanel from '@/components/InputPanel';
 import PropertyPanel from '@/components/PropertyPanel';
 import ActivityTracker from '@/components/ActivityTracker';
 import ExportModal from '@/components/ExportModal';
+import GraphAnalytics from '@/components/GraphAnalytics';
+import GraphComparison from '@/components/GraphComparison';
 import { apiRequest } from '@/lib/queryClient';
 import { 
   Tooltip,
@@ -25,7 +27,9 @@ import {
   TooltipTrigger 
 } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MessageSquare, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, MessageSquare, Users, BarChart, GitCompare, Settings, Activity, List } from 'lucide-react';
 
 interface User {
   id: number;
@@ -59,6 +63,7 @@ export default function MultiPlayerGraph() {
   const [chatMessages, setChatMessages] = useState<{user: string, message: string, timestamp: Date}[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [activeTab, setActiveTab] = useState('graph');
   const [options, setOptions] = useState<GraphGenerationOptions>({
     extractEntities: true,
     extractRelations: true,
@@ -366,9 +371,32 @@ export default function MultiPlayerGraph() {
             </Badge>
           </div>
           
-          <div className="flex flex-col h-full">
-            {/* Graph panel */}
-            <div className="flex-1 overflow-auto">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+            <TabsList className="grid grid-cols-4 w-full mb-4">
+              <TabsTrigger value="graph" className="flex items-center space-x-2">
+                <Activity className="h-4 w-4" />
+                <span>Graph</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center space-x-2">
+                <BarChart className="h-4 w-4" />
+                <span>Analytics</span>
+              </TabsTrigger>
+              <TabsTrigger value="compare" className="flex items-center space-x-2">
+                <GitCompare className="h-4 w-4" />
+                <span>Comparison</span>
+              </TabsTrigger>
+              <TabsTrigger value="chat" className="flex items-center space-x-2">
+                <MessageSquare className="h-4 w-4" />
+                <span>Chat</span>
+                {chatMessages.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs">
+                    {chatMessages.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="graph" className="flex-1 overflow-auto">
               <GraphPanel 
                 graph={graph}
                 isLoading={generateMutation.isPending || webSearchMutation.isPending}
@@ -376,8 +404,61 @@ export default function MultiPlayerGraph() {
                 onShowExportModal={() => setShowExportModal(true)}
                 onWebSearch={handleWebSearch}
               />
-            </div>
-          </div>
+            </TabsContent>
+            
+            <TabsContent value="analytics" className="flex-1 overflow-auto p-1">
+              <GraphAnalytics graph={graph} />
+            </TabsContent>
+            
+            <TabsContent value="compare" className="flex-1 overflow-auto p-1">
+              <GraphComparison currentGraph={graph} userId="current-user" sessionId="current-session" />
+            </TabsContent>
+            
+            <TabsContent value="chat" className="flex-1 flex flex-col h-full">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 rounded-md mb-4">
+                {chatMessages.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500">
+                    <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                    <p>No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  chatMessages.map((msg, idx) => (
+                    <div key={idx} className="flex flex-col space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline" className="text-xs px-2 py-0">
+                          {msg.user}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {msg.timestamp.toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg shadow-sm">
+                        {msg.message}
+                      </div>
+                    </div>
+                  ))
+                )}
+                <div ref={chatEndRef} />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={chatInput}
+                  onChange={handleChatInputChange}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
+                />
+                <Button 
+                  onClick={handleSendChatMessage}
+                  disabled={!chatInput.trim()}
+                >
+                  Send
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
       

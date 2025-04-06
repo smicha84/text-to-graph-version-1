@@ -1546,6 +1546,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API endpoint to save a graph snapshot
+  app.post('/api/graph/snapshots', optionalAuthenticateToken, async (req, res) => {
+    try {
+      const { name, graph, metadata } = req.body;
+      
+      if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+        return res.status(400).json({ message: 'A valid graph object is required' });
+      }
+      
+      // Create snapshot
+      const snapshot = {
+        id: `snapshot-${Date.now()}`,
+        name: name || `Snapshot ${new Date().toLocaleString()}`,
+        createdAt: new Date().toISOString(),
+        userId: req.user?.userId,
+        graph,
+        metadata: metadata || {}
+      };
+      
+      // In a real implementation, we would store this in the database
+      // For this prototype, we'll just return the snapshot
+      
+      res.json(snapshot);
+    } catch (error) {
+      console.error('Error saving graph snapshot:', error);
+      res.status(500).json({ message: 'Failed to save graph snapshot' });
+    }
+  });
+  
+  // API endpoint to get graph snapshots
+  app.get('/api/graph/snapshots', optionalAuthenticateToken, async (req, res) => {
+    try {
+      // In a real implementation, we would fetch from database
+      // For this prototype, we'll just return a mock list
+      
+      const snapshots = [
+        {
+          id: 'snapshot-1',
+          name: 'Initial Graph',
+          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          userId: req.user?.userId
+        },
+        {
+          id: 'snapshot-2',
+          name: 'After Web Search',
+          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          userId: req.user?.userId
+        },
+        {
+          id: 'snapshot-3',
+          name: 'Current Version',
+          createdAt: new Date().toISOString(),
+          userId: req.user?.userId
+        }
+      ];
+      
+      res.json(snapshots);
+    } catch (error) {
+      console.error('Error fetching graph snapshots:', error);
+      res.status(500).json({ message: 'Failed to fetch graph snapshots' });
+    }
+  });
+  
+  // API endpoint to get a specific snapshot
+  app.get('/api/graph/snapshots/:id', optionalAuthenticateToken, async (req, res) => {
+    try {
+      const snapshotId = req.params.id;
+      
+      // In a real implementation, we would fetch from database
+      // For this prototype, we'll just return a mock snapshot with a minimal graph
+      
+      // Create a simple mock graph
+      const mockGraph = {
+        nodes: [
+          { id: 'n1', label: 'Person', type: 'Entity', properties: { name: 'John Doe' }, x: 100, y: 100 },
+          { id: 'n2', label: 'Company', type: 'Organization', properties: { name: 'Acme Inc.' }, x: 300, y: 100 },
+          { id: 'n3', label: 'Product', type: 'Item', properties: { name: 'Widget X' }, x: 300, y: 300 }
+        ],
+        edges: [
+          { id: 'e1', source: 'n1', target: 'n2', label: 'WORKS_FOR', properties: {} },
+          { id: 'e2', source: 'n2', target: 'n3', label: 'PRODUCES', properties: {} }
+        ]
+      };
+      
+      const snapshot = {
+        id: snapshotId,
+        name: snapshotId === 'snapshot-1' ? 'Initial Graph' : 
+              snapshotId === 'snapshot-2' ? 'After Web Search' : 'Current Version',
+        createdAt: new Date().toISOString(),
+        userId: req.user?.userId,
+        graph: mockGraph
+      };
+      
+      res.json(snapshot);
+    } catch (error) {
+      console.error('Error fetching graph snapshot:', error);
+      res.status(500).json({ message: 'Failed to fetch graph snapshot' });
+    }
+  });
+  
   // Create HTTP server
   const httpServer = createServer(app);
   
