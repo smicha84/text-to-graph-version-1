@@ -34,11 +34,14 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
   
   // Create a map of existing node IDs and labels for quick lookup
   const existingNodeIds = new Map();
+  const existingNodeMap = new Map(); // Map nodeKey to actual node object
+  
   existingGraph.nodes.forEach((node: any) => {
     // Use a combination of label and name property (if available) as a unique identifier
     const nodeName = node.properties.name || '';
     const nodeKey = `${node.label}:${nodeName}`.toLowerCase();
     existingNodeIds.set(nodeKey, node.id);
+    existingNodeMap.set(nodeKey, node); // Store the actual node
   });
   
   // Create a mapping from new node IDs to either existing IDs or new unique IDs
@@ -56,9 +59,23 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
       nodeIdMap.set(newNode.id, existingId);
       
       // Find the existing node and add the new subgraph ID to its list
-      const existingNode = mergedGraph.nodes.find((n: any) => n.id === existingId);
-      if (existingNode) {
-        existingNode.subgraphIds = [...(existingNode.subgraphIds || []), newSubgraphId];
+      const existingNodeIndex = mergedGraph.nodes.findIndex((n: any) => n.id === existingId);
+      if (existingNodeIndex >= 0) {
+        // Get a reference to the actual node object
+        const existingNode = mergedGraph.nodes[existingNodeIndex];
+        
+        // Ensure the subgraphIds array exists
+        if (!existingNode.subgraphIds) {
+          existingNode.subgraphIds = [];
+        }
+        
+        // Add the new subgraph ID if it's not already present
+        if (!existingNode.subgraphIds.includes(newSubgraphId)) {
+          existingNode.subgraphIds.push(newSubgraphId);
+        }
+        
+        // Update the node object directly in the array to ensure the reference is maintained
+        mergedGraph.nodes[existingNodeIndex] = existingNode;
       }
     } else {
       // Generate a new unique ID for this node
@@ -93,7 +110,19 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
     if (existingEdgeIndex >= 0) {
       // The edge exists, so add this subgraph ID to its list
       const existingEdge = mergedGraph.edges[existingEdgeIndex];
-      existingEdge.subgraphIds = [...(existingEdge.subgraphIds || []), newSubgraphId];
+      
+      // Ensure the subgraphIds array exists
+      if (!existingEdge.subgraphIds) {
+        existingEdge.subgraphIds = [];
+      }
+      
+      // Add the new subgraph ID if it's not already present
+      if (!existingEdge.subgraphIds.includes(newSubgraphId)) {
+        existingEdge.subgraphIds.push(newSubgraphId);
+      }
+      
+      // Update the edge object directly in the array
+      mergedGraph.edges[existingEdgeIndex] = existingEdge;
     } else {
       // Add a new edge with this subgraph ID
       mergedGraph.edges.push({
@@ -103,6 +132,19 @@ function mergeGraphs(existingGraph: any, newGraph: any): any {
         target: targetId,
         subgraphIds: [newSubgraphId]
       });
+    }
+  });
+  
+  // Final verification pass to ensure all subgraphIds are properly set
+  mergedGraph.nodes.forEach((node, idx) => {
+    if (!node.subgraphIds) {
+      mergedGraph.nodes[idx].subgraphIds = [];
+    }
+  });
+  
+  mergedGraph.edges.forEach((edge, idx) => {
+    if (!edge.subgraphIds) {
+      mergedGraph.edges[idx].subgraphIds = [];
     }
   });
   
